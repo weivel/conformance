@@ -42,14 +42,6 @@
         ]
       ]
     },
-    "edges": {
-      "contains": [
-        [
-          "storage.object",
-          "api.http"
-        ]
-      ]
-    },
     "cycle": null
   }
 }

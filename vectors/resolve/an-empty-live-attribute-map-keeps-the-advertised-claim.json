@@ -4,15 +4,15 @@
   "covers": "12.4",
   "given": {
     "requirement": {
-      "id": "accounts",
+      "id": "storage.object",
       "constraints": {
-        "region": "eu"
+        "minReplicas": 3
       },
       "degradable": false
     },
     "provider": {
       "advertised": {
-        "region": "eu"
+        "maxReplicas": 3
       },
       "attributesByPoll": [
         {}
@@ -24,11 +24,7 @@
   "then": {
     "served": true,
     "atPoll": 1,
-    "attributes": {
-      "equals": {
-        "region": "eu"
-      }
-    },
+    "degraded": false,
     "refusal": null
   }
 }

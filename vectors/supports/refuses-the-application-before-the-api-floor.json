@@ -25,7 +25,6 @@
       ],
       "hasFix": true
     },
-    "supported": false,
-    "axis": "application"
+    "supported": false
   }
 }

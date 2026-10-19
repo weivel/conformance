@@ -24,8 +24,7 @@
       "mentions": [
         "api.http",
         "storage.object"
-      ],
-      "hasFix": true
+      ]
     },
     "started": {
       "equals": []

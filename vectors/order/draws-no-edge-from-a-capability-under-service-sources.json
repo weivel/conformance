@@ -34,8 +34,13 @@
     ]
   },
   "then": {
-    "edges": {
-      "equals": []
+    "order": {
+      "before": [
+        [
+          "api.http",
+          "storage.object"
+        ]
+      ]
     },
     "cycle": null
   }

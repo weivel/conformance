@@ -4,22 +4,19 @@
   "covers": "12.4",
   "given": {
     "requirement": {
-      "id": "accounts",
+      "id": "storage.object",
       "constraints": {
-        "region": "eu"
+        "minReplicas": 3
       },
       "degradable": false
     },
     "provider": {
       "advertised": {
-        "region": "us"
+        "maxReplicas": 1
       },
       "attributesByPoll": [
         {
-          "region": "us"
-        },
-        {
-          "region": "us"
+          "maxReplicas": 1
         }
       ]
     },
@@ -31,11 +28,10 @@
     "degraded": false,
     "refusal": {
       "mentions": [
-        "region",
-        "eu",
-        "us"
-      ],
-      "hasFix": true
+        "minReplicas",
+        "maxReplicas",
+        "2000"
+      ]
     }
   }
 }
