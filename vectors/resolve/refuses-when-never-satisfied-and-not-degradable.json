@@ -1,0 +1,41 @@
+{
+  "id": "resolve/refuses-when-never-satisfied-and-not-degradable",
+  "op": "resolve",
+  "covers": "12.4",
+  "given": {
+    "requirement": {
+      "id": "accounts",
+      "constraints": {
+        "region": "eu"
+      },
+      "degradable": false
+    },
+    "provider": {
+      "advertised": {
+        "region": "us"
+      },
+      "attributesByPoll": [
+        {
+          "region": "us"
+        },
+        {
+          "region": "us"
+        }
+      ]
+    },
+    "budgetMillis": 2000,
+    "pollMillis": 1000
+  },
+  "then": {
+    "served": false,
+    "degraded": false,
+    "refusal": {
+      "mentions": [
+        "region",
+        "eu",
+        "us"
+      ],
+      "hasFix": true
+    }
+  }
+}

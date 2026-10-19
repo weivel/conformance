@@ -1,0 +1,30 @@
+{
+  "id": "validate/reports-which-field-is-wrong",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://intisy.github.io/bayonet/schema/plugin.schema.json",
+    "manifest": {
+      "id": "config-ledger",
+      "api": "one",
+      "entry": "dist/index.js",
+      "capabilities": [
+        "provider"
+      ]
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "api"
+      ]
+    },
+    "refusal": {
+      "mentions": [
+        "api"
+      ],
+      "hasFix": true
+    }
+  }
+}

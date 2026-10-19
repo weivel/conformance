@@ -1,0 +1,40 @@
+{
+  "id": "resolve/asks-with-the-consumers-constraints-before-falling-back",
+  "op": "resolve",
+  "covers": "12.4",
+  "given": {
+    "requirement": {
+      "id": "accounts",
+      "constraints": {
+        "region": "eu"
+      },
+      "degradable": true
+    },
+    "provider": {
+      "advertised": {
+        "region": "us"
+      },
+      "attributesByPoll": [
+        {
+          "region": "us"
+        },
+        {
+          "region": "us"
+        }
+      ]
+    },
+    "budgetMillis": 2000,
+    "pollMillis": 1000
+  },
+  "then": {
+    "asks": {
+      "equals": [
+        {
+          "region": "eu"
+        },
+        null
+      ]
+    },
+    "degraded": true
+  }
+}

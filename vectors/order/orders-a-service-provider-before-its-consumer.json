@@ -1,0 +1,50 @@
+{
+  "id": "order/orders-a-service-provider-before-its-consumer",
+  "op": "order",
+  "covers": "12.3",
+  "given": {
+    "edgeSource": "services",
+    "units": [
+      {
+        "id": "dashboard",
+        "provides": [],
+        "requires": [
+          {
+            "id": "accounts",
+            "kind": "service",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "id": "identity",
+        "provides": [
+          {
+            "id": "accounts",
+            "kind": "service"
+          }
+        ],
+        "requires": []
+      }
+    ]
+  },
+  "then": {
+    "order": {
+      "before": [
+        [
+          "identity",
+          "dashboard"
+        ]
+      ]
+    },
+    "edges": {
+      "contains": [
+        [
+          "identity",
+          "dashboard"
+        ]
+      ]
+    },
+    "cycle": null
+  }
+}

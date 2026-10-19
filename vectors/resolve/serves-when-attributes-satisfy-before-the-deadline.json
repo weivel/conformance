@@ -1,0 +1,35 @@
+{
+  "id": "resolve/serves-when-attributes-satisfy-before-the-deadline",
+  "op": "resolve",
+  "covers": "12.4",
+  "given": {
+    "requirement": {
+      "id": "accounts",
+      "constraints": {
+        "region": "eu"
+      },
+      "degradable": false
+    },
+    "provider": {
+      "advertised": {
+        "region": "us"
+      },
+      "attributesByPoll": [
+        {
+          "region": "us"
+        },
+        {
+          "region": "eu"
+        }
+      ]
+    },
+    "budgetMillis": 30000,
+    "pollMillis": 1000
+  },
+  "then": {
+    "served": true,
+    "atPoll": 2,
+    "degraded": false,
+    "refusal": null
+  }
+}

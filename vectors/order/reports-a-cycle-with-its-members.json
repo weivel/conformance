@@ -1,0 +1,53 @@
+{
+  "id": "order/reports-a-cycle-with-its-members",
+  "op": "order",
+  "covers": "12.3",
+  "given": {
+    "edgeSource": "capabilities",
+    "units": [
+      {
+        "id": "api.http",
+        "provides": [
+          {
+            "id": "api.http",
+            "kind": "capability"
+          }
+        ],
+        "requires": [
+          {
+            "id": "storage.object",
+            "kind": "capability",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "id": "storage.object",
+        "provides": [
+          {
+            "id": "storage.object",
+            "kind": "capability"
+          }
+        ],
+        "requires": [
+          {
+            "id": "api.http",
+            "kind": "capability",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  "then": {
+    "cycle": {
+      "contains": [
+        "api.http",
+        "storage.object"
+      ]
+    },
+    "order": {
+      "equals": []
+    }
+  }
+}

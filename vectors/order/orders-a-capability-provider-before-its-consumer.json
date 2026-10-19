@@ -1,0 +1,55 @@
+{
+  "id": "order/orders-a-capability-provider-before-its-consumer",
+  "op": "order",
+  "covers": "12.3",
+  "given": {
+    "edgeSource": "capabilities",
+    "units": [
+      {
+        "id": "api.http",
+        "provides": [
+          {
+            "id": "api.http",
+            "kind": "capability"
+          }
+        ],
+        "requires": [
+          {
+            "id": "storage.object",
+            "kind": "capability",
+            "optional": false
+          }
+        ]
+      },
+      {
+        "id": "storage.object",
+        "provides": [
+          {
+            "id": "storage.object",
+            "kind": "capability"
+          }
+        ],
+        "requires": []
+      }
+    ]
+  },
+  "then": {
+    "order": {
+      "before": [
+        [
+          "storage.object",
+          "api.http"
+        ]
+      ]
+    },
+    "edges": {
+      "contains": [
+        [
+          "storage.object",
+          "api.http"
+        ]
+      ]
+    },
+    "cycle": null
+  }
+}
