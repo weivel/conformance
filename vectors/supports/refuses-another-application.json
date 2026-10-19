@@ -1,0 +1,10 @@
+{
+  "id": "supports/refuses-another-application",
+  "op": "supports",
+  "covers": "12.1",
+  "given": {
+    "host": { "applications": ["claude"], "api": 2 },
+    "facts": { "id": "studio-thing", "api": 1, "targets": ["studio"] }
+  },
+  "then": { "refusal": { "mentions": ["studio", "claude"], "hasFix": true } }
+}

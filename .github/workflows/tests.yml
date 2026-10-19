@@ -1,0 +1,13 @@
+name: Test
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: intisy/workflows/.github/workflows/test.yml@main
+    with:
+      toolchains: node
+      node_test: npx vitest run && npm run validate-vectors

@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://weivel.github.io/engine-conformance/vector.schema.json",
+  "title": "engine conformance vector",
+  "description": "One given state, one operation and one expected outcome, in no implementation's language.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "The vector's identity, naming its own family first so a report groups itself.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*/[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "op": {
+      "description": "The operation a driver performs for this vector.",
+      "type": "string",
+      "enum": ["supports", "boot", "order", "resolve", "revoke", "validate"]
+    },
+    "covers": {
+      "description": "The section of the unified plugin system design this vector witnesses.",
+      "type": "string",
+      "pattern": "^12\\.[1-6]$"
+    },
+    "given": {
+      "description": "The state the driver sets up. Each op owns its own shape.",
+      "type": "object"
+    },
+    "then": {
+      "description": "What the outcome must show. An absent key asserts nothing.",
+      "type": "object"
+    }
+  },
+  "required": ["id", "op", "covers", "given", "then"]
+}

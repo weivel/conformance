@@ -1,0 +1,2 @@
+kind: generic
+description: The plugin engine's behaviour as vectors, and the contract a driver implements.

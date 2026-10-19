@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "declaration": true,
+    "sourceMap": true,
+    "rootDir": "runner/src",
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": ["runner/src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
