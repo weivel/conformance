@@ -78,10 +78,12 @@ rather than thrown, and `order` is then empty.
 Given `{ requirement: { id, constraints, degradable }, provider: { advertised, attributesByPoll },
 budgetMillis, pollMillis }`. Time is virtual: each entry of `attributesByPoll` is what the provider
 reports at that poll, and a driver advances a clock it controls.
-Answers `{ served, atPoll, degraded, attributes, asks: [constraints | null], report, refusal }`.
-`asks` is the sequence of constraint sets the engine asked the provider with, so the degradable
-fallback asking once more with the consumer's own constraints before asking unconstrained is
-observable rather than inferred.
+Answers `{ served, atPoll, degraded, attributes, asks: [boolean], report, refusal }`.
+`asks` is one boolean per time the engine asked the provider to serve, true when that ask carried
+the consumer's constraints, so the degradable fallback asking once more with them before asking
+unconstrained reads as `[true, false]` and is observable rather than inferred. It is a boolean
+rather than the constraint set itself because a vector asserts a DECISION, and the set would pin
+how an engine spells what it already decided.
 **An entry of `{}` means the provider has nothing live to add, not that it offers nothing**, so the
 descriptor's advertised claim stands, per key.
 
