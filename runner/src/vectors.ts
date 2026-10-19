@@ -31,13 +31,14 @@ export function loadVectors(directory: string): Vector[] {
   const vectors: Vector[] = [];
   for (const file of jsonFilesUnder(directory)) {
     const vector = parse(file);
+    refuseUnknownOp(file, vector);
     if (!validate(vector)) {
       throw new Error(`${file} is not a valid vector: ${ajvErrors(validate.errors)}`);
     }
     const valid = vector as Vector;
     const previous = seen.get(valid.id);
     if (previous !== undefined) {
-      throw new Error(`vector id ${valid.id} is declared twice, in ${previous} and in ${file}`);
+      throw new Error(`duplicate vector id ${valid.id}, in ${previous} and in ${file}`);
     }
     if (familyOf(valid.id) !== valid.op) {
       throw new Error(`vector ${valid.id} in ${file} runs op ${valid.op}, so its id must start ${valid.op}/`);
@@ -46,6 +47,18 @@ export function loadVectors(directory: string): Vector[] {
     vectors.push(valid);
   }
   return vectors.sort((left, right) => left.id.localeCompare(right.id));
+}
+
+/**
+ * @implNote The schema's `op` enum would reject this too, as a value not among the allowed ones. It
+ * is checked separately so the failure names the op that is wrong, which is the whole content of the
+ * message to whoever wrote the vector.
+ */
+function refuseUnknownOp(file: string, vector: unknown): void {
+  const op = (vector as { op?: unknown }).op;
+  if (typeof op === "string" && !(OPS as readonly string[]).includes(op)) {
+    throw new Error(`${file} declares unknown op '${op}', which no driver can be asked to perform`);
+  }
 }
 
 function schemaValidator() {

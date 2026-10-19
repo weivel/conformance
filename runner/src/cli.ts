@@ -21,7 +21,7 @@ export async function runConformance(
 function driverNotes(run: Awaited<ReturnType<typeof runDriverVerbose>>, timeoutMillis: number): string[] {
   const notes: string[] = [];
   if (run.timedOut) {
-    notes.push(`killed after ${timeoutMillis} ms without finishing, so the answers below are partial`);
+    notes.push(`timed out after ${timeoutMillis} ms and was killed, so the answers below are partial`);
   }
   if (!run.timedOut && run.exitCode !== 0) {
     notes.push(`exited ${run.exitCode === null ? "without a status" : String(run.exitCode)}`);
