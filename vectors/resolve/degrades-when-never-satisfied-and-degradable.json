@@ -1,0 +1,37 @@
+{
+  "id": "resolve/degrades-when-never-satisfied-and-degradable",
+  "op": "resolve",
+  "covers": "12.4",
+  "given": {
+    "requirement": {
+      "id": "storage.object",
+      "constraints": {
+        "minReplicas": 3
+      },
+      "degradable": true
+    },
+    "provider": {
+      "advertised": {
+        "maxReplicas": 1
+      },
+      "attributesByPoll": [
+        {
+          "maxReplicas": 1
+        }
+      ]
+    },
+    "budgetMillis": 2000,
+    "pollMillis": 1000
+  },
+  "then": {
+    "served": false,
+    "degraded": true,
+    "report": {
+      "mentions": [
+        "minReplicas",
+        "maxReplicas"
+      ]
+    },
+    "refusal": null
+  }
+}

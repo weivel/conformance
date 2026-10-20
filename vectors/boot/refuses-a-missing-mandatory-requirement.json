@@ -1,0 +1,33 @@
+{
+  "id": "boot/refuses-a-missing-mandatory-requirement",
+  "op": "boot",
+  "covers": "12.2",
+  "given": {
+    "units": [
+      {
+        "id": "api.http",
+        "provides": [
+          "api.http"
+        ],
+        "requires": [
+          {
+            "id": "storage.object",
+            "optional": false,
+            "degradable": false
+          }
+        ]
+      }
+    ]
+  },
+  "then": {
+    "refusal": {
+      "mentions": [
+        "api.http",
+        "storage.object"
+      ]
+    },
+    "started": {
+      "equals": []
+    }
+  }
+}

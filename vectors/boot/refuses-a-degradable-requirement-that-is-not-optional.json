@@ -1,0 +1,33 @@
+{
+  "id": "boot/refuses-a-degradable-requirement-that-is-not-optional",
+  "op": "boot",
+  "covers": "12.2",
+  "given": {
+    "units": [
+      {
+        "id": "api.http",
+        "provides": [
+          "api.http"
+        ],
+        "requires": [
+          {
+            "id": "storage.object",
+            "optional": false,
+            "degradable": true
+          }
+        ]
+      }
+    ]
+  },
+  "then": {
+    "refusal": {
+      "mentions": [
+        "api.http",
+        "storage.object"
+      ]
+    },
+    "started": {
+      "equals": []
+    }
+  }
+}

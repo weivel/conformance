@@ -1,0 +1,26 @@
+{
+  "id": "validate/ignores-an-unknown-field",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://intisy.github.io/bayonet/schema/plugin.schema.json",
+    "manifest": {
+      "id": "config-ledger",
+      "api": 1,
+      "entry": "dist/index.js",
+      "capabilities": [
+        "provider"
+      ],
+      "reticulation": {
+        "splines": 3
+      }
+    }
+  },
+  "then": {
+    "valid": true,
+    "paths": {
+      "equals": []
+    },
+    "refusal": null
+  }
+}

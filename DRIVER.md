@@ -43,6 +43,66 @@ and not a pass**: the runner prints it as `unwitnessed` and the run exits non-ze
 the driver's own documentation, naming which families it cannot witness and why, because an
 implementation that quietly declares a vector inapplicable is grading itself.
 
+## What each op is given, and what it answers
+
+Every shape below is a contract both drivers read. A driver answers the keys it can and omits the
+rest; a key the vector does not assert is ignored, and a key the vector asserts and the driver omits
+fails the vector.
+
+### `supports`
+
+Given `{ host: { applications, api }, facts }`, the manifest facts as the engine holds them.
+Answers `{ supported, refusal: { detail, fix } | null, axis: "application" | "api" | null }`.
+`axis` names which check refused first, because a refusal that cites the api floor when the artifact
+was built for another application sends the author to the wrong line.
+
+### `boot`
+
+Given `{ units: [{ id, provides, requires: [{ id, optional, degradable }] }] }`.
+Answers `{ started: [id], refusal: { detail, fix } | null }`.
+**`optional` and `degradable` are different axes.** `optional` decides whether an absence is
+tolerated; `degradable` decides what a present-but-unsatisfying provider costs. A requirement that is
+`degradable` and not `optional` still refuses when it is absent.
+
+### `order`
+
+Given `{ edgeSource: "capabilities" | "services", units: [{ id, provides: [{ id, kind }],
+requires: [{ id, kind, optional }] }] }`.
+Answers `{ order: [id], edges: [[provider, consumer]], cycle: [id] | null }`.
+`edgeSource` is a parameter and not a convention: an engine that draws capability edges while asked
+for service edges is answering a question nobody put to it. A cycle is **reported** with its members
+rather than thrown, and `order` is then empty.
+
+### `resolve`
+
+Given `{ requirement: { id, constraints, degradable }, provider: { advertised, attributesByPoll },
+budgetMillis, pollMillis }`. Time is virtual: each entry of `attributesByPoll` is what the provider
+reports at that poll, and a driver advances a clock it controls.
+Answers `{ served, atPoll, degraded, attributes, asks: [boolean], report, refusal }`.
+`asks` is one boolean per time the engine asked the provider to serve, true when that ask carried
+the consumer's constraints, so the degradable fallback asking once more with them before asking
+unconstrained reads as `[true, false]` and is observable rather than inferred. It is a boolean
+rather than the constraint set itself because a vector asserts a DECISION, and the set would pin
+how an engine spells what it already decided.
+**An entry of `{}` means the provider has nothing live to add, not that it offers nothing**, so the
+descriptor's advertised claim stands, per key.
+
+### `revoke`
+
+Given `{ service: { id }, steps }`, a script of `register`, `lookup`, `revoke` and `use`.
+Answers `{ lookups: [boolean], used, reason }`. `reason` is a token such as `revoked`, never a
+sentence: a consumer holding a revoked handle has to learn what happened, and the kit must not pin
+how it is phrased.
+
+### `validate`
+
+Given `{ schema, manifest }`, where `schema` is the published vocabulary's URL. **A driver validates
+against the published schema and never against a restatement of it.**
+Answers `{ valid, paths: [field], refusal: { detail, fix } | null }`.
+An unknown field **validates** and is ignored: no object in the schema closes
+`additionalProperties`, deliberately, so a manifest written against a later version still loads
+today. A vector rejecting it would invert that decision.
+
 ## What `then` can assert
 
 A vector asserts decisions and never wording, so two implementations in two languages need not

@@ -1,0 +1,30 @@
+{
+  "id": "boot/starts-without-a-missing-optional-requirement",
+  "op": "boot",
+  "covers": "12.2",
+  "given": {
+    "units": [
+      {
+        "id": "api.http",
+        "provides": [
+          "api.http"
+        ],
+        "requires": [
+          {
+            "id": "storage.object",
+            "optional": true,
+            "degradable": false
+          }
+        ]
+      }
+    ]
+  },
+  "then": {
+    "refusal": null,
+    "started": {
+      "equals": [
+        "api.http"
+      ]
+    }
+  }
+}

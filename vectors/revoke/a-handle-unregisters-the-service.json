@@ -1,0 +1,24 @@
+{
+  "id": "revoke/a-handle-unregisters-the-service",
+  "op": "revoke",
+  "covers": "12.5",
+  "given": {
+    "service": {
+      "id": "accounts"
+    },
+    "steps": [
+      "register",
+      "lookup",
+      "revoke",
+      "lookup"
+    ]
+  },
+  "then": {
+    "lookups": {
+      "equals": [
+        true,
+        false
+      ]
+    }
+  }
+}

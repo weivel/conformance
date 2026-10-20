@@ -1,0 +1,47 @@
+{
+  "id": "order/orders-an-optional-requirement-that-is-present",
+  "op": "order",
+  "covers": "12.3",
+  "given": {
+    "edgeSource": "capabilities",
+    "units": [
+      {
+        "id": "api.http",
+        "provides": [
+          {
+            "id": "api.http",
+            "kind": "capability"
+          }
+        ],
+        "requires": [
+          {
+            "id": "storage.object",
+            "kind": "capability",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "id": "storage.object",
+        "provides": [
+          {
+            "id": "storage.object",
+            "kind": "capability"
+          }
+        ],
+        "requires": []
+      }
+    ]
+  },
+  "then": {
+    "order": {
+      "before": [
+        [
+          "storage.object",
+          "api.http"
+        ]
+      ]
+    },
+    "cycle": null
+  }
+}

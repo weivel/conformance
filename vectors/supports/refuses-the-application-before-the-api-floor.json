@@ -1,0 +1,30 @@
+{
+  "id": "supports/refuses-the-application-before-the-api-floor",
+  "op": "supports",
+  "covers": "12.1",
+  "given": {
+    "host": {
+      "applications": [
+        "claude"
+      ],
+      "api": 1
+    },
+    "facts": {
+      "id": "studio-thing",
+      "api": 2,
+      "targets": [
+        "studio"
+      ]
+    }
+  },
+  "then": {
+    "refusal": {
+      "mentions": [
+        "studio",
+        "claude"
+      ],
+      "hasFix": true
+    },
+    "supported": false
+  }
+}

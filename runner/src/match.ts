@@ -22,7 +22,7 @@ export function match(vector: Vector, outcome: Outcome | undefined): MatchResult
     return { vector, status: "errored", reasons: ["the driver answered nothing for this vector"] };
   }
   if (!outcome.witnessed) {
-    return { vector, status: "unwitnessed", reasons: ["the driver reported it cannot witness this vector"] };
+    return { vector, status: "unwitnessed", reasons: [unwitnessedReason(outcome)] };
   }
   const result = outcome.result ?? {};
   const reasons: string[] = [];
@@ -30,6 +30,17 @@ export function match(vector: Vector, outcome: Outcome | undefined): MatchResult
     checkKey(key, expected, result[key], reasons);
   }
   return { vector, status: reasons.length === 0 ? "passed" : "failed", reasons };
+}
+
+/**
+ * @remarks A driver that cannot witness a vector is asked to say why, and the why is the whole value
+ * of the unwitnessed state: without it a report says only that something is missing.
+ */
+function unwitnessedReason(outcome: Outcome): string {
+  const reason = outcome.result?.["reason"];
+  return typeof reason === "string" && reason.trim().length > 0
+    ? reason
+    : "the driver reported it cannot witness this vector, and gave no reason";
 }
 
 function checkKey(key: string, expected: unknown, actual: unknown, reasons: string[]): void {

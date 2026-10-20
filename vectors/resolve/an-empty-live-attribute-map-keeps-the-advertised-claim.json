@@ -1,0 +1,30 @@
+{
+  "id": "resolve/an-empty-live-attribute-map-keeps-the-advertised-claim",
+  "op": "resolve",
+  "covers": "12.4",
+  "given": {
+    "requirement": {
+      "id": "storage.object",
+      "constraints": {
+        "minReplicas": 3
+      },
+      "degradable": false
+    },
+    "provider": {
+      "advertised": {
+        "maxReplicas": 3
+      },
+      "attributesByPoll": [
+        {}
+      ]
+    },
+    "budgetMillis": 30000,
+    "pollMillis": 1000
+  },
+  "then": {
+    "served": true,
+    "atPoll": 1,
+    "degraded": false,
+    "refusal": null
+  }
+}

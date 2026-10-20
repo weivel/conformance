@@ -1,0 +1,22 @@
+{
+  "id": "revoke/a-revoked-handle-says-so",
+  "op": "revoke",
+  "covers": "12.5",
+  "given": {
+    "service": {
+      "id": "accounts"
+    },
+    "steps": [
+      "register",
+      "lookup",
+      "revoke",
+      "use"
+    ]
+  },
+  "then": {
+    "used": false,
+    "reason": {
+      "equals": "revoked"
+    }
+  }
+}

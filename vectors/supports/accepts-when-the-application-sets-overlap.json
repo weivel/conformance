@@ -1,0 +1,25 @@
+{
+  "id": "supports/accepts-when-the-application-sets-overlap",
+  "op": "supports",
+  "covers": "12.1",
+  "given": {
+    "host": {
+      "applications": [
+        "claude",
+        "studio"
+      ],
+      "api": 2
+    },
+    "facts": {
+      "id": "studio-thing",
+      "api": 1,
+      "targets": [
+        "studio"
+      ]
+    }
+  },
+  "then": {
+    "refusal": null,
+    "supported": true
+  }
+}

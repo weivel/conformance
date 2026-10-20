@@ -1,0 +1,7 @@
+{
+  "id": "supports/same-id",
+  "op": "supports",
+  "covers": "12.1",
+  "given": { "host": { "applications": ["studio"], "api": 2 } },
+  "then": { "refusal": { "mentions": ["studio"] } }
+}

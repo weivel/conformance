@@ -1,0 +1,19 @@
+{
+  "id": "supports/accepts-when-either-side-names-no-application",
+  "op": "supports",
+  "covers": "12.1",
+  "given": {
+    "host": {
+      "applications": [],
+      "api": 2
+    },
+    "facts": {
+      "id": "anywhere-thing",
+      "api": 1
+    }
+  },
+  "then": {
+    "refusal": null,
+    "supported": true
+  }
+}
