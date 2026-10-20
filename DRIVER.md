@@ -96,12 +96,42 @@ how it is phrased.
 
 ### `validate`
 
-Given `{ schema, manifest }`, where `schema` is the published vocabulary's URL. **A driver validates
-against the published schema and never against a restatement of it.**
+Given `{ schema, manifest, wellKnownServices? }`, where `schema` is the published vocabulary's URL.
+**A driver validates against the published schema and never against a restatement of it**, then
+applies `weivel/model`'s `VALIDATION.md` rules. `wellKnownServices` is the host's list for rule V2;
+absent means V2 is not applied, and an empty list refuses every bare id.
 Answers `{ valid, paths: [field], refusal: { detail, fix } | null }`.
 An unknown field **validates** and is ignored: no object in the schema closes
 `additionalProperties`, deliberately, so a manifest written against a later version still loads
 today. A vector rejecting it would invert that decision.
+
+### `carry`
+
+Given `{ manifest }`. Answers `{ sameObject }`. The driver builds the engine's manifest facts with
+`manifest` as their payload, opens a plugin session from those facts, and answers whether the
+payload the session hands back is the very object it passed in, not an equal copy. Invariant 4: the
+engine carries the host's manifest through uninspected, which is what lets one model serve hosts
+whose manifest types are unrelated.
+
+### `want`
+
+Given `{ service: { id }, registerAtMillis, timeoutMillis, horizonMillis }`, all in virtual time.
+One consumer asks for `service.id` at time 0, with a timeout only when `timeoutMillis` is non-null;
+a second plugin registers it at `registerAtMillis`, or never when that is null; the driver then
+advances its clock to `horizonMillis`.
+Answers `{ settled, timedOut, atMillis }`, `atMillis` being the virtual time the ask settled or
+timed out, and null when neither happened by the horizon.
+**An absent timeout means none, never a default.** Invariant 8: waiting is unbounded unless the
+consumer asks otherwise, because a provider that cannot exist today may exist once a node joins.
+
+### `scope`
+
+Given `{ steps }`, run in order, each one of `{ consumer, register: id }`, `{ consumer, want: id }`,
+`{ release: consumer }` and `{ lookup: id }`.
+Answers `{ lookups: [boolean], wants: ["settled" | "pending" | "rejected"] }`: one entry per
+`lookup` step, true when the id resolves at that step, and one per `want` step, read after the last
+step. Invariant 11: a consumer's view of the registry is bound to it, so releasing one consumer
+removes exactly what it registered and rejects exactly what it still waits for.
 
 ## What `then` can assert
 

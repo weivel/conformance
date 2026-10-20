@@ -1,0 +1,20 @@
+{
+  "id": "validate/refuses-a-duplicate-capability",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "config-ledger",
+      "api": 2,
+      "entry": "dist/index.js",
+      "capabilities": [
+        "provider",
+        "provider"
+      ]
+    }
+  },
+  "then": {
+    "valid": false
+  }
+}

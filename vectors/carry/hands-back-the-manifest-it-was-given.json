@@ -1,0 +1,22 @@
+{
+  "id": "carry/hands-back-the-manifest-it-was-given",
+  "op": "carry",
+  "covers": "invariant-4",
+  "given": {
+    "manifest": {
+      "id": "config-ledger",
+      "api": 2,
+      "vendorExtra": {
+        "nested": [
+          1,
+          2
+        ]
+      }
+    }
+  },
+  "then": {
+    "sameObject": {
+      "equals": true
+    }
+  }
+}

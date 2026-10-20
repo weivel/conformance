@@ -1,0 +1,26 @@
+{
+  "id": "validate/requires-an-entry-once-capabilities-are-declared",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "config-ledger",
+      "api": 2,
+      "capabilities": [
+        "provider"
+      ]
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "entry"
+      ]
+    },
+    "refusal": {
+      "hasFix": true
+    }
+  }
+}

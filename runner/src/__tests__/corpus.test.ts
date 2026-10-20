@@ -5,7 +5,7 @@ import { loadVectors, OPS, VECTORS_PATH } from "../vectors.js";
 // complete because it only ever shows the rows it has.
 const CORPUS = loadVectors(VECTORS_PATH);
 
-const SECTIONS = ["12.1", "12.2", "12.3", "12.4", "12.5", "12.6"];
+const SECTIONS = ["12.1", "12.2", "12.3", "12.4", "12.5", "12.6", "invariant-11", "invariant-4", "invariant-8"];
 
 it("asks about every op", () => {
   expect([...new Set(CORPUS.map((vector) => vector.op))].sort()).toEqual([...OPS].sort());

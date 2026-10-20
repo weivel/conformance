@@ -13,12 +13,22 @@
     "op": {
       "description": "The operation a driver performs for this vector.",
       "type": "string",
-      "enum": ["supports", "boot", "order", "resolve", "revoke", "validate"]
+      "enum": [
+        "supports",
+        "boot",
+        "order",
+        "resolve",
+        "revoke",
+        "validate",
+        "carry",
+        "want",
+        "scope"
+      ]
     },
     "covers": {
-      "description": "The section of the unified plugin system design this vector witnesses.",
+      "description": "The section of the unified plugin system design, or the invariant of weivel/model's INVARIANTS.md, this vector witnesses.",
       "type": "string",
-      "pattern": "^12\\.[1-6]$"
+      "pattern": "^(12\\.[1-6]|invariant-([1-9]|1[01]))$"
     },
     "given": {
       "description": "The state the driver sets up. Each op owns its own shape.",
@@ -29,5 +39,11 @@
       "type": "object"
     }
   },
-  "required": ["id", "op", "covers", "given", "then"]
+  "required": [
+    "id",
+    "op",
+    "covers",
+    "given",
+    "then"
+  ]
 }
