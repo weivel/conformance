@@ -1,0 +1,24 @@
+{
+  "id": "validate/reports-a-missing-entry-beside-another-error",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "config-ledger",
+      "api": "one",
+      "capabilities": [
+        "provider"
+      ]
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "contains": [
+        "api",
+        "entry"
+      ]
+    }
+  }
+}

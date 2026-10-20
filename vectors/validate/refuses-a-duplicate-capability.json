@@ -15,6 +15,11 @@
     }
   },
   "then": {
-    "valid": false
+    "valid": false,
+    "paths": {
+      "equals": [
+        "capabilities[1]"
+      ]
+    }
   }
 }
