@@ -34,7 +34,7 @@ stdin**, closes stdin, and reads **one outcome per line of JSON from stdout**.
 `budgetMillis` and `pollMillis` in a vector are **logical**. A driver advances a clock it controls
 and must not sleep in real time: a 30 second budget costing 30 seconds of wall clock is a suite
 nobody runs. Both of today's implementations already have the seam, `ConsumerBoundDirectory`'s
-injected clock and sleeper on the kernel side and `ManualScheduler` in bayonet.
+injected clock and sleeper on the kernel side and `ManualScheduler` in `weivel/java`.
 
 ## Partial witness
 
