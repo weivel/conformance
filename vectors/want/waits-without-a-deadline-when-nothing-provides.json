@@ -1,0 +1,17 @@
+{
+  "id": "want/waits-without-a-deadline-when-nothing-provides",
+  "op": "want",
+  "covers": "invariant-8",
+  "given": {
+    "service": {
+      "id": "accounts"
+    },
+    "registerAtMillis": null,
+    "timeoutMillis": null,
+    "horizonMillis": 3600000
+  },
+  "then": {
+    "settled": false,
+    "timedOut": false
+  }
+}

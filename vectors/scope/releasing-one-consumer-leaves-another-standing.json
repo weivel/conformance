@@ -1,0 +1,34 @@
+{
+  "id": "scope/releasing-one-consumer-leaves-another-standing",
+  "op": "scope",
+  "covers": "invariant-11",
+  "given": {
+    "steps": [
+      {
+        "consumer": "a",
+        "register": "a:x"
+      },
+      {
+        "consumer": "b",
+        "register": "b:y"
+      },
+      {
+        "release": "a"
+      },
+      {
+        "lookup": "a:x"
+      },
+      {
+        "lookup": "b:y"
+      }
+    ]
+  },
+  "then": {
+    "lookups": {
+      "equals": [
+        false,
+        true
+      ]
+    }
+  }
+}

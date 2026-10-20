@@ -1,0 +1,23 @@
+{
+  "id": "scope/releasing-a-consumer-rejects-what-it-still-waits-for",
+  "op": "scope",
+  "covers": "invariant-11",
+  "given": {
+    "steps": [
+      {
+        "consumer": "a",
+        "want": "b:z"
+      },
+      {
+        "release": "a"
+      }
+    ]
+  },
+  "then": {
+    "wants": {
+      "equals": [
+        "rejected"
+      ]
+    }
+  }
+}

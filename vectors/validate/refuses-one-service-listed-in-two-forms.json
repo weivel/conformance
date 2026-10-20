@@ -1,0 +1,29 @@
+{
+  "id": "validate/refuses-one-service-listed-in-two-forms",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "a",
+      "api": 2,
+      "services": {
+        "provides": [
+          "a:x",
+          {
+            "id": "a:x"
+          }
+        ]
+      }
+    },
+    "wellKnownServices": []
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "services.provides[1]"
+      ]
+    }
+  }
+}

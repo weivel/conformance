@@ -1,0 +1,21 @@
+{
+  "id": "validate/refuses-an-entry-outside-the-repo",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "config-ledger",
+      "api": 2,
+      "entry": "../x.js"
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "entry"
+      ]
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "want/settles-when-a-provider-arrives-later",
+  "op": "want",
+  "covers": "invariant-8",
+  "given": {
+    "service": {
+      "id": "accounts"
+    },
+    "registerAtMillis": 5000,
+    "timeoutMillis": null,
+    "horizonMillis": 10000
+  },
+  "then": {
+    "settled": true,
+    "atMillis": {
+      "equals": 5000
+    }
+  }
+}

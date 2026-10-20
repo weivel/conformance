@@ -1,0 +1,20 @@
+{
+  "id": "want/times-out-only-when-asked",
+  "op": "want",
+  "covers": "invariant-8",
+  "given": {
+    "service": {
+      "id": "accounts"
+    },
+    "registerAtMillis": null,
+    "timeoutMillis": 1000,
+    "horizonMillis": 10000
+  },
+  "then": {
+    "settled": false,
+    "timedOut": true,
+    "atMillis": {
+      "equals": 1000
+    }
+  }
+}
