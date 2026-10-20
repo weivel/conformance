@@ -1,0 +1,34 @@
+{
+  "id": "resolve/a-live-attribute-leaves-the-other-advertised-claims-standing",
+  "op": "resolve",
+  "covers": "12.4",
+  "given": {
+    "requirement": {
+      "id": "storage.object",
+      "constraints": {
+        "minReplicas": 3,
+        "maxLatencyMs": 50
+      },
+      "degradable": false
+    },
+    "provider": {
+      "advertised": {
+        "maxReplicas": 3,
+        "latencyMs": 10
+      },
+      "attributesByPoll": [
+        {
+          "maxReplicas": 5
+        }
+      ]
+    },
+    "budgetMillis": 2000,
+    "pollMillis": 1000
+  },
+  "then": {
+    "served": true,
+    "atPoll": 1,
+    "degraded": false,
+    "refusal": null
+  }
+}
