@@ -101,6 +101,10 @@ Given `{ schema, manifest, wellKnownServices? }`, where `schema` is the publishe
 applies `weivel/model`'s `VALIDATION.md` rules. `wellKnownServices` is the host's list for rule V2;
 absent means V2 is not applied, and an empty list refuses every bare id.
 Answers `{ valid, paths: [field], refusal: { detail, fix } | null }`.
+**`paths` names every field that is wrong, each once**: a `then` applies whatever else is wrong, as
+draft-07 applies it, and a repeated item is reported at the index of its second occurrence
+(`capabilities[1]`), the convention V1 states, rather than at the array. A validator whose own
+error for `uniqueItems` names the array maps it to that index.
 An unknown field **validates** and is ignored: no object in the schema closes
 `additionalProperties`, deliberately, so a manifest written against a later version still loads
 today. A vector rejecting it would invert that decision.
@@ -118,7 +122,9 @@ whose manifest types are unrelated.
 Given `{ service: { id }, registerAtMillis, timeoutMillis, horizonMillis }`, all in virtual time.
 One consumer asks for `service.id` at time 0, with a timeout only when `timeoutMillis` is non-null;
 a second plugin registers it at `registerAtMillis`, or never when that is null; the driver then
-advances its clock to `horizonMillis`.
+advances its clock to `horizonMillis`. **The driver lets that plugin register `service.id` in
+whatever form it has**, declaring it well-known if the engine asks: the vector is about waiting, and
+a namespacing refusal would fail it for a reason unrelated to invariant 8.
 Answers `{ settled, timedOut, atMillis }`, `atMillis` being the virtual time the ask settled or
 timed out, and null when neither happened by the horizon.
 **An absent timeout means none, never a default.** Invariant 8: waiting is unbounded unless the

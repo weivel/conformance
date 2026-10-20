@@ -1,0 +1,24 @@
+{
+  "id": "validate/refuses-a-duplicate-permission",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "config-ledger",
+      "api": 2,
+      "permissions": [
+        "net",
+        "net"
+      ]
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "permissions[1]"
+      ]
+    }
+  }
+}
