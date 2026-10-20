@@ -1,0 +1,20 @@
+{
+  "id": "validate/skips-the-well-known-rule-when-the-host-names-no-list",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "a",
+      "api": 2,
+      "services": {
+        "provides": [
+          "routing"
+        ]
+      }
+    }
+  },
+  "then": {
+    "valid": true
+  }
+}
