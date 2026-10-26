@@ -1,0 +1,27 @@
+{
+  "id": "validate/reports-every-later-occurrence-of-a-repeated-capability",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "config-ledger",
+      "api": 2,
+      "entry": "dist/index.js",
+      "capabilities": [
+        "provider",
+        "provider",
+        "provider"
+      ]
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "capabilities[1]",
+        "capabilities[2]"
+      ]
+    }
+  }
+}
