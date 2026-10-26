@@ -1,0 +1,32 @@
+{
+  "id": "order/orders-a-mandatory-consumer-of-a-service-the-host-provides",
+  "op": "order",
+  "covers": "12.3",
+  "given": {
+    "edgeSource": "services",
+    "hostProvided": [
+      "clock"
+    ],
+    "units": [
+      {
+        "id": "dashboard",
+        "provides": [],
+        "requires": [
+          {
+            "id": "clock",
+            "kind": "service",
+            "optional": false
+          }
+        ]
+      }
+    ]
+  },
+  "then": {
+    "order": {
+      "equals": [
+        "dashboard"
+      ]
+    },
+    "cycle": null
+  }
+}
