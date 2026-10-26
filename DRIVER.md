@@ -66,12 +66,14 @@ tolerated; `degradable` decides what a present-but-unsatisfying provider costs. 
 
 ### `order`
 
-Given `{ edgeSource: "capabilities" | "services", units: [{ id, provides: [{ id, kind }],
-requires: [{ id, kind, optional }] }] }`.
+Given `{ edgeSource: "capabilities" | "services", hostProvided?: [id], units: [{ id, provides:
+[{ id, kind }], requires: [{ id, kind, optional }] }] }`.
 Answers `{ order: [id], edges: [[provider, consumer]], cycle: [id] | null }`.
 `edgeSource` is a parameter and not a convention: an engine that draws capability edges while asked
 for service edges is answering a question nobody put to it. A cycle is **reported** with its members
 rather than thrown, and `order` is then empty.
+`hostProvided`, when present, lists service ids the host itself supplies: they meet a mandatory
+need exactly as a unit's offer would, and the host never appears in `order`.
 
 ### `resolve`
 
