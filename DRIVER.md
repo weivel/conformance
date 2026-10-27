@@ -176,7 +176,9 @@ Answers `{ outcomes, reported: [[plugin, id]], refusal: { detail, fix } | { mess
 Invariant 12: a consumer reaches only the services it declared under `services.consumes` or offers
 under `services.provides`, host services included. The refusal is data and is reported once per
 plugin and id, so a polling plugin does not flood the sink, and a declared id that nothing provides
-is absence, not a refusal.
+is absence, not a refusal. The declaration check comes before the late (no longer running) check for
+`get`, `want` and `watch`, so an undeclared call from a plugin that is gone is refused and reported
+as undeclared, and only a declared one takes the late path; `ids` ignores lateness.
 
 ## What `then` can assert
 
