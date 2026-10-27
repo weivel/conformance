@@ -1,0 +1,44 @@
+{
+  "id": "reach/reads-a-declared-id-nothing-provides-as-absent",
+  "op": "reach",
+  "covers": "invariant-12",
+  "given": {
+    "hostProvided": [],
+    "plugins": [
+      {
+        "id": "notes",
+        "consumes": [
+          "calendar:events"
+        ],
+        "provides": []
+      }
+    ],
+    "steps": [
+      {
+        "plugin": "notes",
+        "get": "calendar:events"
+      },
+      {
+        "plugin": "notes",
+        "want": "calendar:events"
+      },
+      {
+        "plugin": "notes",
+        "watch": "calendar:events"
+      }
+    ]
+  },
+  "then": {
+    "outcomes": {
+      "equals": [
+        "absent",
+        "absent",
+        "absent"
+      ]
+    },
+    "reported": {
+      "equals": []
+    },
+    "refusal": null
+  }
+}

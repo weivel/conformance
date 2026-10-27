@@ -1,0 +1,70 @@
+{
+  "id": "reach/refuses-an-undeclared-get-and-reports-it-once",
+  "op": "reach",
+  "covers": "invariant-12",
+  "given": {
+    "hostProvided": [],
+    "plugins": [
+      {
+        "id": "calendar",
+        "consumes": [],
+        "provides": [
+          "calendar:events"
+        ]
+      },
+      {
+        "id": "notes",
+        "consumes": [],
+        "provides": []
+      },
+      {
+        "id": "agenda",
+        "consumes": [
+          "calendar:events"
+        ],
+        "provides": []
+      }
+    ],
+    "steps": [
+      {
+        "plugin": "calendar",
+        "register": "calendar:events"
+      },
+      {
+        "plugin": "notes",
+        "get": "calendar:events"
+      },
+      {
+        "plugin": "notes",
+        "get": "calendar:events"
+      },
+      {
+        "plugin": "agenda",
+        "get": "calendar:events"
+      }
+    ]
+  },
+  "then": {
+    "outcomes": {
+      "equals": [
+        "refused",
+        "refused",
+        "served"
+      ]
+    },
+    "reported": {
+      "equals": [
+        [
+          "notes",
+          "calendar:events"
+        ]
+      ]
+    },
+    "refusal": {
+      "mentions": [
+        "services.consumes",
+        "calendar:events"
+      ]
+    }
+  }
+}

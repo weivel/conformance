@@ -1,0 +1,70 @@
+{
+  "id": "reach/lists-only-the-ids-a-plugin-may-reach",
+  "op": "reach",
+  "covers": "invariant-12",
+  "given": {
+    "hostProvided": [
+      "clock",
+      "locale"
+    ],
+    "plugins": [
+      {
+        "id": "calendar",
+        "consumes": [
+          "clock",
+          "weather:forecast"
+        ],
+        "provides": [
+          "calendar:events"
+        ]
+      },
+      {
+        "id": "notes",
+        "consumes": [
+          "calendar:events"
+        ],
+        "provides": []
+      },
+      {
+        "id": "idle",
+        "consumes": [],
+        "provides": []
+      }
+    ],
+    "steps": [
+      {
+        "plugin": "calendar",
+        "register": "calendar:events"
+      },
+      {
+        "plugin": "calendar",
+        "ids": true
+      },
+      {
+        "plugin": "notes",
+        "ids": true
+      },
+      {
+        "plugin": "idle",
+        "ids": true
+      }
+    ]
+  },
+  "then": {
+    "outcomes": {
+      "equals": [
+        [
+          "calendar:events",
+          "clock"
+        ],
+        [
+          "calendar:events"
+        ],
+        []
+      ]
+    },
+    "reported": {
+      "equals": []
+    }
+  }
+}

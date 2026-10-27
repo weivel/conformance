@@ -22,13 +22,14 @@
         "validate",
         "carry",
         "want",
-        "scope"
+        "scope",
+        "reach"
       ]
     },
     "covers": {
       "description": "The section of the unified plugin system design, or the invariant of weivel/model's INVARIANTS.md, this vector witnesses.",
       "type": "string",
-      "pattern": "^(12\\.[1-6]|invariant-([1-9]|1[01]))$"
+      "pattern": "^(12\\.[1-6]|invariant-([1-9]|1[0-2]))$"
     },
     "given": {
       "description": "The state the driver sets up. Each op owns its own shape.",

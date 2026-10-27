@@ -1,0 +1,65 @@
+{
+  "id": "reach/refuses-an-undeclared-want",
+  "op": "reach",
+  "covers": "invariant-12",
+  "given": {
+    "hostProvided": [],
+    "plugins": [
+      {
+        "id": "calendar",
+        "consumes": [],
+        "provides": [
+          "calendar:events"
+        ]
+      },
+      {
+        "id": "notes",
+        "consumes": [],
+        "provides": []
+      },
+      {
+        "id": "agenda",
+        "consumes": [
+          "calendar:events"
+        ],
+        "provides": []
+      }
+    ],
+    "steps": [
+      {
+        "plugin": "calendar",
+        "register": "calendar:events"
+      },
+      {
+        "plugin": "notes",
+        "want": "calendar:events"
+      },
+      {
+        "plugin": "agenda",
+        "want": "calendar:events"
+      }
+    ]
+  },
+  "then": {
+    "outcomes": {
+      "equals": [
+        "refused",
+        "served"
+      ]
+    },
+    "reported": {
+      "equals": [
+        [
+          "notes",
+          "calendar:events"
+        ]
+      ]
+    },
+    "refusal": {
+      "mentions": [
+        "services.consumes",
+        "calendar:events"
+      ]
+    }
+  }
+}

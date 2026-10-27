@@ -1,0 +1,65 @@
+{
+  "id": "reach/refuses-an-undeclared-watch",
+  "op": "reach",
+  "covers": "invariant-12",
+  "given": {
+    "hostProvided": [],
+    "plugins": [
+      {
+        "id": "calendar",
+        "consumes": [],
+        "provides": [
+          "calendar:events"
+        ]
+      },
+      {
+        "id": "notes",
+        "consumes": [],
+        "provides": []
+      },
+      {
+        "id": "agenda",
+        "consumes": [
+          "calendar:events"
+        ],
+        "provides": []
+      }
+    ],
+    "steps": [
+      {
+        "plugin": "notes",
+        "watch": "calendar:events"
+      },
+      {
+        "plugin": "agenda",
+        "watch": "calendar:events"
+      },
+      {
+        "plugin": "calendar",
+        "register": "calendar:events"
+      }
+    ]
+  },
+  "then": {
+    "outcomes": {
+      "equals": [
+        "refused",
+        "served"
+      ]
+    },
+    "reported": {
+      "equals": [
+        [
+          "notes",
+          "calendar:events"
+        ]
+      ]
+    },
+    "refusal": {
+      "mentions": [
+        "services.consumes",
+        "calendar:events"
+      ]
+    }
+  }
+}
