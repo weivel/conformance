@@ -143,12 +143,14 @@ removes exactly what it registered and rejects exactly what it still waits for.
 
 ### `reach`
 
-Given `{ hostProvided: [id], plugins: [{ id, consumes: [id], provides: [id] }], steps }`.
+Given `{ hostProvided: [id], plugins: [{ id, consumes: [id | { id, optional }], provides: [id] }], steps }`.
 **The driver drives a HOST, never a bare service hub**: it builds a manifest per plugin with
 `consumes` and `provides` under `services`, opens each plugin's context through the host in the
 order given, and registers each `hostProvided` id as a host service before the first step. The
 refusal lives in a fence the host builds from the manifest, so a driver that calls the hub directly
-answers a question about an engine that never refuses.
+answers a question about an engine that never refuses. A `consumes` entry goes into the manifest
+exactly as written, so the object form reaches the engine's own reading of it rather than a
+driver's.
 Steps run in order, each one of `{ plugin, register: id }`, `{ plugin, get: id }`,
 `{ plugin, want: id }`, `{ plugin, watch: id }` and `{ plugin, ids: true }`, every call made through
 that plugin's own context. A vector registers only an id the plugin lists under `provides`.

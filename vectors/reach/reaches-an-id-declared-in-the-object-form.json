@@ -1,0 +1,72 @@
+{
+  "id": "reach/reaches-an-id-declared-in-the-object-form",
+  "op": "reach",
+  "covers": "invariant-12",
+  "given": {
+    "hostProvided": [
+      "clock"
+    ],
+    "plugins": [
+      {
+        "id": "calendar",
+        "consumes": [],
+        "provides": [
+          "calendar:events"
+        ]
+      },
+      {
+        "id": "agenda",
+        "consumes": [
+          {
+            "id": "calendar:events",
+            "optional": true
+          }
+        ],
+        "provides": []
+      }
+    ],
+    "steps": [
+      {
+        "plugin": "calendar",
+        "register": "calendar:events"
+      },
+      {
+        "plugin": "agenda",
+        "get": "calendar:events"
+      },
+      {
+        "plugin": "agenda",
+        "get": "clock"
+      },
+      {
+        "plugin": "agenda",
+        "ids": true
+      }
+    ]
+  },
+  "then": {
+    "outcomes": {
+      "equals": [
+        "served",
+        "refused",
+        [
+          "calendar:events"
+        ]
+      ]
+    },
+    "reported": {
+      "equals": [
+        [
+          "agenda",
+          "clock"
+        ]
+      ]
+    },
+    "refusal": {
+      "mentions": [
+        "services.consumes",
+        "clock"
+      ]
+    }
+  }
+}
