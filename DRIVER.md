@@ -141,6 +141,36 @@ Answers `{ lookups: [boolean], wants: ["settled" | "pending" | "rejected"] }`: o
 step. Invariant 11: a consumer's view of the registry is bound to it, so releasing one consumer
 removes exactly what it registered and rejects exactly what it still waits for.
 
+### `reach`
+
+Given `{ hostProvided: [id], plugins: [{ id, consumes: [id], provides: [id] }], steps }`.
+**The driver drives a HOST, never a bare service hub**: it builds a manifest per plugin with
+`consumes` and `provides` under `services`, opens each plugin's context through the host in the
+order given, and registers each `hostProvided` id as a host service before the first step. The
+refusal lives in a fence the host builds from the manifest, so a driver that calls the hub directly
+answers a question about an engine that never refuses.
+Steps run in order, each one of `{ plugin, register: id }`, `{ plugin, get: id }`,
+`{ plugin, want: id }`, `{ plugin, watch: id }` and `{ plugin, ids: true }`, every call made through
+that plugin's own context. A vector registers only an id the plugin lists under `provides`.
+Answers `{ outcomes, reported: [[plugin, id]], refusal: { detail, fix } | { message } | null }`:
+
+- `outcomes` holds one entry per `get`, `want`, `watch` and `ids` step, in step order; `register`
+  answers nothing. A `get` is read at its step, a `want` and a `watch` after the last step.
+- A `get`, `want` or `watch` answers `served`, `absent` or `refused`. `served`: the `get` returned
+  the service, the `want` settled with it, the `watch` listener heard it registered. Otherwise a
+  `want` that was rejected is `refused` and one still waiting is `absent`; a `get` or `watch` is
+  `refused` when the host reported that plugin and id, and `absent` when it did not.
+- An `ids` step answers the ids that plugin's context lists at that step, **sorted**, so a vector
+  does not pin the order an engine keeps them in.
+- `reported` holds one `[plugin, id]` pair per refusal the host reported, in the order reported, so
+  a pair reported twice appears twice.
+- `refusal` is the first refusal of the run, a rejected `want` or a reported line, as its text.
+
+Invariant 12: a consumer reaches only the services it declared under `services.consumes` or offers
+under `services.provides`, host services included. The refusal is data and is reported once per
+plugin and id, so a polling plugin does not flood the sink, and a declared id that nothing provides
+is absence, not a refusal.
+
 ## What `then` can assert
 
 A vector asserts decisions and never wording, so two implementations in two languages need not

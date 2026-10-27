@@ -1,0 +1,48 @@
+{
+  "id": "reach/lets-a-plugin-reach-what-it-provides",
+  "op": "reach",
+  "covers": "invariant-12",
+  "given": {
+    "hostProvided": [],
+    "plugins": [
+      {
+        "id": "calendar",
+        "consumes": [],
+        "provides": [
+          "calendar:events"
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "plugin": "calendar",
+        "watch": "calendar:events"
+      },
+      {
+        "plugin": "calendar",
+        "register": "calendar:events"
+      },
+      {
+        "plugin": "calendar",
+        "get": "calendar:events"
+      },
+      {
+        "plugin": "calendar",
+        "want": "calendar:events"
+      }
+    ]
+  },
+  "then": {
+    "outcomes": {
+      "equals": [
+        "served",
+        "served",
+        "served"
+      ]
+    },
+    "reported": {
+      "equals": []
+    },
+    "refusal": null
+  }
+}

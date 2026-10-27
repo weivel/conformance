@@ -1,0 +1,56 @@
+{
+  "id": "reach/refuses-a-host-service-the-plugin-did-not-declare",
+  "op": "reach",
+  "covers": "invariant-12",
+  "given": {
+    "hostProvided": [
+      "clock"
+    ],
+    "plugins": [
+      {
+        "id": "notes",
+        "consumes": [],
+        "provides": []
+      },
+      {
+        "id": "agenda",
+        "consumes": [
+          "clock"
+        ],
+        "provides": []
+      }
+    ],
+    "steps": [
+      {
+        "plugin": "notes",
+        "get": "clock"
+      },
+      {
+        "plugin": "agenda",
+        "get": "clock"
+      }
+    ]
+  },
+  "then": {
+    "outcomes": {
+      "equals": [
+        "refused",
+        "served"
+      ]
+    },
+    "reported": {
+      "equals": [
+        [
+          "notes",
+          "clock"
+        ]
+      ]
+    },
+    "refusal": {
+      "mentions": [
+        "services.consumes",
+        "clock"
+      ]
+    }
+  }
+}
