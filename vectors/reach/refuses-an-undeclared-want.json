@@ -47,6 +47,14 @@
         "served"
       ]
     },
+    "reported": {
+      "equals": [
+        [
+          "notes",
+          "calendar:events"
+        ]
+      ]
+    },
     "refusal": {
       "mentions": [
         "services.consumes",

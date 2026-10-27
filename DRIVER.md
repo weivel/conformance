@@ -159,12 +159,19 @@ Answers `{ outcomes, reported: [[plugin, id]], refusal: { detail, fix } | { mess
 - A `get`, `want` or `watch` answers `served`, `absent` or `refused`. `served`: the `get` returned
   the service, the `want` settled with it, the `watch` listener heard it registered. Otherwise a
   `want` that was rejected is `refused` and one still waiting is `absent`; a `get` or `watch` is
-  `refused` when the host reported that plugin and id, and `absent` when it did not.
+  `refused` when the host reported that plugin and id, and `absent` when it did not. **A refused
+  `want` is reported too**, exactly as a refused `get` or `watch` is, so all three appear in
+  `reported`.
 - An `ids` step answers the ids that plugin's context lists at that step, **sorted**, so a vector
-  does not pin the order an engine keeps them in.
+  does not pin the order an engine keeps them in. The context lists an id only when it is
+  registered AND that plugin may reach it, so a declared id that nothing provides is not listed.
 - `reported` holds one `[plugin, id]` pair per refusal the host reported, in the order reported, so
-  a pair reported twice appears twice.
-- `refusal` is the first refusal of the run, a rejected `want` or a reported line, as its text.
+  a pair reported twice appears twice. **It is read from a structured refusal record the engine
+  keeps, each entry a plugin id and a service id, and never parsed or matched out of diagnostic
+  text**: a driver that infers pairs from wording would pass an engine that only prints.
+- `refusal` is the first refusal of the run as text, the rejection of a `want` or the diagnostic a
+  `get` or `watch` emitted. It exists only for the `mentions` check of the fix and decides nothing
+  about `outcomes` or `reported`.
 
 Invariant 12: a consumer reaches only the services it declared under `services.consumes` or offers
 under `services.provides`, host services included. The refusal is data and is reported once per
