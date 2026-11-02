@@ -1,0 +1,21 @@
+{
+  "id": "validate/refuses-a-windows-reserved-id",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "nul",
+      "api": 2
+    },
+    "wellKnownServices": []
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "id"
+      ]
+    }
+  }
+}

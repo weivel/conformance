@@ -1,0 +1,74 @@
+{
+  "id": "validate/accepts-settings-actions-and-a-view",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "demo",
+      "api": 2,
+      "services": {
+        "provides": [
+          "demo:screens"
+        ]
+      },
+      "settings": {
+        "theme": {
+          "type": "text",
+          "label": "Theme"
+        }
+      },
+      "actions": {
+        "refresh": {
+          "label": "Refresh",
+          "call": {
+            "service": "demo:screens",
+            "method": "refresh"
+          }
+        }
+      },
+      "views": {
+        "main": {
+          "title": "Main",
+          "nodes": [
+            {
+              "id": "root",
+              "component": "stack"
+            },
+            {
+              "id": "refresh",
+              "parent": "root",
+              "component": "button",
+              "label": "Refresh",
+              "action": "refresh",
+              "tone": "accent"
+            },
+            {
+              "id": "theme",
+              "parent": "root",
+              "component": "field",
+              "field": "theme"
+            },
+            {
+              "id": "info",
+              "parent": "root",
+              "component": "text",
+              "text": "Hello",
+              "bind": {
+                "service": "demo:screens",
+                "method": "read"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "wellKnownServices": []
+  },
+  "then": {
+    "valid": true,
+    "paths": {
+      "equals": []
+    }
+  }
+}

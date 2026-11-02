@@ -1,0 +1,36 @@
+{
+  "id": "validate/ignores-an-unknown-node-property",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "demo",
+      "api": 2,
+      "services": {
+        "provides": [
+          "demo:screens"
+        ]
+      },
+      "views": {
+        "main": {
+          "title": "Main",
+          "nodes": [
+            {
+              "id": "root",
+              "component": "stack",
+              "color": "#ff0000"
+            }
+          ]
+        }
+      }
+    },
+    "wellKnownServices": []
+  },
+  "then": {
+    "valid": true,
+    "paths": {
+      "equals": []
+    }
+  }
+}
