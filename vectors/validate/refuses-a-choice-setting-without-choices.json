@@ -1,0 +1,38 @@
+{
+  "id": "validate/refuses-a-choice-setting-without-choices",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "demo",
+      "api": 2,
+      "services": {
+        "provides": [
+          "demo:screens"
+        ]
+      },
+      "settings": {
+        "mode": {
+          "type": "choice",
+          "label": "x"
+        }
+      }
+    },
+    "wellKnownServices": []
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "settings.mode.choices"
+      ]
+    },
+    "refusal": {
+      "mentions": [
+        "fast"
+      ],
+      "hasFix": true
+    }
+  }
+}
