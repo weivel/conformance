@@ -1,0 +1,31 @@
+{
+  "id": "context/takes-an-application-write-on-a-host-without-the-layer",
+  "op": "context",
+  "covers": "invariant-13",
+  "given": {
+    "host": {
+      "portable": null,
+      "secrets": false
+    },
+    "write": {
+      "key": "theme",
+      "value": "dark",
+      "layer": "application"
+    }
+  },
+  "then": {
+    "portable": {
+      "absent": true
+    },
+    "secrets": {
+      "equals": false
+    },
+    "written": {
+      "equals": {
+        "key": "theme",
+        "layer": "application"
+      }
+    },
+    "refusal": null
+  }
+}
