@@ -1,0 +1,38 @@
+{
+  "id": "validate/refuses-a-raw-colour-where-a-tone-goes",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "id": "demo",
+      "api": 2,
+      "services": {
+        "provides": [
+          "demo:screens"
+        ]
+      },
+      "views": {
+        "main": {
+          "title": "Main",
+          "nodes": [
+            {
+              "id": "root",
+              "component": "stack",
+              "tone": "#ff0000"
+            }
+          ]
+        }
+      }
+    },
+    "wellKnownServices": []
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "views.main.nodes[0].tone"
+      ]
+    }
+  }
+}
