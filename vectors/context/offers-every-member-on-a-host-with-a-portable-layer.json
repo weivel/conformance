@@ -1,0 +1,31 @@
+{
+  "id": "context/offers-every-member-on-a-host-with-a-portable-layer",
+  "op": "context",
+  "covers": "invariant-13",
+  "given": {
+    "host": {
+      "portable": "/home/user/.spisor/plugins/config-ledger",
+      "secrets": true
+    },
+    "write": {
+      "key": "theme",
+      "value": "dark",
+      "layer": "portable"
+    }
+  },
+  "then": {
+    "portable": {
+      "equals": "/home/user/.spisor/plugins/config-ledger"
+    },
+    "secrets": {
+      "equals": true
+    },
+    "written": {
+      "equals": {
+        "key": "theme",
+        "layer": "portable"
+      }
+    },
+    "refusal": null
+  }
+}

@@ -182,6 +182,28 @@ is absence, not a refusal. The declaration check comes before the late (no longe
 `get`, `want` and `watch`, so an undeclared call from a plugin that is gone is refused and reported
 as undeclared, and only a declared one takes the late path; `ids` ignores lateness.
 
+### `context`
+
+Given `{ host: { portable: path | null, secrets: boolean }, write: { key, value, layer? } }`.
+**The driver builds one plugin's context through the engine's own context builder**, the one a host
+calls, from a runtime it supplies: `paths` carries `portable` only when `host.portable` is a path,
+and the runtime carries a secret store only when `host.secrets` is true. The runtime's settings
+record every write that reaches them. The driver then calls `ctx.config.set(key, value, { layer })`,
+or `set(key, value)` when the vector names no `layer`, and waits for it to settle.
+Answers `{ portable, secrets, written, refusal: { detail, fix } | { message } | null }`:
+
+- `portable` is the context's `paths.portable`, null when the member is absent.
+- `secrets` is true when the context carries a `secrets` member at all, false when it is absent.
+- `written` is `{ key, layer }` for the write that reached the runtime's settings, `layer` being the
+  layer the runtime was handed, null when it was handed none; null when nothing reached them.
+- `refusal` is the write's rejection, null when it settled.
+
+Invariant 13: `paths.portable` is present only on a host with a portable settings layer, and its
+presence IS that layer, so a host without it refuses a portable write as data, naming the missing
+layer, and hands nothing to its settings; `secrets` is present only on a host with a secret store,
+independently of the portable layer. A driver answers what the CONTEXT carries, never what it put
+into the runtime, because an engine that drops or invents a member is the defect being asked about.
+
 ## What `then` can assert
 
 A vector asserts decisions and never wording, so two implementations in two languages need not
