@@ -211,8 +211,9 @@ Given `{ schema, definition, value }`, where `schema` is the `$id` of a publishe
 method answers), `definition` names one of its definitions, and `value` is the candidate answer.
 **A driver validates against the published schema and never against a restatement of it**, and
 answers `{ valid, paths: [path] }`.
-`paths` names every wrong member, each once, rooted at the value (`items[0].id`, `tone`,
-`installed`). A required member that is missing is named by the member itself. Where a definition is
+`paths` is `[]` for a valid answer, and otherwise names every wrong member, each once, rooted at the
+value (`items[0].id`, `tone`, `installed`). A required member that is missing is named by the member
+itself. The schemas are the ones `weivel/model` publishes, named by their `$id`. Where a definition is
 an `anyOf`, the reported path is implementation-shaped, so such a vector pins `valid` alone.
 
 ## What `then` can assert
