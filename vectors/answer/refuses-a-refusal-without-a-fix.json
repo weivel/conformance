@@ -1,0 +1,16 @@
+{
+  "id": "answer/refuses-a-refusal-without-a-fix",
+  "op": "answer",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/install-method.schema.json",
+    "definition": "operationAnswer",
+    "value": {
+      "ok": false,
+      "detail": "x"
+    }
+  },
+  "then": {
+    "valid": false
+  }
+}

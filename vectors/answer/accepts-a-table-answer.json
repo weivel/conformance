@@ -1,0 +1,23 @@
+{
+  "id": "answer/accepts-a-table-answer",
+  "op": "answer",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/ui-data.schema.json",
+    "definition": "table",
+    "value": {
+      "items": [
+        {
+          "id": "a",
+          "label": "A"
+        }
+      ]
+    }
+  },
+  "then": {
+    "valid": true,
+    "paths": {
+      "equals": []
+    }
+  }
+}

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Ajv, type ErrorObject } from "ajv";
 
-export const OPS = ["supports", "boot", "order", "resolve", "revoke", "validate", "carry", "want", "scope", "reach", "context"] as const;
+export const OPS = ["supports", "boot", "order", "resolve", "revoke", "validate", "carry", "want", "scope", "reach", "context", "answer"] as const;
 
 export type Op = (typeof OPS)[number];
 

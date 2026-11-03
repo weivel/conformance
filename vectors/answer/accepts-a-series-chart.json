@@ -1,0 +1,24 @@
+{
+  "id": "answer/accepts-a-series-chart",
+  "op": "answer",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/ui-data.schema.json",
+    "definition": "chart",
+    "value": {
+      "series": [
+        {
+          "label": "s",
+          "points": [
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    }
+  },
+  "then": {
+    "valid": true
+  }
+}
