@@ -204,6 +204,17 @@ layer, and hands nothing to its settings; `secrets` is present only on a host wi
 independently of the portable layer. A driver answers what the CONTEXT carries, never what it put
 into the runtime, because an engine that drops or invents a member is the defect being asked about.
 
+### `answer`
+
+Given `{ schema, definition, value }`, where `schema` is the `$id` of a published schema
+(`ui-data.schema.json` for what a binding answers, `install-method.schema.json` for what an install
+method answers), `definition` names one of its definitions, and `value` is the candidate answer.
+**A driver validates against the published schema and never against a restatement of it**, and
+answers `{ valid, paths: [path] }`.
+`paths` names every wrong member, each once, rooted at the value (`items[0].id`, `tone`,
+`installed`). A required member that is missing is named by the member itself. Where a definition is
+an `anyOf`, the reported path is implementation-shaped, so such a vector pins `valid` alone.
+
 ## What `then` can assert
 
 A vector asserts decisions and never wording, so two implementations in two languages need not

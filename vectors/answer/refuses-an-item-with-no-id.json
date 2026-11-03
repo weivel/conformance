@@ -1,0 +1,24 @@
+{
+  "id": "answer/refuses-an-item-with-no-id",
+  "op": "answer",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/ui-data.schema.json",
+    "definition": "table",
+    "value": {
+      "items": [
+        {
+          "label": "A"
+        }
+      ]
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "items[0].id"
+      ]
+    }
+  }
+}
