@@ -5,7 +5,7 @@
   "given": {
     "schema": "https://weivel.github.io/model/plugin.schema.json",
     "manifest": {
-      "id": "nul",
+      "importName": "nul",
       "api": 2
     },
     "wellKnownServices": []
@@ -14,7 +14,7 @@
     "valid": false,
     "paths": {
       "equals": [
-        "id"
+        "importName"
       ]
     }
   }

@@ -1,0 +1,19 @@
+{
+  "id": "unbound/lists-a-namespaced-service-with-no-provider",
+  "op": "unbound",
+  "covers": "12.6",
+  "given": {
+    "manifest": {
+      "importName": "agenda",
+      "api": 1,
+      "services": {
+        "consumes": ["calendar:events"]
+      }
+    }
+  },
+  "then": {
+    "services": {
+      "equals": ["calendar:events"]
+    }
+  }
+}

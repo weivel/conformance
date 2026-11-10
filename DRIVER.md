@@ -99,6 +99,7 @@ how it is phrased.
 ### `validate`
 
 Given `{ schema, manifest, wellKnownServices? }`, where `schema` is the published vocabulary's URL.
+The manifest names itself with `importName`; a repository's identity is supplied from outside it.
 **A driver validates against the published schema and never against a restatement of it**, then
 applies `weivel/model`'s `VALIDATION.md` rules. `wellKnownServices` is the host's list for rule V2;
 absent means V2 is not applied, and an empty list refuses every bare id.
@@ -110,6 +111,21 @@ error for `uniqueItems` names the array maps it to that index.
 An unknown field **validates** and is ignored: no object in the schema closes
 `additionalProperties`, deliberately, so a manifest written against a later version still loads
 today. A vector rejecting it would invert that decision.
+
+### `identity`
+
+Given `{ value }`, a string offered as a repository identity. Answers `{ valid }`, true when the whole
+string matches `^(local:[^/\s]+|[a-z][a-z0-9-]*(@[a-z0-9.-]+)?:[0-9]+)(/[a-z0-9._-]+)*$`: `local:`
+followed by a name, or a forge (with an optional `@host`) and a numeric repository id, then any number
+of path segments. A bare name, a non-numeric or empty id and an uppercase forge are all invalid.
+
+### `unbound`
+
+Given `{ manifest }`, a manifest whose `services.consumes` holds ids in the string form or the object
+form `{ id, optional?, provider? }`. Answers `{ services: [id] }`, the consumed ids the engine cannot
+tie to a provider and so must report: a namespaced id (`calendar:events`) with no `provider`. An id
+bound by a `provider` is omitted, and so is a bare id, because a bare id names a host or shared
+service and has no plugin to bind to. The list keeps the manifest's order.
 
 ### `carry`
 
@@ -143,7 +159,11 @@ removes exactly what it registered and rejects exactly what it still waits for.
 
 ### `reach`
 
-Given `{ hostProvided: [id], plugins: [{ id, consumes: [id | { id, optional }], provides: [id] }], steps }`.
+Given `{ hostProvided: [id], plugins: [{ id, importName?, consumes: [id | { id, optional, provider? }], provides: [id] }], steps }`.
+`importName` defaults to `id`: it is the name a plugin's own services are namespaced by, so a plugin
+with id `github:2` and `importName` `calendar` registers `calendar:events`. A step names its plugin by
+`id`. A `consumes` object with a `provider` is served only by the plugin with that id; without one it
+is served by whichever plugin registered the service.
 **The driver drives a HOST, never a bare service hub**: it builds a manifest per plugin with
 `consumes` and `provides` under `services`, opens each plugin's context through the host in the
 order given, and registers each `hostProvided` id as a host service before the first step. The

@@ -1,0 +1,19 @@
+{
+  "id": "unbound/omits-a-bare-shared-service",
+  "op": "unbound",
+  "covers": "12.6",
+  "given": {
+    "manifest": {
+      "importName": "agenda",
+      "api": 1,
+      "services": {
+        "consumes": ["accounts"]
+      }
+    }
+  },
+  "then": {
+    "services": {
+      "equals": []
+    }
+  }
+}

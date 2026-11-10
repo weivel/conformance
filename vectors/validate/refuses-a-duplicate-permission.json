@@ -5,7 +5,7 @@
   "given": {
     "schema": "https://weivel.github.io/model/plugin.schema.json",
     "manifest": {
-      "id": "config-ledger",
+      "importName": "config-ledger",
       "api": 2,
       "permissions": [
         "net",
