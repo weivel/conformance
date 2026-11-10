@@ -1,5 +1,5 @@
 {
-  "id": "reach/delivers-a-late-registration-from-the-named-provider",
+  "id": "reach/does-not-deliver-a-late-registration-from-the-wrong-provider-to-a-watch",
   "op": "reach",
   "covers": "invariant-12",
   "given": {
@@ -18,17 +18,13 @@
         "consumes": [
           {
             "id": "calendar:events",
-            "provider": "github:2"
+            "provider": "github:1"
           }
         ],
         "provides": []
       }
     ],
     "steps": [
-      {
-        "plugin": "agenda",
-        "want": "calendar:events"
-      },
       {
         "plugin": "agenda",
         "watch": "calendar:events"
@@ -42,8 +38,7 @@
   "then": {
     "outcomes": {
       "equals": [
-        "served",
-        "served"
+        "absent"
       ]
     }
   }
