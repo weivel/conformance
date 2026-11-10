@@ -115,9 +115,10 @@ today. A vector rejecting it would invert that decision.
 ### `identity`
 
 Given `{ value }`, a string offered as a repository identity. Answers `{ valid }`, true when the whole
-string matches `^(local:[^/\s]+|[a-z][a-z0-9-]*(@[a-z0-9.-]+)?:[0-9]+)(/[a-z0-9._-]+)*$`: `local:`
+string matches `^(local:[^/\s]+|[a-z][a-z0-9-]*(@[a-z0-9.-]+)?:[0-9]+)(/(?!\.{1,2}(/|(?![\s\S])))[a-z0-9._-]+)*(?![\s\S])`: `local:`
 followed by a name, or a forge (with an optional `@host`) and a numeric repository id, then any number
-of path segments. A bare name, a non-numeric or empty id and an uppercase forge are all invalid.
+of path segments. A bare name, a non-numeric or empty id, an uppercase forge and a `.` or `..` segment
+are all invalid; a segment that only starts with or contains dots, such as `.hidden` or `a..b`, is valid.
 
 ### `unbound`
 

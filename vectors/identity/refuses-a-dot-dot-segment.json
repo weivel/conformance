@@ -1,0 +1,11 @@
+{
+  "id": "identity/refuses-a-dot-dot-segment",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "github:1/.."
+  },
+  "then": {
+    "valid": false
+  }
+}
