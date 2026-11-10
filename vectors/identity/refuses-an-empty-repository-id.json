@@ -1,0 +1,11 @@
+{
+  "id": "identity/refuses-an-empty-repository-id",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "github:"
+  },
+  "then": {
+    "valid": false
+  }
+}

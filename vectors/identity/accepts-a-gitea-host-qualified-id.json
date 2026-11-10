@@ -1,0 +1,11 @@
+{
+  "id": "identity/accepts-a-gitea-host-qualified-id",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "gitea@git.example.com:123"
+  },
+  "then": {
+    "valid": true
+  }
+}

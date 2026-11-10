@@ -1,0 +1,11 @@
+{
+  "id": "identity/refuses-an-uppercase-forge",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "GitHub:1"
+  },
+  "then": {
+    "valid": false
+  }
+}

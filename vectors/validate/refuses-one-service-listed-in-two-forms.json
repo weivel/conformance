@@ -5,7 +5,7 @@
   "given": {
     "schema": "https://weivel.github.io/model/plugin.schema.json",
     "manifest": {
-      "id": "a",
+      "importName": "a",
       "api": 2,
       "services": {
         "provides": [
