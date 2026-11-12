@@ -132,10 +132,14 @@ static int set_single(char **slot, const char *value) {
 }
 
 static int parse_rule_line(char *line, rule_set *rules, const char *path) {
-    char *tokens[MAXIMUM_TOKENS];
+    char *tokens[MAXIMUM_TOKENS] = {NULL};
     size_t count = split_tokens(line, tokens);
     size_t kind;
     size_t form = FORM_SYMBOL;
+    if (count == 0) {
+        fprintf(stderr, "%s: a rule line holds no word\n", path);
+        return 0;
+    }
     if (count == 2 && strcmp(tokens[0], MUTEX_MARKER_KIND) == 0) {
         return set_single(&rules->mutex_marker, tokens[1]);
     }
