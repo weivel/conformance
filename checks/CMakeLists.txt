@@ -129,9 +129,11 @@ set(core_gate_scenarios
     says_where_lock_calls_cannot_be_attributed:lock_elsewhere
     clears_a_startup_clock_only_through_the_objects:nothing
     refuses_a_tool_that_reads_nothing:nothing
-    refuses_a_tool_it_cannot_run:nothing)
+    refuses_a_tool_it_cannot_run:nothing
+    reads_a_library_whose_path_holds_a_space_and_a_quote:nothing)
 set(core_gate_scenarios_on_windows_only clears_a_startup_clock_only_through_the_objects)
-set(core_gate_scenarios_alike_everywhere refuses_a_tool_that_reads_nothing refuses_a_tool_it_cannot_run)
+set(core_gate_scenarios_alike_everywhere
+    refuses_a_tool_that_reads_nothing refuses_a_tool_it_cannot_run reads_a_library_whose_path_holds_a_space_and_a_quote)
 
 set(core_gate_plants "")
 foreach(entry IN LISTS core_gate_scenarios)
@@ -164,6 +166,7 @@ foreach(entry IN LISTS core_gate_scenarios)
                 -DGATE=$<TARGET_FILE:weivel-core-gate> -DRULES=${core_gate_rules} -DFORMAT=${core_gate_format}
                 -DTOOL=${core_gate_tool} -DSILENT=$<TARGET_FILE:core_gate_silent_tool>
                 -DSHARED=$<TARGET_FILE:core_gate_${plant}_shared> -DOBJECTS=$<TARGET_FILE:core_gate_${plant}_static>
+                -DWORK=${PROJECT_BINARY_DIR}/checks-work
                 -P ${PROJECT_SOURCE_DIR}/test/core_gate_test.cmake)
         set_tests_properties(${name} PROPERTIES SKIP_RETURN_CODE 77)
     endforeach()

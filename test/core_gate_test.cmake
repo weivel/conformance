@@ -1,6 +1,6 @@
 # -DSCENARIO=<name> -DPLATFORM=<linux|macos|windows> -DCURRENT=<the platform this runs on> -DGATE=<exe> -DRULES=<file>
 # -DFORMAT=<msvc|gnu|apple> -DTOOL=<dumpbin or nm> -DSILENT=<a tool that prints nothing> -DSHARED=<fixture library>
-# -DOBJECTS=<the same fixture as a static library>
+# -DOBJECTS=<the same fixture as a static library> -DWORK=<a directory for copies>
 #
 # A scenario written for another platform exits 77, which ctest reports as a skip rather than a pass. Exiting with a
 # chosen code needs CMake 3.29; an older CMake fails the scenario instead, so it can never pass unseen.
@@ -78,6 +78,14 @@ elseif(SCENARIO STREQUAL "refuses_a_tool_that_reads_nothing")
         ${GATE} ${RULES} ${FORMAT} ${SILENT} ${SHARED} ${OBJECTS})
 elseif(SCENARIO STREQUAL "refuses_a_tool_it_cannot_run")
     expect(2 "cannot run|exited 127" "reads nothing of the world" ${GATE} ${RULES} ${FORMAT} ${SILENT}.absent ${SHARED})
+elseif(SCENARIO STREQUAL "reads_a_library_whose_path_holds_a_space_and_a_quote")
+    set(copies "${WORK}/core gate's copy")
+    file(REMOVE_RECURSE "${copies}")
+    file(COPY "${SHARED}" "${OBJECTS}" DESTINATION "${copies}")
+    get_filename_component(shared_name "${SHARED}" NAME)
+    get_filename_component(objects_name "${OBJECTS}" NAME)
+    expect(0 "the core reads nothing of the world" ""
+        ${GATE} ${RULES} ${FORMAT} ${TOOL} "${copies}/${shared_name}" "${copies}/${objects_name}")
 else()
     message(FATAL_ERROR "unknown scenario ${SCENARIO}")
 endif()
