@@ -227,7 +227,8 @@ Steps run in order, each one of `{ plugin, provide: id }`, `{ plugin, verify: tr
   refused activation the real way: the plugin lists a capability under `provides` that no step
   provides, and a `verify` step follows. The driver has no flag that forces a refusal.
 - `quarantine` marks the plugin broken, as a host does for a plugin that fails at run time.
-  `release` stops the plugin and releases what it holds.
+  `release` stops the plugin and releases what it holds, the watches it installed included, so a
+  released consumer hears nothing afterwards.
 - `all` reads the implementations of that capability through the plugin's context at that step.
 - `watch` installs a listener through the plugin's context at that step, recording each
   `[providerId, event]` it is handed, `event` being `"provide"` or `"withdraw"`. With `throws: true`
