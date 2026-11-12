@@ -39,6 +39,7 @@ allow-from-compiler fortified-c-library __memmove_chk
 allow-from-compiler fortified-c-library __memset_chk
 allow-from-compiler fortified-c-library __snprintf_chk
 allow-from-compiler fortified-c-library __vsnprintf_chk
+allow-from-compiler apple-clang-zeroing-memset bzero
 allow-from-startup glibc-shared-library __cxa_finalize
 allow-from-startup glibc-shared-library _ITM_deregisterTMCloneTable
 allow-from-startup glibc-shared-library _ITM_registerTMCloneTable
