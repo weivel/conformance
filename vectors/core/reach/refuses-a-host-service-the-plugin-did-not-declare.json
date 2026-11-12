@@ -46,11 +46,6 @@
         ]
       ]
     },
-    "refusal": {
-      "mentions": [
-        "services.consumes",
-        "clock"
-      ]
-    }
+    "refusal": { "code": "undeclared" }
   }
 }

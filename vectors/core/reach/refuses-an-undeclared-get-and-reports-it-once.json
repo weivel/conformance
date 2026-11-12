@@ -60,11 +60,6 @@
         ]
       ]
     },
-    "refusal": {
-      "mentions": [
-        "services.consumes",
-        "calendar:events"
-      ]
-    }
+    "refusal": { "code": "undeclared" }
   }
 }

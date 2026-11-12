@@ -26,12 +26,6 @@
   "then": {
     "served": false,
     "degraded": false,
-    "refusal": {
-      "mentions": [
-        "minReplicas",
-        "maxReplicas",
-        "2000"
-      ]
-    }
+    "refusal": { "code": "unmet_constraint" }
   }
 }

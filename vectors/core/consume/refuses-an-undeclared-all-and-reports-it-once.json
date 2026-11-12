@@ -71,11 +71,6 @@
         ]
       ]
     },
-    "refusal": {
-      "mentions": [
-        "capabilities.consumes",
-        "screens"
-      ]
-    }
+    "refusal": { "code": "undeclared" }
   }
 }

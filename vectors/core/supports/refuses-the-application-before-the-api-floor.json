@@ -18,13 +18,7 @@
     }
   },
   "then": {
-    "refusal": {
-      "mentions": [
-        "studio",
-        "editor"
-      ],
-      "hasFix": true
-    },
+    "refusal": { "code": "incompatible" },
     "supported": false
   }
 }

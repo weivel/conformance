@@ -26,12 +26,6 @@
   "then": {
     "served": false,
     "degraded": true,
-    "report": {
-      "mentions": [
-        "minReplicas",
-        "maxReplicas"
-      ]
-    },
     "refusal": null
   }
 }

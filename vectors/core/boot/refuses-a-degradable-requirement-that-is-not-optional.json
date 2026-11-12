@@ -20,12 +20,7 @@
     ]
   },
   "then": {
-    "refusal": {
-      "mentions": [
-        "api.http",
-        "storage.object"
-      ]
-    },
+    "refusal": { "code": "unmet_need" },
     "started": {
       "equals": []
     }
