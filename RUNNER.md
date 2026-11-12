@@ -284,13 +284,15 @@ A key absent from `then` asserts nothing, and a `then` with no key at all, or `p
 
 ## The drift checks
 
-Three programs in `checks/`, each taking a repository root. They exit 0 when clean, 1 with every offender listed, and
-2 when they were given nothing to check (no files, no words, no modules) or are misused.
+Four programs in `checks/`. Three take a repository root and the fourth a built core. They exit 0 when clean, 1 with
+every offender listed, and 2 when they were given nothing to check (no files, no words, no modules, no symbols) or are
+misused.
 
 ```
 weivel-purity <root> <role> <languages-file>
 weivel-names <root> <words-file>
 weivel-parity <root> <modules-file> <language> [languages-file]
+weivel-core-gate <rules-file> <msvc|gnu|apple> <tool> <shared-library> [<static-library>...]
 ```
 
 - Purity: the roles `c`, `core`, `kit` and `standard` allow C, headers, CMake, JSON and prose, and refuse a build file of any language in `checks/languages.txt`
@@ -305,3 +307,13 @@ weivel-parity <root> <modules-file> <language> [languages-file]
   ones a repository may omit. A language repository carries one top-level directory per module, named exactly as
   listed, under its `source-root` (`src` when none is given). A missing required module and a directory not on the list
   are both offenders, and so is a module directory that holds no file.
+- Core gate: reads the built core with the platform's own tool (`dumpbin` beside the MSVC compiler, `nm` elsewhere):
+  the shared library's imports and exports, and, when given, each object of the static library built from the same
+  sources. `checks/core_gate.txt` holds the rules, one `<kind> <reason> <symbol>` per line: `forbid` names what reads
+  the world (file access, environment, clock, process, code loading, network), `forbid-name` a name no symbol may
+  carry (`json`), and the `allow-*` kinds what the core may import: the C library everywhere, lock calls only in the
+  object defining the symbol on the `mutex-object-defines` line, what the compiler emits, and what the toolchain's
+  startup code draws into a shared library. Anything else is an offender. An import table cannot say which object
+  calls a lock, so lock calls are attributed through the objects, and without them the gate says they were not.
+  The MSVC startup code imports a clock and the environment (`QueryPerformanceCounter`, `_configure_narrow_argv` and
+  others), so such an import passes only when the objects are given and none of them references it.
