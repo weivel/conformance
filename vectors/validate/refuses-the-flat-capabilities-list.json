@@ -1,0 +1,31 @@
+{
+  "id": "validate/refuses-the-flat-capabilities-list",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "https://weivel.github.io/model/plugin.schema.json",
+    "manifest": {
+      "importName": "config-ledger",
+      "api": 2,
+      "entry": "dist/index.js",
+      "capabilities": [
+        "provider"
+      ]
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "capabilities"
+      ]
+    },
+    "refusal": {
+      "mentions": [
+        "capabilities",
+        "provides"
+      ],
+      "hasFix": true
+    }
+  }
+}

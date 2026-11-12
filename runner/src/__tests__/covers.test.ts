@@ -10,12 +10,12 @@ function vectorCovering(covers: string): unknown {
 }
 
 it("admits every invariant weivel/model states", () => {
-  for (let invariant = 1; invariant <= 13; invariant += 1) {
+  for (let invariant = 1; invariant <= 14; invariant += 1) {
     expect(validate(vectorCovering(`invariant-${invariant}`)), `invariant-${invariant}`).toBe(true);
   }
 });
 
 it("refuses an invariant weivel/model does not state", () => {
-  expect(validate(vectorCovering("invariant-14"))).toBe(false);
+  expect(validate(vectorCovering("invariant-15"))).toBe(false);
   expect(validate(vectorCovering("invariant-0"))).toBe(false);
 });

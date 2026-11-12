@@ -7,9 +7,11 @@
     "manifest": {
       "importName": "config-ledger",
       "api": 2,
-      "capabilities": [
-        "provider"
-      ]
+      "capabilities": {
+        "provides": [
+          "provider"
+        ]
+      }
     }
   },
   "then": {
