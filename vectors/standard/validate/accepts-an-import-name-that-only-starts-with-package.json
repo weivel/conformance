@@ -1,0 +1,16 @@
+{
+  "id": "validate/accepts-an-import-name-that-only-starts-with-package",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "package-lock",
+      "api": 2
+    },
+    "wellKnownServices": []
+  },
+  "then": {
+    "valid": true
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "validate/refuses-an-object-entry-in-consumed-capabilities",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "config-ledger",
+      "api": 2,
+      "entry": "dist/index.js",
+      "capabilities": {
+        "consumes": [
+          {
+            "id": "provider"
+          }
+        ]
+      }
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "capabilities.consumes[0]"
+      ]
+    }
+  }
+}

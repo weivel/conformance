@@ -1,0 +1,11 @@
+{
+  "id": "identity/accepts-a-path-under-a-repository-id",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "forge:1361969293/kernel"
+  },
+  "then": {
+    "valid": true
+  }
+}

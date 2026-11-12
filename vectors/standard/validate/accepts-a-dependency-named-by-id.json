@@ -1,0 +1,18 @@
+{
+  "id": "validate/accepts-a-dependency-named-by-id",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "a",
+      "api": 2,
+      "dependencies": [
+        { "importName": "runtime", "id": "forge:12/runtime" }
+      ]
+    }
+  },
+  "then": {
+    "valid": true
+  }
+}

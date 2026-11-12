@@ -1,0 +1,28 @@
+{
+  "id": "validate/ignores-an-unknown-field",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "config-ledger",
+      "api": 1,
+      "entry": "dist/index.js",
+      "capabilities": {
+        "provides": [
+          "provider"
+        ]
+      },
+      "reticulation": {
+        "splines": 3
+      }
+    }
+  },
+  "then": {
+    "valid": true,
+    "paths": {
+      "equals": []
+    },
+    "refusal": null
+  }
+}

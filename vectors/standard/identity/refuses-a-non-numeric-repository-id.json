@@ -1,0 +1,11 @@
+{
+  "id": "identity/refuses-a-non-numeric-repository-id",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "forge:abc"
+  },
+  "then": {
+    "valid": false
+  }
+}

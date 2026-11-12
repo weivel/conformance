@@ -1,0 +1,26 @@
+{
+  "id": "validate/reports-a-missing-entry-beside-another-error",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "config-ledger",
+      "api": "one",
+      "capabilities": {
+        "provides": [
+          "provider"
+        ]
+      }
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "contains": [
+        "api",
+        "entry"
+      ]
+    }
+  }
+}

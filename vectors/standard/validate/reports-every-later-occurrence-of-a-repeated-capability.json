@@ -1,0 +1,29 @@
+{
+  "id": "validate/reports-every-later-occurrence-of-a-repeated-capability",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "config-ledger",
+      "api": 2,
+      "entry": "dist/index.js",
+      "capabilities": {
+        "provides": [
+          "provider",
+          "provider",
+          "provider"
+        ]
+      }
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "capabilities.provides[1]",
+        "capabilities.provides[2]"
+      ]
+    }
+  }
+}
