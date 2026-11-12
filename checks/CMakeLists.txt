@@ -55,6 +55,9 @@ add_test(NAME kit_is_pure
     COMMAND weivel-purity ${PROJECT_SOURCE_DIR} kit ${CMAKE_CURRENT_SOURCE_DIR}/languages.txt)
 add_test(NAME kit_names_no_foreign_word
     COMMAND weivel-names ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/names.txt)
+add_test(NAME names_list_holds_the_nine_words
+    COMMAND ${CMAKE_COMMAND} -DWORDS=${CMAKE_CURRENT_SOURCE_DIR}/names.txt
+        -P ${PROJECT_SOURCE_DIR}/test/names_list_test.cmake)
 add_test(NAME core_is_pure
     COMMAND weivel-purity ${PROJECT_SOURCE_DIR}/siblings/core core ${CMAKE_CURRENT_SOURCE_DIR}/languages.txt)
 
