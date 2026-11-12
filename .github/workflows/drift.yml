@@ -1,0 +1,16 @@
+name: Drift
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    uses: intisy/workflows/.github/workflows/drift.yml@main
+    with:
+      kit_repository: ${{ github.repository }}
+      kit_ref: ${{ github.sha }}
+      role: kit
+      checks: purity names
+      runners: '["ubuntu-latest","windows-latest","macos-latest"]'
