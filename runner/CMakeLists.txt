@@ -1,0 +1,3 @@
+add_library(conformance_json STATIC src/json.c)
+target_include_directories(conformance_json PUBLIC src)
+conformance_strict_warnings(conformance_json)
