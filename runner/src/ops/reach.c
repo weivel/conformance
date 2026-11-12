@@ -1,6 +1,7 @@
 #include "adapters.h"
 #include "cast.h"
 #include "facts.h"
+#include "want_states.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -312,7 +313,7 @@ static const char *settle_want(reach_run *run, reach_outcome *outcome) {
     const heard_event *settlement = hearing_settlement(&run->log, outcome->handle);
     if (settlement != NULL) {
         outcome->served = settlement->implementation;
-        return outcome->served != 0 ? "served" : "refused";
+        return want_state_in_reach(settlement);
     }
     return session_still_kept(&run->session, outcome->handle) ? "absent" : NULL;
 }

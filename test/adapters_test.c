@@ -1,6 +1,7 @@
 #include "check.h"
 #include "ops/adapters.h"
 #include "ops/session.h"
+#include "ops/want_states.h"
 
 /** The adapter's answer to `given_text`, parsed; NULL when it answered nothing or an incomplete document. */
 static json_value *answer_of(op_adapter adapter, const char *given_text) {
@@ -199,6 +200,32 @@ static void answers_nothing_for_a_step_naming_no_plugin(void) {
                                          "\"steps\":[{\"plugin\":\"stranger\",\"get\":\"clock\"}]}"));
 }
 
+static heard_event rejection_carrying(uint32_t code) {
+    heard_event settlement;
+    memset(&settlement, 0, sizeof settlement);
+    settlement.kind = WEIVEL_EVENT_WANT_SETTLED;
+    settlement.code = code;
+    return settlement;
+}
+
+static void reads_a_rejection_only_for_the_codes_the_contract_means(void) {
+    heard_event stopped = rejection_carrying(WEIVEL_REFUSAL_STOPPED);
+    heard_event undeclared = rejection_carrying(WEIVEL_REFUSAL_UNDECLARED);
+    heard_event wrong_provider = rejection_carrying(WEIVEL_REFUSAL_WRONG_PROVIDER);
+    heard_event timed_out = rejection_carrying(WEIVEL_REFUSAL_TIMED_OUT);
+    heard_event served = rejection_carrying(WEIVEL_REFUSAL_NONE);
+    served.implementation = 7;
+    check_text(want_state_in_scope(&stopped), "rejected", "scope want released");
+    CHECK(want_state_in_scope(&undeclared) == NULL);
+    CHECK(want_state_in_scope(&timed_out) == NULL);
+    check_text(want_state_in_scope(&served), "settled", "scope want served");
+    check_text(want_state_in_reach(&undeclared), "refused", "reach want undeclared");
+    check_text(want_state_in_reach(&wrong_provider), "refused", "reach want from the wrong provider");
+    CHECK(want_state_in_reach(&stopped) == NULL);
+    CHECK(want_state_in_reach(&timed_out) == NULL);
+    check_text(want_state_in_reach(&served), "served", "reach want served");
+}
+
 int main(void) {
     names_every_refusal_code_as_the_header_spells_it();
     answers_the_api_axis_when_only_the_floor_refuses();
@@ -215,5 +242,6 @@ int main(void) {
     hands_back_the_payload_it_was_given();
     answers_a_want_nothing_settles_as_pending();
     answers_nothing_for_a_step_naming_no_plugin();
+    reads_a_rejection_only_for_the_codes_the_contract_means();
     return check_summary("adapters_test");
 }
