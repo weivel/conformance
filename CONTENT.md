@@ -44,3 +44,15 @@ build/bin/weivel-conformance run vectors
 
 **Only `passed` is a pass.** Every other status is reported in its own column and the run exits non-zero: a suite
 that counts a vector it did not run as a pass reports a green it has not earned.
+
+## The core control call benchmark
+
+`weivel-benchmark-control-call measure` prints the median, p99 and spread of one `weivel_get_service` on a warm core;
+`gate <budget-file>` exits 1 when the median is over `benchmarks/budget.txt`, and 2 when the budget is missing or
+malformed or nothing was measured. It warms with 200000 calls, then times 2000 batches of 1000 calls. A timing verdict
+from an unoptimised build means nothing, so the committed-budget test runs in a Release build only and skips elsewhere.
+
+The committed budget, `median_nanoseconds 500`, is one development machine's figure, until the CI runners'
+measurement replaces it: five Release runs gave medians of 184.6 to 196.4 ns (spread 12 to 22 ns, p99 313 to 389 ns),
+and the budget is about 2.5 times the highest, wide enough for machine noise and narrow enough that an added system
+call, allocation or sleep in the call path trips it.

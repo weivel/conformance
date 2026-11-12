@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,17 +35,22 @@ typedef struct summary {
     double maximum;
 } summary;
 
-static double now_nanoseconds(void) {
+static int now_nanoseconds(double *nanoseconds) {
 #if defined(_WIN32)
     LARGE_INTEGER frequency;
     LARGE_INTEGER counter;
-    QueryPerformanceFrequency(&frequency);
-    QueryPerformanceCounter(&counter);
-    return (double)counter.QuadPart * 1e9 / (double)frequency.QuadPart;
+    if (!QueryPerformanceFrequency(&frequency) || !QueryPerformanceCounter(&counter)) {
+        return 0;
+    }
+    *nanoseconds = (double)counter.QuadPart * 1e9 / (double)frequency.QuadPart;
+    return 1;
 #else
     struct timespec now;
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    return (double)now.tv_sec * 1e9 + (double)now.tv_nsec;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) {
+        return 0;
+    }
+    *nanoseconds = (double)now.tv_sec * 1e9 + (double)now.tv_nsec;
+    return 1;
 #endif
 }
 
@@ -81,15 +88,21 @@ static int warm_up(const bench_core *bench) {
 
 static int time_batch(const bench_core *bench, double *nanoseconds_per_call) {
     weivel_handle implementation = 0;
-    double start = now_nanoseconds();
-    for (int call = 0; call < CALLS_PER_BATCH; call++) {
-        if (call_once(bench, &implementation) != WEIVEL_STATUS_OK) {
-            return 0;
-        }
+    int any_refused_or_empty = 0;
+    double start = 0;
+    double stop = 0;
+    if (!now_nanoseconds(&start)) {
+        return 0;
     }
-    double stop = now_nanoseconds();
+    for (int call = 0; call < CALLS_PER_BATCH; call++) {
+        any_refused_or_empty |= call_once(bench, &implementation) != WEIVEL_STATUS_OK;
+        any_refused_or_empty |= implementation == 0;
+    }
+    if (!now_nanoseconds(&stop)) {
+        return 0;
+    }
     *nanoseconds_per_call = (stop - start) / CALLS_PER_BATCH;
-    return implementation != 0;
+    return !any_refused_or_empty;
 }
 
 static int compare_doubles(const void *left, const void *right) {
@@ -151,7 +164,7 @@ static int read_budget(const char *path, double *budget) {
     char leftover[64];
     int fields = fscanf(file, "%63s %lf %63s", key, budget, leftover);
     fclose(file);
-    if (fields != 2 || strcmp(key, "median_nanoseconds") != 0 || !(*budget > 0)) {
+    if (fields != 2 || strcmp(key, "median_nanoseconds") != 0 || !isfinite(*budget) || !(*budget > 0)) {
         fprintf(stderr, "budget file %s must hold exactly: median_nanoseconds <positive number>\n", path);
         return 0;
     }

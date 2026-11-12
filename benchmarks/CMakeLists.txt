@@ -19,7 +19,7 @@ endfunction()
 benchmark_test(benchmark_measure_prints_the_statistics 0 measure "" -DMUST_MATCH=median_nanoseconds)
 benchmark_test(benchmark_gate_exits_over_budget 1 gate ${benchmark_fixtures}/one-nanosecond.txt)
 benchmark_test(benchmark_gate_refuses_a_missing_budget 2 gate ${benchmark_fixtures}/no-such-budget.txt)
-foreach(fixture not-a-number wrong-key trailing-junk empty)
+foreach(fixture not-a-number wrong-key trailing-junk empty infinite)
     benchmark_test(benchmark_gate_refuses_a_budget_that_is_${fixture} 2 gate ${benchmark_fixtures}/${fixture}.txt)
 endforeach()
 benchmark_test(benchmark_gate_holds_the_committed_budget 0 gate ${CMAKE_CURRENT_SOURCE_DIR}/budget.txt
