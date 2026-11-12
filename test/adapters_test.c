@@ -39,6 +39,12 @@ static const char *text_at(const json_value *object, const char *key) {
     return json_as_string(json_object_get(object, key));
 }
 
+/** 1 when `key` is present and null; a missing answer or member is not null, so the check fails rather than crashes. */
+static int is_null_at(const json_value *object, const char *key) {
+    const json_value *member = json_object_get(object, key);
+    return member != NULL && json_kind_of(member) == JSON_NULL;
+}
+
 static int flag_at(const json_value *object, const char *key) {
     int flag = -1;
     json_as_bool(json_object_get(object, key), &flag);
@@ -77,7 +83,7 @@ static void starts_a_provider_before_the_consumer_that_needs_it(void) {
     CHECK(json_array_length(started) == 2);
     check_text(json_as_string(json_array_at(started, 0)), "store", "first started");
     check_text(json_as_string(json_array_at(started, 1)), "consumer", "second started");
-    CHECK(json_kind_of(json_object_get(answer, "refusal")) == JSON_NULL);
+    CHECK(is_null_at(answer, "refusal"));
     json_free(answer);
 }
 
@@ -92,7 +98,7 @@ static void answers_each_edge_as_provider_then_consumer(void) {
     CHECK(json_array_length(edges) == 1);
     check_text(json_as_string(json_array_at(json_array_at(edges, 0), 0)), "store", "edge provider");
     check_text(json_as_string(json_array_at(json_array_at(edges, 0), 1)), "api", "edge consumer");
-    CHECK(json_kind_of(json_object_get(answer, "cycle")) == JSON_NULL);
+    CHECK(is_null_at(answer, "cycle"));
     json_free(answer);
 }
 
@@ -131,8 +137,8 @@ static void reports_why_a_want_degraded_and_what_it_asked(void) {
     CHECK(flag_at(answer, "served") == 0);
     CHECK(report != NULL && strlen(report) > 0);
     CHECK(json_array_length(asks) == 1);
-    CHECK(json_kind_of(json_object_get(answer, "atPoll")) == JSON_NULL);
-    CHECK(json_kind_of(json_object_get(answer, "refusal")) == JSON_NULL);
+    CHECK(is_null_at(answer, "atPoll"));
+    CHECK(is_null_at(answer, "refusal"));
     json_free(answer);
 }
 
@@ -146,7 +152,7 @@ static void counts_the_poll_that_served(void) {
     CHECK(answer != NULL);
     CHECK(flag_at(answer, "served") == 1);
     CHECK(json_as_int64(json_object_get(answer, "atPoll"), &at_poll) && at_poll == 3);
-    CHECK(json_kind_of(json_object_get(answer, "report")) == JSON_NULL);
+    CHECK(is_null_at(answer, "report"));
     json_free(answer);
 }
 
@@ -160,6 +166,11 @@ static void refuses_to_answer_a_resolve_missing_a_premise(void) {
                                            "\"vocabulary\":[{\"constraint\":\"minReplicas\",\"attribute\":\"maxReplicas\","
                                            "\"bound\":\"sideways\"}]," NEVER_SATISFIED
                                            "\"budgetMillis\":2000,\"pollMillis\":1000}"));
+}
+
+static void refuses_a_resolve_without_well_known_services_even_when_the_id_needs_none(void) {
+    CHECK(answers_nothing(adapter_resolve, "{" HOST_VOCABULARY "\"requirement\":{\"id\":\"provider:store\",\"constraints\":{}},"
+                                           "\"provider\":{\"advertised\":{}},\"budgetMillis\":10,\"pollMillis\":1}"));
 }
 
 static void answers_nothing_for_a_want_that_never_settled(void) {
@@ -186,6 +197,7 @@ int main(void) {
     reports_why_a_want_degraded_and_what_it_asked();
     counts_the_poll_that_served();
     refuses_to_answer_a_resolve_missing_a_premise();
+    refuses_a_resolve_without_well_known_services_even_when_the_id_needs_none();
     answers_nothing_for_a_want_that_never_settled();
     hands_back_the_payload_it_was_given();
     return check_summary("adapters_test");
