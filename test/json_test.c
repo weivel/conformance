@@ -150,6 +150,10 @@ static void reads_a_64_kilobyte_vector(void) {
     free(text);
 }
 
+static void reads_a_missing_value_as_null(void) {
+    CHECK(json_kind_of(NULL) == JSON_NULL);
+}
+
 int main(void) {
     reads_objects_and_arrays();
     reads_strings_with_escapes();
@@ -161,5 +165,6 @@ int main(void) {
     refuses_other_malformed_input();
     refuses_nesting_that_would_overflow_the_stack();
     reads_a_64_kilobyte_vector();
+    reads_a_missing_value_as_null();
     return check_summary("json_test");
 }

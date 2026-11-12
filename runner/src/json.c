@@ -582,7 +582,7 @@ void json_free(json_value *value) {
 }
 
 json_kind json_kind_of(const json_value *value) {
-    return value->kind;
+    return value == NULL ? JSON_NULL : value->kind;
 }
 
 const json_value *json_object_get(const json_value *value, const char *key) {

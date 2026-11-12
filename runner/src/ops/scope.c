@@ -1,5 +1,6 @@
 #include "adapters.h"
 #include "cast.h"
+#include "want_states.h"
 
 #include <string.h>
 
@@ -149,7 +150,7 @@ static int run_step(core_session *session, const cast *opened, const json_value 
 static const char *want_state(core_session *session, const hearing *log, weivel_handle want) {
     const heard_event *settlement = hearing_settlement(log, want);
     if (settlement != NULL) {
-        return settlement->implementation != 0 ? "settled" : "rejected";
+        return want_state_in_scope(settlement);
     }
     return session_still_kept(session, want) ? "pending" : NULL;
 }

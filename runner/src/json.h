@@ -24,12 +24,12 @@ typedef struct {
 /**
  * Parses one JSON document. Returns NULL and fills error (when not NULL) on any malformed input;
  * line and column are 1-based. The text need not be NUL-terminated.
- * @implNote A reader only: nothing here ever writes JSON.
  */
 json_value *json_parse(const char *text, size_t length, json_error *error);
 
 void json_free(json_value *value);
 
+/** The kind of value, and JSON_NULL for a NULL value, so an absent member reads as null. */
 json_kind json_kind_of(const json_value *value);
 
 /** Returns the member named key, or NULL when value is not an object or has no such member. */

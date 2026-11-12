@@ -50,5 +50,9 @@ add_test(NAME runner_names_an_unknown_op
 set_tests_properties(runner_names_an_unknown_op PROPERTIES
     PASS_REGULAR_EXPRESSION "unknown op 'reticulate'")
 
+add_test(NAME core_sits_its_vectors
+    COMMAND weivel-conformance run ${PROJECT_SOURCE_DIR}/vectors/core)
+set_tests_properties(core_sits_its_vectors PROPERTIES TIMEOUT 300)
+
 add_subdirectory(checks)
 add_subdirectory(benchmarks)

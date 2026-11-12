@@ -21,6 +21,7 @@ add_library(conformance_runner STATIC
     src/ops/supports.c
     src/ops/unbound.c
     src/ops/want.c
+    src/ops/want_states.c
     src/report.c
     src/runner.c
     src/text.c

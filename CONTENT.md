@@ -32,6 +32,9 @@ build/bin/weivel-conformance run vectors
 `run <directory>` accepts the whole corpus or any directory inside it. A vector's tier comes from the last `core`,
 `standard` or `layer` directory in its path, and a vector under none is refused.
 
+The kit's own tests sit the pinned core against `vectors/core`, and the core's drift job sits the core under test
+against the same corpus, so a core change that breaks a vector fails in the core's own CI.
+
 ## What a result means
 
 | status | meaning |
