@@ -51,3 +51,4 @@ set_tests_properties(runner_names_an_unknown_op PROPERTIES
     PASS_REGULAR_EXPRESSION "unknown op 'reticulate'")
 
 add_subdirectory(checks)
+add_subdirectory(benchmarks)
