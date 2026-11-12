@@ -7,13 +7,20 @@ add_library(conformance_runner STATIC
     src/match.c
     src/ops/arena.c
     src/ops/carry.c
+    src/ops/cast.c
+    src/ops/consume.c
     src/ops/facts.c
+    src/ops/hearing.c
     src/ops/ops.c
     src/ops/plan.c
+    src/ops/reach.c
     src/ops/resolve.c
+    src/ops/revoke.c
+    src/ops/scope.c
     src/ops/session.c
     src/ops/supports.c
     src/ops/unbound.c
+    src/ops/want.c
     src/report.c
     src/runner.c
     src/text.c

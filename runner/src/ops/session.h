@@ -28,6 +28,14 @@ void session_drain(core_session *session);
 
 void session_close(core_session *session);
 
+/**
+ * 1 when `handle` still named a want or a watch the core keeps, read by ending it.
+ * @implNote The core answers no question about a want's or a watch's state, but ending one is refused as stale
+ * exactly when the core no longer keeps it, so this reads the core's state rather than inferring it from a missing
+ * event. It ends what it reads, so an adapter calls it only after the last step.
+ */
+int session_still_kept(core_session *session, weivel_handle handle);
+
 /** The refusal code as RUNNER.md spells it: the WEIVEL_REFUSAL_ name in lowercase, NULL for one the kit does not know. */
 const char *session_refusal_name(uint32_t code);
 

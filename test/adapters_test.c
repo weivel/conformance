@@ -186,6 +186,19 @@ static void hands_back_the_payload_it_was_given(void) {
     CHECK(answers_nothing(adapter_carry, "{}"));
 }
 
+static void answers_a_want_nothing_settles_as_pending(void) {
+    json_value *answer =
+        answer_of(adapter_scope, "{\"steps\":[{\"consumer\":\"a\",\"want\":\"b:z\"},{\"lookup\":\"b:z\"}]}");
+    CHECK(answer != NULL);
+    check_text(json_as_string(json_array_at(json_object_get(answer, "wants"), 0)), "pending", "want state");
+    json_free(answer);
+}
+
+static void answers_nothing_for_a_step_naming_no_plugin(void) {
+    CHECK(answers_nothing(adapter_reach, "{\"plugins\":[{\"id\":\"notes\",\"consumes\":[\"clock\"]}],"
+                                         "\"steps\":[{\"plugin\":\"stranger\",\"get\":\"clock\"}]}"));
+}
+
 int main(void) {
     names_every_refusal_code_as_the_header_spells_it();
     answers_the_api_axis_when_only_the_floor_refuses();
@@ -200,5 +213,7 @@ int main(void) {
     refuses_a_resolve_without_well_known_services_even_when_the_id_needs_none();
     answers_nothing_for_a_want_that_never_settled();
     hands_back_the_payload_it_was_given();
+    answers_a_want_nothing_settles_as_pending();
+    answers_nothing_for_a_step_naming_no_plugin();
     return check_summary("adapters_test");
 }

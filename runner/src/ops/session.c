@@ -41,6 +41,12 @@ void session_close(core_session *session) {
     session->core = NULL;
 }
 
+int session_still_kept(core_session *session, weivel_handle handle) {
+    weivel_status status = weivel_unregister(session->core, handle, NULL);
+    session_drain(session);
+    return status == WEIVEL_STATUS_OK;
+}
+
 const char *session_refusal_name(uint32_t code) {
     return code < sizeof REFUSAL_NAMES / sizeof REFUSAL_NAMES[0] ? REFUSAL_NAMES[code] : NULL;
 }

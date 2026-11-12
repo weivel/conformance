@@ -100,6 +100,9 @@ advertised claim stands, per key.
 ### `revoke`
 
 Given `{ service: { id }, steps }`, a script of `register`, `lookup`, `revoke` and `use`.
+One plugin registers `service.id`, as a well-known id, and another declares it and looks it up; `revoke` ends the
+registration and `use` uses the handle the last lookup returned. The handle is unusable once the core has revoked
+it from the consumer, and usable only while the core still hands back that same registration.
 Answers `{ lookups: [boolean], used, reason }`. `reason` is a token such as `revoked`, never a sentence: a
 consumer holding a revoked handle has to learn what happened, and the kit must not pin how it is phrased.
 
@@ -161,7 +164,9 @@ otherwise, because a provider that cannot exist today may exist once a node join
 Given `{ steps }`, run in order, each one of `{ consumer, register: id }`, `{ consumer, want: id }`,
 `{ release: consumer }` and `{ lookup: id }`.
 Answers `{ lookups: [boolean], wants: ["settled" | "pending" | "rejected"] }`: one entry per `lookup` step, true
-when the id resolves at that step, and one per `want` step, read after the last step. Invariant 11: a consumer's
+when the id resolves at that step, and one per `want` step, read after the last step. A `lookup` is made as the
+host, and each consumer's manifest declares exactly the ids its own steps register and want, so the reach fence,
+which `reach` asks about, never decides a scope step. Invariant 11: a consumer's
 view of the registry is bound to it, so releasing one consumer removes exactly what it registered and rejects
 exactly what it still waits for.
 
@@ -180,7 +185,10 @@ goes into the manifest exactly as written, so the object form reaches the core's
 Steps run in order, each one of `{ plugin, register: id }`, `{ plugin, get: id }`, `{ plugin, want: id }`,
 `{ plugin, watch: id }` and `{ plugin, ids: true }`, every call made as that plugin. A vector registers only an id
 the plugin lists under `provides`.
-Answers `{ outcomes, reported: [[plugin, id]], refusal }`:
+Two more steps are made as the host itself, never fenced: `{ host: true, register: id }` registers `id` as a host
+service, and `{ host: true, unregister: id }` ends the host's live registration of it. A `register` step, the
+plugin's or the host's, may name the `object` it registers.
+Answers `{ outcomes, objects, reported: [[plugin, id]], refusal }`:
 
 - `outcomes` holds one entry per `get`, `want`, `watch` and `ids` step, in step order; `register` answers nothing.
   A `get` is read at its step, a `want` and a `watch` after the last step.
@@ -191,6 +199,10 @@ Answers `{ outcomes, reported: [[plugin, id]], refusal }`:
 - An `ids` step answers the ids that plugin may list at that step, **sorted**, so a vector does not pin the order
   the core keeps them in. An id is listed only when it is registered AND that plugin may reach it, so a declared
   id that nothing provides is not listed.
+- `objects` holds one entry per `get`, `want` and `watch` step, in step order: the `object` of the registration
+  that served it, null when none did or that registration named no object. **It is read off the registration
+  handle the core handed back**, which stands for the object because the core holds none, never off which
+  registration the script made last, so a core that still serves a replaced host service is caught.
 - `reported` holds one `[plugin, id]` pair per refusal the core reported, in the order reported, so a pair
   reported twice appears twice. **It is read from the core's refusal events, each carrying a plugin and a service
   id, and never parsed out of diagnostic text.**
