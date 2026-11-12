@@ -254,6 +254,7 @@ identically. Each key of `then` is compared against the same key of the answer:
 | `{"contains": [x]}` | the answer is an array containing each element |
 | `{"equals": x}` | the answer equals `x` exactly |
 | `{"absent": true}` | the key is absent or null |
+| `{"present": true}` | the key is present and not null |
 | anything else | deep equality |
 
-A key absent from `then` asserts nothing, and a `then` with no key at all is refused when the corpus loads.
+A key absent from `then` asserts nothing, and a `then` with no key at all, or `present: false` or `absent: false`, is refused when the corpus loads.

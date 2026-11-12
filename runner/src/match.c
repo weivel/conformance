@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-static const char *const ASSERTIONS[] = {"before", "contains", "equals", "absent", "code"};
+static const char *const ASSERTIONS[] = {"before", "contains", "equals", "absent", "present", "code"};
 
 static int is_present(const json_value *value) {
     return value != NULL && json_kind_of(value) != JSON_NULL;
@@ -279,6 +279,15 @@ static size_t check_absent(const char *key, const json_value *argument, const js
     return 0;
 }
 
+static size_t check_present(const char *key, const json_value *argument, const json_value *actual, text_builder *reasons) {
+    int required = 0;
+    if (json_as_bool(argument, &required) && required && !is_present(actual)) {
+        say(reasons, key, "expected a value", NULL, actual);
+        return 1;
+    }
+    return 0;
+}
+
 static size_t check_assertion(const char *key, const char *assertion, const json_value *argument,
                               const json_value *actual, text_builder *reasons) {
     if (strcmp(assertion, "code") == 0) {
@@ -299,6 +308,9 @@ static size_t check_assertion(const char *key, const char *assertion, const json
     }
     if (strcmp(assertion, "absent") == 0) {
         return check_absent(key, argument, actual, reasons);
+    }
+    if (strcmp(assertion, "present") == 0) {
+        return check_present(key, argument, actual, reasons);
     }
     text_append_format(reasons, "%s: unknown assertion %s\n", key, assertion);
     return 1;
@@ -339,4 +351,33 @@ size_t match_then(const json_value *then, const json_value *result, text_builder
         failures += check_key(key, json_object_value_at(then, at), json_object_get(result, key), reasons);
     }
     return failures;
+}
+
+static int is_false_flag(const json_value *value) {
+    int flag = 1;
+    return json_as_bool(value, &flag) && !flag;
+}
+
+static const char *refuse_block(const json_value *block) {
+    size_t at;
+    for (at = 0; at < json_object_size(block); at++) {
+        const char *name = json_object_key_at(block, at);
+        int is_presence = strcmp(name, "present") == 0 || strcmp(name, "absent") == 0;
+        if (is_presence && is_false_flag(json_object_value_at(block, at))) {
+            return strcmp(name, "present") == 0 ? "present: false asserts nothing" : "absent: false asserts nothing";
+        }
+    }
+    return NULL;
+}
+
+const char *match_refuse_meaningless(const json_value *then) {
+    size_t at;
+    for (at = 0; at < json_object_size(then); at++) {
+        const json_value *value = json_object_value_at(then, at);
+        const char *reason = is_assertion_block(value) ? refuse_block(value) : NULL;
+        if (reason != NULL) {
+            return reason;
+        }
+    }
+    return NULL;
 }

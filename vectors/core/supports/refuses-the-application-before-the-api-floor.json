@@ -19,6 +19,7 @@
   },
   "then": {
     "refusal": { "code": "incompatible" },
-    "supported": false
+    "supported": false,
+    "axis": "application"
   }
 }

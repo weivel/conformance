@@ -96,6 +96,13 @@ static void absent_holds_for_an_absent_or_null_key(void) {
     fails("{\"report\":{\"absent\":true}}", "{\"report\":\"x\"}", "present");
 }
 
+static void present_holds_for_a_non_null_key(void) {
+    holds("{\"report\":{\"present\":true}}", "{\"report\":\"x\"}", "present");
+    holds("{\"report\":{\"present\":true}}", "{\"report\":[]}", "empty array");
+    fails("{\"report\":{\"present\":true}}", "{}", "absent");
+    fails("{\"report\":{\"present\":true}}", "{\"report\":null}", "null");
+}
+
 static void anything_else_is_deep_equality(void) {
     holds("{\"served\":true,\"atPoll\":2}", "{\"served\":true,\"atPoll\":2,\"extra\":1}", "scalars");
     fails("{\"served\":true}", "{\"served\":false}", "other boolean");
@@ -105,6 +112,11 @@ static void anything_else_is_deep_equality(void) {
     fails("{\"written\":{\"key\":\"k\"}}", "{\"written\":{\"key\":\"k\",\"layer\":null}}", "object with extra member");
     holds("{\"outcomes\":[\"served\",[\"a\"]]}", "{\"outcomes\":[\"served\",[\"a\"]]}", "nested");
     fails("{\"outcomes\":[\"served\",[\"a\"]]}", "{\"outcomes\":[\"served\",[\"b\"]]}", "nested difference");
+}
+
+static void a_refusal_axis_is_compared_by_value(void) {
+    holds("{\"axis\":\"application\"}", "{\"axis\":\"application\"}", "same axis");
+    fails("{\"axis\":\"application\"}", "{\"axis\":\"api\"}", "other axis");
 }
 
 static void a_key_absent_from_then_asserts_nothing(void) {
@@ -133,7 +145,9 @@ int main(void) {
     contains_holds_when_every_element_is_there();
     equals_holds_on_exact_equality();
     absent_holds_for_an_absent_or_null_key();
+    present_holds_for_a_non_null_key();
     anything_else_is_deep_equality();
+    a_refusal_axis_is_compared_by_value();
     a_key_absent_from_then_asserts_nothing();
     every_failing_assertion_is_reported();
     a_reason_names_the_key_and_what_was_answered();

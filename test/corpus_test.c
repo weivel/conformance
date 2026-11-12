@@ -1,4 +1,5 @@
 #include "check.h"
+#include "runner.h"
 #include "vectors.h"
 
 #include <stdlib.h>
@@ -155,6 +156,54 @@ static void refuses_a_directory_that_does_not_exist(void) {
     check_refused("absent-directory", "cannot read the directory");
 }
 
+static void refuses_a_vector_outside_every_tier_directory(void) {
+    check_refused("no-tier", "no suite owns it");
+}
+
+static void the_last_tier_directory_in_a_path_decides(void) {
+    corpus loaded;
+    char error[ERROR_CAPACITY];
+    CHECK(load_fixture("nested-tiers", &loaded, error));
+    CHECK(loaded.count == 1);
+    CHECK(loaded.items[0].tier == TIER_STANDARD);
+    check_text(loaded.items[0].directory, "standard/identity", "nested directory");
+    corpus_free(&loaded);
+}
+
+static void refuses_present_false(void) {
+    check_refused("present-false", "present: false asserts nothing");
+}
+
+static void refuses_absent_false(void) {
+    check_refused("absent-false", "absent: false asserts nothing");
+}
+
+static void awaits_every_vector_of_a_root_below_its_tier(const char *subdirectory, vector_tier tier,
+                                                          verdict_status expected) {
+    corpus loaded;
+    char error[ERROR_CAPACITY];
+    char path[512];
+    verdict *verdicts;
+    size_t at;
+    snprintf(path, sizeof path, "%s/%s", KIT_VECTORS_DIR, subdirectory);
+    CHECK(corpus_load(path, &loaded, error, sizeof error));
+    verdicts = run_corpus(&loaded);
+    CHECK(verdicts != NULL);
+    CHECK(loaded.count > 0);
+    for (at = 0; verdicts != NULL && at < loaded.count; at++) {
+        CHECK(loaded.items[at].tier == tier);
+        CHECK(verdicts[at].status == expected);
+    }
+    verdicts_free(verdicts, loaded.count);
+    corpus_free(&loaded);
+}
+
+static void a_root_inside_a_tier_is_still_that_tier(void) {
+    awaits_every_vector_of_a_root_below_its_tier("standard/identity", TIER_STANDARD, VERDICT_AWAITING_STANDARD);
+    awaits_every_vector_of_a_root_below_its_tier("layer/consume", TIER_LAYER, VERDICT_AWAITING_LAYER);
+    awaits_every_vector_of_a_root_below_its_tier("standard", TIER_STANDARD, VERDICT_AWAITING_STANDARD);
+}
+
 static void admits_every_invariant_the_model_states_and_no_other(void) {
     int invariant;
     char covers[32];
@@ -218,6 +267,11 @@ int main(void) {
     refuses_a_section_the_design_does_not_state();
     refuses_a_directory_without_vectors();
     refuses_a_directory_that_does_not_exist();
+    refuses_a_vector_outside_every_tier_directory();
+    the_last_tier_directory_in_a_path_decides();
+    refuses_present_false();
+    refuses_absent_false();
+    a_root_inside_a_tier_is_still_that_tier();
     admits_every_invariant_the_model_states_and_no_other();
     reads_the_tier_from_the_directory();
     reads_the_tier_from_the_walked_root_when_it_is_a_tier_name();

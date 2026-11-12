@@ -1,5 +1,6 @@
 #include "vectors.h"
 
+#include "match.h"
 #include "ops/ops.h"
 #include "text.h"
 #include "walk.h"
@@ -143,6 +144,9 @@ static int check_shape(const vector *candidate, char *error, size_t error_size) 
     if (candidate->given == NULL || candidate->then == NULL) {
         return refuse(error, error_size, "%s is not a valid vector: %s", path, "given and then must be objects");
     }
+    if (match_refuse_meaningless(candidate->then) != NULL) {
+        return refuse(error, error_size, "%s is not a valid vector: %s", path, match_refuse_meaningless(candidate->then));
+    }
     if (json_object_size(candidate->then) == 0) {
         return refuse(error, error_size, "%s is not a valid vector: %s", path, "then asserts nothing");
     }
@@ -154,39 +158,50 @@ static int check_shape(const vector *candidate, char *error, size_t error_size) 
     return 1;
 }
 
-static const char *last_component(const char *path, size_t length, size_t *component_length) {
-    const char *start = path;
-    size_t at;
-    for (at = 0; at < length; at++) {
-        if (path[at] == '/' || path[at] == '\\') {
-            start = path + at + 1;
-        }
-    }
-    *component_length = (size_t)(path + length - start);
-    return start;
+static int is_separator(char character) {
+    return character == '/' || character == '\\';
 }
 
 /**
- * Names the directory a vector lives in and its tier. `relative` is the file's path under the walked root.
+ * Finds the last `core`, `standard` or `layer` directory in a file's full path. Returns the offset where that
+ * directory's name starts, or -1 when the path carries none.
  */
-static int place(vector *candidate, const char *relative, const char *root_name, size_t root_name_length) {
-    const char *last_slash = strrchr(relative, '/');
-    size_t directory_length = last_slash == NULL ? 0 : (size_t)(last_slash - relative);
-    size_t first_length = strcspn(relative, "/");
+static long tier_directory_offset(const char *path, vector_tier *tier) {
+    long found = -1;
+    size_t start = 0;
+    size_t at;
+    for (at = 0;; at++) {
+        if (path[at] == '\0' || is_separator(path[at])) {
+            vector_tier candidate;
+            if (path[at] != '\0' && tier_from_name(path + start, at - start, &candidate)) {
+                found = (long)start;
+                *tier = candidate;
+            }
+            if (path[at] == '\0') {
+                break;
+            }
+            start = at + 1;
+        }
+    }
+    return found;
+}
+
+static int place(vector *candidate, const char *path, char *error, size_t error_size) {
+    long offset = tier_directory_offset(path, &candidate->tier);
+    const char *last_separator = path + strlen(path);
     text_builder name;
-    int led_by_tier;
-    candidate->tier = TIER_CORE;
-    led_by_tier = first_length < directory_length + 1 && directory_length > 0 &&
-                  tier_from_name(relative, first_length, &candidate->tier);
-    if (!led_by_tier) {
-        tier_from_name(root_name, root_name_length, &candidate->tier);
+    size_t at;
+    if (offset < 0) {
+        return refuse(error, error_size, "%s is not in a core, standard or layer directory, so no suite owns it", path,
+                      "");
+    }
+    while (last_separator > path && !is_separator(*last_separator)) {
+        last_separator--;
     }
     text_init(&name);
-    if (!led_by_tier) {
-        text_append(&name, tier_name(candidate->tier));
-        text_append(&name, directory_length > 0 ? "/" : "");
+    for (at = (size_t)offset; path + at < last_separator; at++) {
+        text_append_bytes(&name, is_separator(path[at]) ? "/" : path + at, 1);
     }
-    text_append_bytes(&name, relative, directory_length);
     candidate->directory = text_duplicate(text_view(&name));
     text_release(&name);
     return candidate->directory != NULL;
@@ -215,9 +230,7 @@ static int parse_document(vector *candidate, const char *path, char *error, size
     return 1;
 }
 
-static int read_vector(const char *path, size_t root_length, vector *candidate, char *error, size_t error_size) {
-    size_t root_name_length;
-    const char *root_name = last_component(path, root_length, &root_name_length);
+static int read_vector(const char *path, vector *candidate, char *error, size_t error_size) {
     memset(candidate, 0, sizeof *candidate);
     if (!parse_document(candidate, path, error, error_size)) {
         return 0;
@@ -228,7 +241,7 @@ static int read_vector(const char *path, size_t root_length, vector *candidate, 
     candidate->covers = json_as_string(json_object_get(candidate->document, "covers"));
     candidate->given = object_member(candidate->document, "given");
     candidate->then = object_member(candidate->document, "then");
-    return candidate->path != NULL && place(candidate, path + root_length + 1, root_name, root_name_length);
+    return candidate->path != NULL && place(candidate, path, error, error_size);
 }
 
 static int compare_by_id(const void *left, const void *right) {
@@ -250,7 +263,7 @@ static int refuse_duplicate_ids(const corpus *loaded, char *error, size_t error_
     return 1;
 }
 
-static int load_all(const path_list *paths, size_t root_length, corpus *loaded, char *error, size_t error_size) {
+static int load_all(const path_list *paths, corpus *loaded, char *error, size_t error_size) {
     size_t at;
     loaded->items = calloc(paths->count, sizeof(vector));
     if (loaded->items == NULL) {
@@ -259,7 +272,7 @@ static int load_all(const path_list *paths, size_t root_length, corpus *loaded, 
     }
     for (at = 0; at < paths->count; at++) {
         vector *candidate = &loaded->items[loaded->count];
-        int read = read_vector(paths->paths[at], root_length, candidate, error, error_size);
+        int read = read_vector(paths->paths[at], candidate, error, error_size);
         loaded->count++;
         if (!read || !check_shape(candidate, error, error_size)) {
             return 0;
@@ -270,7 +283,6 @@ static int load_all(const path_list *paths, size_t root_length, corpus *loaded, 
 
 int corpus_load(const char *directory, corpus *loaded, char *error, size_t error_size) {
     path_list paths;
-    size_t root_length = walk_root_length(directory);
     int ok;
     loaded->items = NULL;
     loaded->count = 0;
@@ -282,7 +294,7 @@ int corpus_load(const char *directory, corpus *loaded, char *error, size_t error
         path_list_free(&paths);
         return 0;
     }
-    ok = load_all(&paths, root_length, loaded, error, error_size);
+    ok = load_all(&paths, loaded, error, error_size);
     path_list_free(&paths);
     if (ok) {
         qsort(loaded->items, loaded->count, sizeof(vector), compare_by_id);

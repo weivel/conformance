@@ -1,0 +1,1 @@
+{ "id": "supports/no-suite", "op": "supports", "covers": "12.1", "given": {}, "then": { "supported": true } }

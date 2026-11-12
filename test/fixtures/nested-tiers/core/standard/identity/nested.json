@@ -1,0 +1,1 @@
+{ "id": "identity/nested", "op": "identity", "covers": "12.6", "given": { "value": "local:a" }, "then": { "valid": true } }
