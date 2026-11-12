@@ -11,7 +11,7 @@ jobs:
     with:
       toolchains: cmake
       runners: '["ubuntu-latest","windows-latest","macos-latest"]'
-      cmake_version: '3.31.6'
+      cmake_version: '4.4.4'
       cmake_configure: '-S . -B build'
       cmake_build: '--build build --config Debug'
       cmake_test: 'ctest --test-dir build --output-on-failure -C Debug'
