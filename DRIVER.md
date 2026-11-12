@@ -106,7 +106,7 @@ absent means V2 is not applied, and an empty list refuses every bare id.
 Answers `{ valid, paths: [field], refusal: { detail, fix } | null }`.
 **`paths` names every field that is wrong, each once**: a `then` applies whatever else is wrong, as
 draft-07 applies it, and a repeated item is reported at the index of its second occurrence
-(`capabilities[1]`), the convention V1 states, rather than at the array. A validator whose own
+(`capabilities.provides[1]`), the convention V1 states, rather than at the array. A validator whose own
 error for `uniqueItems` names the array maps it to that index.
 An unknown field **validates** and is ignored: no object in the schema closes
 `additionalProperties`, deliberately, so a manifest written against a later version still loads
@@ -217,7 +217,7 @@ carrying the providing plugin's id, so a consumer's answer is read off the objec
 returned and never inferred from the steps the driver ran.
 Steps run in order, each one of `{ plugin, provide: id }`, `{ plugin, verify: true }`,
 `{ plugin, all: id }`, `{ plugin, watch: id }`, `{ plugin, quarantine: true }` and
-`{ plugin, release: true }`:
+`{ plugin, release: true }`, and `watch` may carry `throws: true`:
 
 - `provide` provides the named capability through the plugin's context. A vector provides only an id
   the plugin lists under `capabilities.provides`.
@@ -230,19 +230,24 @@ Steps run in order, each one of `{ plugin, provide: id }`, `{ plugin, verify: tr
   `release` stops the plugin and releases what it holds.
 - `all` reads the implementations of that capability through the plugin's context at that step.
 - `watch` installs a listener through the plugin's context at that step, recording each
-  `[providerId, event]` it is handed, `event` being `"provide"` or `"withdraw"`.
+  `[providerId, event]` it is handed, `event` being `"provide"` or `"withdraw"`. With `throws: true`
+  the driver installs a listener that throws on every call, and that watch's `heard` entry still
+  records what it was handed before throwing, so a vector can show the other listeners still hear.
 
 Answers `{ outcomes, heard, reported: [[plugin, id]], refusal: { detail, fix } | { message } | null }`:
 
 - `outcomes` holds one entry per `all` step, in step order: the provider ids of the implementations
-  the engine handed back, **in the order handed back**. An undeclared `all` answers `[]`.
+  the engine handed back, **in the order handed back**, which is the order the plugins' activations were verified (the `verify`
+  step order), neither the order `provide` was called nor the order contexts were opened. An undeclared `all` answers `[]`.
 - `heard` holds one entry per `watch` step, in step order, read after the last step: the
   `[providerId, event]` pairs that listener heard, in the order heard. An undeclared or late `watch`
   is inert and answers `[]`. A `"withdraw"` is read off the implementation the listener was handed,
   so it names the provider whose object left.
 - `reported` is read from the host's structured refusal record, one `[plugin, id]` pair per refusal
   reported and never parsed out of diagnostic text, exactly as for `reach`.
-- `refusal` is the first refusal of the run as text, for the `mentions` check of the fix only.
+- `refusal` is the first refusal of the run as text, for the `mentions` check of the fix only. It
+  carries only the diagnostic text of an `all` or `watch` refusal, never an activation check's error,
+  so a vector whose activation is refused and which asserts `refusal: null` is unambiguous.
 
 Invariant 14: an implementation joins `all` when its plugin's activation is verified, not when it
 is provided, and leaves when the plugin is quarantined or released, so a consumer is never handed a
@@ -250,7 +255,9 @@ provider the host is about to refuse. A `watch` reports changes from its own ins
 and never replays. `all` and `watch` answer for an id the plugin lists under `capabilities.consumes`
 or `capabilities.provides` and nothing else; the refusal is reported once per plugin and id, so an
 empty answer from an undeclared `all` is never mistaken for absence. The declaration check comes
-before the lateness check: a released plugin's `all` is let through and its `watch` is inert.
+before the lateness check: an undeclared call from a plugin that is no longer running is refused and
+reported as undeclared, and only a declared one takes the late path, where `all` is let through and
+`watch` is inert and not reported.
 
 ### `context`
 
