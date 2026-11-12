@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "importName": "conformance",
+  "description": "weivel's behaviour as vectors, the C runner that sits the core against them, and the drift checks every weivel repo runs.",
+  "topics": [
+    "weivel"
+  ],
+  "dependencies": [
+    {
+      "id": "github:1455223370",
+      "importName": "core",
+      "commit": "e6c18c39f467589c1bb166fa6827a3ea1d006676"
+    }
+  ]
+}
