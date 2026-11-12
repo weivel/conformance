@@ -1,0 +1,71 @@
+{
+  "id": "reach/replaces-a-host-service",
+  "op": "reach",
+  "covers": "invariant-12",
+  "given": {
+    "hostProvided": [],
+    "plugins": [
+      {
+        "id": "agenda",
+        "consumes": [
+          "clock"
+        ],
+        "provides": []
+      }
+    ],
+    "steps": [
+      {
+        "host": true,
+        "register": "clock",
+        "object": "first"
+      },
+      {
+        "plugin": "agenda",
+        "get": "clock"
+      },
+      {
+        "host": true,
+        "unregister": "clock"
+      },
+      {
+        "plugin": "agenda",
+        "get": "clock"
+      },
+      {
+        "plugin": "agenda",
+        "want": "clock"
+      },
+      {
+        "host": true,
+        "register": "clock",
+        "object": "second"
+      },
+      {
+        "plugin": "agenda",
+        "get": "clock"
+      }
+    ]
+  },
+  "then": {
+    "outcomes": {
+      "equals": [
+        "served",
+        "absent",
+        "served",
+        "served"
+      ]
+    },
+    "objects": {
+      "equals": [
+        "first",
+        null,
+        "second",
+        "second"
+      ]
+    },
+    "reported": {
+      "equals": []
+    },
+    "refusal": null
+  }
+}

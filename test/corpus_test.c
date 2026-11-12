@@ -14,7 +14,7 @@ typedef struct {
 static const pinned_count PINNED[] = {
     {"core/supports", 4},   {"core/boot", 3},          {"core/order", 6},
     {"core/resolve", 6},    {"core/revoke", 2},        {"core/scope", 2},
-    {"core/want", 3},       {"core/reach", 15},        {"core/unbound", 3},
+    {"core/want", 3},       {"core/reach", 16},        {"core/unbound", 3},
     {"core/carry", 1},      {"core/consume", 16},      {"standard/identity", 14},
     {"standard/validate", 31}, {"layer/consume", 1},
 };
