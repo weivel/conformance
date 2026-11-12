@@ -238,8 +238,9 @@ Steps run in order, each one of `{ plugin, provide: id }`, `{ plugin, verify: tr
 Answers `{ outcomes, heard, reported: [[plugin, id]], refusal: { detail, fix } | { message } | null }`:
 
 - `outcomes` holds one entry per `all` step, in step order: the provider ids of the implementations
-  the engine handed back, **in the order handed back**, which is the order the plugins' activations were verified (the `verify`
-  step order), neither the order `provide` was called nor the order contexts were opened. An undeclared `all` answers `[]`.
+  the engine handed back, **in the order handed back**, which is the order the plugins' activations
+  were verified (the `verify` step order), neither the order `provide` was called nor the order
+  contexts were opened. An undeclared `all` answers `[]`.
 - `heard` holds one entry per `watch` step, in step order, read after the last step: the
   `[providerId, event]` pairs that listener heard, in the order heard. An undeclared or late `watch`
   is inert and answers `[]`. A `"withdraw"` is read off the implementation the listener was handed,
