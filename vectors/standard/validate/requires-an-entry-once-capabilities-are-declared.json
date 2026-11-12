@@ -1,0 +1,28 @@
+{
+  "id": "validate/requires-an-entry-once-capabilities-are-declared",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "config-ledger",
+      "api": 2,
+      "capabilities": {
+        "provides": [
+          "provider"
+        ]
+      }
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "entry"
+      ]
+    },
+    "refusal": {
+      "hasFix": true
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{ "id": "supports/bad-section", "op": "supports", "covers": "invariant-15", "given": {}, "then": { "supported": true } }

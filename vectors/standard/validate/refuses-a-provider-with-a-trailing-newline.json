@@ -1,0 +1,29 @@
+{
+  "id": "validate/refuses-a-provider-with-a-trailing-newline",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "a",
+      "api": 2,
+      "services": {
+        "consumes": [
+          {
+            "id": "x:y",
+            "provider": "forge:1\n"
+          }
+        ]
+      }
+    },
+    "wellKnownServices": []
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "services.consumes[0].provider"
+      ]
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{ "id": "supports/absent-false", "op": "supports", "covers": "12.1", "given": {}, "then": { "report": { "absent": false } } }

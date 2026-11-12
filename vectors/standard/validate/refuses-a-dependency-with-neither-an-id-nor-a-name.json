@@ -1,0 +1,23 @@
+{
+  "id": "validate/refuses-a-dependency-with-neither-an-id-nor-a-name",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "a",
+      "api": 2,
+      "dependencies": [
+        { "importName": "runtime" }
+      ]
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "dependencies[0].name"
+      ]
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "unbound/omits-a-service-bound-to-a-provider",
+  "op": "unbound",
+  "covers": "12.6",
+  "given": {
+    "manifest": {
+      "importName": "agenda",
+      "api": 1,
+      "services": {
+        "consumes": [{ "id": "calendar:events", "provider": "forge:2" }]
+      }
+    }
+  },
+  "then": {
+    "services": {
+      "equals": []
+    }
+  }
+}

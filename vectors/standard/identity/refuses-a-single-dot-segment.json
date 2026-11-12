@@ -1,0 +1,11 @@
+{
+  "id": "identity/refuses-a-single-dot-segment",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "forge:1/."
+  },
+  "then": {
+    "valid": false
+  }
+}

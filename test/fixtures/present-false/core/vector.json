@@ -1,0 +1,1 @@
+{ "id": "supports/present-false", "op": "supports", "covers": "12.1", "given": {}, "then": { "report": { "present": false } } }

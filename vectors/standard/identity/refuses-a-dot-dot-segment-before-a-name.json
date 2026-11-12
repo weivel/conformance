@@ -1,0 +1,11 @@
+{
+  "id": "identity/refuses-a-dot-dot-segment-before-a-name",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "forge:1/../calendar_identity"
+  },
+  "then": {
+    "valid": false
+  }
+}

@@ -1,0 +1,13 @@
+java extension .java
+java name build.gradle
+java name settings.gradle
+java name gradle.properties
+java name gradlew
+java name gradlew.bat
+java prefix gradle/wrapper/
+java source-root src/main/java
+typescript extension .ts
+typescript name package.json
+typescript name package-lock.json
+typescript pattern tsconfig*.json
+typescript source-root src

@@ -1,0 +1,30 @@
+{
+  "id": "validate/reports-each-repeat-of-two-repeated-capabilities",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "config-ledger",
+      "api": 2,
+      "entry": "dist/index.js",
+      "capabilities": {
+        "provides": [
+          "provider",
+          "consumer",
+          "provider",
+          "consumer"
+        ]
+      }
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "capabilities.provides[2]",
+        "capabilities.provides[3]"
+      ]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "validate/refuses-a-windows-reserved-id-nul-before-a-dot",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "nul.x",
+      "api": 2
+    },
+    "wellKnownServices": []
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "importName"
+      ]
+    }
+  }
+}

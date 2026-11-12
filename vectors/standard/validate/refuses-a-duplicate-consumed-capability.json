@@ -1,0 +1,27 @@
+{
+  "id": "validate/refuses-a-duplicate-consumed-capability",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "config-ledger",
+      "api": 2,
+      "entry": "dist/index.js",
+      "capabilities": {
+        "consumes": [
+          "provider",
+          "provider"
+        ]
+      }
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "capabilities.consumes[1]"
+      ]
+    }
+  }
+}

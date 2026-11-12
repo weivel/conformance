@@ -1,0 +1,275 @@
+mutex-object-defines weivel_mutex_lock
+allow-everywhere c-library malloc
+allow-everywhere c-library calloc
+allow-everywhere c-library realloc
+allow-everywhere c-library free
+allow-everywhere c-library memcpy
+allow-everywhere c-library memmove
+allow-everywhere c-library memset
+allow-everywhere c-library memcmp
+allow-everywhere c-library memchr
+allow-everywhere c-library strlen
+allow-everywhere c-library strnlen
+allow-everywhere c-library strcmp
+allow-everywhere c-library strncmp
+allow-everywhere c-library strchr
+allow-everywhere c-library strstr
+allow-everywhere c-library snprintf
+allow-everywhere c-library vsnprintf
+allow-in-mutex windows-lock InitializeSRWLock
+allow-in-mutex windows-lock AcquireSRWLockExclusive
+allow-in-mutex windows-lock ReleaseSRWLockExclusive
+allow-in-mutex posix-lock pthread_mutex_init
+allow-in-mutex posix-lock pthread_mutex_destroy
+allow-in-mutex posix-lock pthread_mutex_lock
+allow-in-mutex posix-lock pthread_mutex_unlock
+allow-from-compiler msvc-inline-snprintf __stdio_common_vsprintf
+allow-from-compiler msvc-inline-snprintf ?_OptionsStorage@?1??__local_stdio_printf_options@@9@9
+allow-from-compiler msvc-debug-runtime-checks _RTC_CheckStackVars
+allow-from-compiler msvc-debug-runtime-checks _RTC_InitBase
+allow-from-compiler msvc-debug-runtime-checks _RTC_Shutdown
+allow-from-compiler msvc-buffer-security-check __security_check_cookie
+allow-from-compiler msvc-buffer-security-check __security_cookie
+allow-from-compiler msvc-buffer-security-check __GSHandlerCheck
+allow-from-compiler msvc-floating-point-marker _fltused
+allow-from-compiler stack-protector __stack_chk_fail
+allow-from-compiler stack-protector __stack_chk_guard
+allow-from-compiler fortified-c-library __memcpy_chk
+allow-from-compiler fortified-c-library __memmove_chk
+allow-from-compiler fortified-c-library __memset_chk
+allow-from-compiler fortified-c-library __snprintf_chk
+allow-from-compiler fortified-c-library __vsnprintf_chk
+allow-from-startup glibc-shared-library __cxa_finalize
+allow-from-startup glibc-shared-library _ITM_deregisterTMCloneTable
+allow-from-startup glibc-shared-library _ITM_registerTMCloneTable
+allow-from-startup glibc-shared-library __gmon_start__
+startup-export glibc-shared-library _init
+startup-export glibc-shared-library _fini
+startup-export glibc-shared-library _edata
+startup-export glibc-shared-library _end
+startup-export glibc-shared-library __bss_start
+startup-export apple-dylib _mh_dylib_header
+allow-from-startup msvc-dll IsDebuggerPresent
+allow-from-startup msvc-dll InitializeSListHead
+allow-from-startup msvc-dll DisableThreadLibraryCalls
+allow-from-startup msvc-dll GetSystemTimeAsFileTime
+allow-from-startup msvc-dll GetCurrentThreadId
+allow-from-startup msvc-dll GetCurrentProcessId
+allow-from-startup msvc-dll QueryPerformanceCounter
+allow-from-startup msvc-dll IsProcessorFeaturePresent
+allow-from-startup msvc-dll TerminateProcess
+allow-from-startup msvc-dll GetCurrentProcess
+allow-from-startup msvc-dll SetUnhandledExceptionFilter
+allow-from-startup msvc-dll UnhandledExceptionFilter
+allow-from-startup msvc-dll RtlVirtualUnwind
+allow-from-startup msvc-dll RtlLookupFunctionEntry
+allow-from-startup msvc-dll RtlCaptureContext
+allow-from-startup msvc-dll __std_type_info_destroy_list
+allow-from-startup msvc-dll __C_specific_handler
+allow-from-startup msvc-dll _cexit
+allow-from-startup msvc-dll _execute_onexit_table
+allow-from-startup msvc-dll _initialize_onexit_table
+allow-from-startup msvc-dll _initialize_narrow_environment
+allow-from-startup msvc-dll _configure_narrow_argv
+allow-from-startup msvc-dll _seh_filter_dll
+allow-from-startup msvc-dll _initterm_e
+allow-from-startup msvc-dll _initterm
+allow-from-startup msvc-debug-dll FreeLibrary
+allow-from-startup msvc-debug-dll VirtualQuery
+allow-from-startup msvc-debug-dll GetProcessHeap
+allow-from-startup msvc-debug-dll HeapFree
+allow-from-startup msvc-debug-dll HeapAlloc
+allow-from-startup msvc-debug-dll GetLastError
+allow-from-startup msvc-debug-dll GetModuleHandleW
+allow-from-startup msvc-debug-dll GetStartupInfoW
+allow-from-startup msvc-debug-dll WideCharToMultiByte
+allow-from-startup msvc-debug-dll MultiByteToWideChar
+allow-from-startup msvc-debug-dll RaiseException
+allow-from-startup msvc-debug-dll GetProcAddress
+allow-from-startup msvc-debug-dll __C_specific_handler_noexcept
+allow-from-startup msvc-debug-dll __current_exception
+allow-from-startup msvc-debug-dll __current_exception_context
+allow-from-startup msvc-debug-dll __vcrt_GetModuleFileNameW
+allow-from-startup msvc-debug-dll __vcrt_GetModuleHandleW
+allow-from-startup msvc-debug-dll __vcrt_LoadLibraryExW
+allow-from-startup msvc-debug-dll _wsplitpath_s
+allow-from-startup msvc-debug-dll _wmakepath_s
+allow-from-startup msvc-debug-dll strcpy_s
+allow-from-startup msvc-debug-dll strcat_s
+allow-from-startup msvc-debug-dll wcscpy_s
+allow-from-startup msvc-debug-dll _CrtDbgReport
+allow-from-startup msvc-debug-dll _CrtDbgReportW
+allow-from-startup msvc-debug-dll terminate
+allow-from-startup msvc-debug-dll _crt_at_quick_exit
+allow-from-startup msvc-debug-dll _crt_atexit
+allow-from-startup msvc-debug-dll _register_onexit_function
+allow-from-startup msvc-debug-dll __stdio_common_vsprintf_s
+forbid file-access fopen
+forbid file-access fopen64
+forbid file-access fopen_s
+forbid file-access _wfopen
+forbid file-access _wfopen_s
+forbid file-access _fsopen
+forbid file-access _wfsopen
+forbid file-access freopen
+forbid file-access freopen64
+forbid file-access freopen_s
+forbid file-access _wfreopen
+forbid file-access _wfreopen_s
+forbid file-access open
+forbid file-access open64
+forbid file-access openat
+forbid file-access openat64
+forbid file-access creat
+forbid file-access creat64
+forbid file-access _open
+forbid file-access _wopen
+forbid file-access _creat
+forbid file-access _wcreat
+forbid file-access _sopen*
+forbid file-access _wsopen*
+forbid file-access opendir
+forbid file-access fdopendir
+forbid file-access _findfirst*
+forbid file-access _wfindfirst*
+forbid file-access CreateFile*
+forbid file-access OpenFile
+forbid file-access FindFirstFile*
+forbid file-access *GetModuleFileName*
+forbid environment getenv
+forbid environment getenv_s
+forbid environment secure_getenv
+forbid environment _wgetenv
+forbid environment _wgetenv_s
+forbid environment _dupenv_s
+forbid environment _wdupenv_s
+forbid environment environ
+forbid environment _environ
+forbid environment _wenviron
+forbid environment __environ
+forbid environment __p__environ
+forbid environment __p__wenviron
+forbid environment _get_environ
+forbid environment _get_wenviron
+forbid environment _initialize_narrow_environment
+forbid environment _initialize_wide_environment
+forbid environment _configure_narrow_argv
+forbid environment _configure_wide_argv
+forbid environment __p___argv
+forbid environment __p___wargv
+forbid environment GetEnvironmentVariable*
+forbid environment GetEnvironmentStrings*
+forbid environment GetCommandLine*
+forbid environment GetStartupInfo*
+forbid clock time
+forbid clock _time32
+forbid clock _time64
+forbid clock clock
+forbid clock clock_gettime
+forbid clock clock_getres
+forbid clock timespec_get
+forbid clock _timespec32_get
+forbid clock _timespec64_get
+forbid clock gettimeofday
+forbid clock ftime
+forbid clock _ftime*
+forbid clock localtime*
+forbid clock _localtime*
+forbid clock mktime
+forbid clock _mktime*
+forbid clock tzset
+forbid clock _tzset
+forbid clock mach_absolute_time
+forbid clock mach_continuous_time
+forbid clock mach_approximate_time
+forbid clock QueryPerformanceCounter
+forbid clock QueryPerformanceFrequency
+forbid clock QueryUnbiasedInterruptTime*
+forbid clock GetTickCount*
+forbid clock GetSystemTime*
+forbid clock GetLocalTime
+forbid clock NtQuerySystemTime
+forbid process system
+forbid process _wsystem
+forbid process popen
+forbid process _popen
+forbid process _wpopen
+forbid process fork
+forbid process vfork
+forbid process execl
+forbid process execle
+forbid process execlp
+forbid process execv
+forbid process execve
+forbid process execvp
+forbid process execvpe
+forbid process fexecve
+forbid process _execl
+forbid process _execle
+forbid process _execlp
+forbid process _execlpe
+forbid process _execv
+forbid process _execve
+forbid process _execvp
+forbid process _execvpe
+forbid process _wexec*
+forbid process posix_spawn*
+forbid process _spawn*
+forbid process _wspawn*
+forbid process CreateProcess*
+forbid process ShellExecute*
+forbid process WinExec
+forbid code-loading dlopen
+forbid code-loading dlmopen
+forbid code-loading dlsym
+forbid code-loading *LoadLibrary*
+forbid code-loading LoadPackagedLibrary
+forbid code-loading GetProcAddress
+forbid process-identity GetCurrentProcessId
+forbid process-identity GetCurrentThreadId
+forbid debugger IsDebuggerPresent
+forbid memory-map VirtualQuery*
+forbid module-lookup *GetModuleHandle*
+forbid network socket
+forbid network connect
+forbid network getaddrinfo
+forbid network gethostbyname
+forbid network WSAStartup
+forbid-name json *json*
+mutex-source src/mutex.c
+forbid-source file-access word fopen
+forbid-source file-access word fopen64
+forbid-source file-access word fopen_s
+forbid-source file-access word freopen
+forbid-source file-access call open
+forbid-source file-access prefix CreateFile
+forbid-source environment word getenv
+forbid-source environment word secure_getenv
+forbid-source environment prefix GetEnvironmentVariable
+forbid-source clock call time
+forbid-source clock call clock
+forbid-source clock word clock_gettime
+forbid-source clock word timespec_get
+forbid-source clock word gettimeofday
+forbid-source clock word mach_absolute_time
+forbid-source clock prefix QueryPerformanceCounter
+forbid-source clock prefix GetTickCount
+forbid-source clock prefix GetSystemTime
+forbid-source clock prefix __rdtsc
+forbid-source clock word rdtsc
+forbid-source clock word rdtscp
+forbid-source system-call call syscall
+forbid-source inline-assembly word asm
+forbid-source inline-assembly prefix __asm
+forbid-source json text json
+source-in-mutex-only windows-lock prefix InitializeSRWLock
+source-in-mutex-only windows-lock prefix AcquireSRWLock
+source-in-mutex-only windows-lock prefix ReleaseSRWLock
+source-in-mutex-only windows-lock prefix TryAcquireSRWLock
+source-in-mutex-only windows-lock prefix InitializeCriticalSection
+source-in-mutex-only windows-lock prefix EnterCriticalSection
+source-in-mutex-only windows-lock prefix LeaveCriticalSection
+source-in-mutex-only posix-lock prefix pthread_mutex_
+source-in-mutex-only posix-lock prefix pthread_rwlock_
+source-in-mutex-only posix-lock prefix pthread_spin_
+source-in-mutex-only c11-lock prefix mtx_

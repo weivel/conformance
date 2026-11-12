@@ -1,0 +1,23 @@
+{
+  "id": "validate/refuses-a-dependency-with-an-id-and-a-name",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "a",
+      "api": 2,
+      "dependencies": [
+        { "importName": "runtime", "id": "forge:12/runtime", "name": "vendor/runtime" }
+      ]
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "dependencies[0].name"
+      ]
+    }
+  }
+}

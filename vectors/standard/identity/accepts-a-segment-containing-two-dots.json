@@ -1,0 +1,11 @@
+{
+  "id": "identity/accepts-a-segment-containing-two-dots",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "forge:1/a..b"
+  },
+  "then": {
+    "valid": true
+  }
+}
