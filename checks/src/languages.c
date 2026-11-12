@@ -75,7 +75,7 @@ int language_rules_load(const char *path, const char *language, language_rules *
             language_rules_free(rules);
             return 0;
         }
-        if (strcmp(line_language, language) != 0) {
+        if (language != NULL && strcmp(line_language, language) != 0) {
             continue;
         }
         if (!apply_line(rules, kind, value)) {

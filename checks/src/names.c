@@ -7,6 +7,7 @@
 
 static const char *const EXEMPT_PATHS[] = {"LICENSE", ".weivel/repo.json"};
 
+#define BINARY_PROBE_BYTES 8192
 #define COUNT_OF(array) (sizeof(array) / sizeof((array)[0]))
 
 typedef struct {
@@ -41,7 +42,16 @@ static int is_the_words_file(const char *root, const char *relative, const char 
 }
 
 static int is_binary(const char *data, size_t size) {
-    return memchr(data, '\0', size) != NULL;
+    return memchr(data, '\0', size < BINARY_PROBE_BYTES ? size : BINARY_PROBE_BYTES) != NULL;
+}
+
+static void blank_nul_bytes(char *data, size_t size) {
+    size_t at;
+    for (at = 0; at < size; at++) {
+        if (data[at] == '\0') {
+            data[at] = ' ';
+        }
+    }
 }
 
 static size_t line_of(const char *data, const char *position) {
@@ -58,6 +68,7 @@ static size_t line_of(const char *data, const char *position) {
 static int report_words(const char *relative, char *data, size_t size, const text_list *words) {
     size_t at;
     int offenders = 0;
+    blank_nul_bytes(data, size);
     lowercase(data, size);
     for (at = 0; at < words->count; at++) {
         const char *found = strstr(data, words->items[at]);
@@ -85,7 +96,9 @@ static void scan_file(const char *root, const char *relative, const char *words_
         return;
     }
     free(full);
-    if (!is_binary(data, size)) {
+    if (is_binary(data, size)) {
+        fprintf(stderr, "%s: skipped as binary\n", relative);
+    } else {
         result->files_read++;
         result->offenders += report_words(relative, data, size, words);
     }

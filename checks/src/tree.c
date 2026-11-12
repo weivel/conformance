@@ -129,6 +129,10 @@ static int compare_entries(const void *left, const void *right) {
     return strcmp(((const entry *)left)->name, ((const entry *)right)->name);
 }
 
+#define LISTED 1
+#define UNREADABLE 0
+#define OUT_OF_MEMORY (-1)
+
 #ifdef _WIN32
 static int list_directory(const char *directory, entry_list *entries) {
     char *pattern = tree_join(directory, "*");
@@ -136,12 +140,12 @@ static int list_directory(const char *directory, entry_list *entries) {
     HANDLE handle;
     int ok = 1;
     if (pattern == NULL) {
-        return 0;
+        return OUT_OF_MEMORY;
     }
     handle = FindFirstFileA(pattern, &data);
     free(pattern);
     if (handle == INVALID_HANDLE_VALUE) {
-        return 0;
+        return UNREADABLE;
     }
     do {
         if (strcmp(data.cFileName, ".") != 0 && strcmp(data.cFileName, "..") != 0) {
@@ -149,7 +153,7 @@ static int list_directory(const char *directory, entry_list *entries) {
         }
     } while (ok && FindNextFileA(handle, &data));
     FindClose(handle);
-    return ok;
+    return ok ? LISTED : OUT_OF_MEMORY;
 }
 #else
 static int list_directory(const char *directory, entry_list *entries) {
@@ -157,27 +161,36 @@ static int list_directory(const char *directory, entry_list *entries) {
     struct dirent *item;
     int ok = 1;
     if (handle == NULL) {
-        return 0;
+        return UNREADABLE;
     }
     while (ok && (item = readdir(handle)) != NULL) {
         if (strcmp(item->d_name, ".") != 0 && strcmp(item->d_name, "..") != 0) {
             char *path = tree_join(directory, item->d_name);
             struct stat status;
-            ok = path != NULL && stat(path, &status) == 0 && add_entry(entries, item->d_name, S_ISDIR(status.st_mode));
+            if (path == NULL) {
+                ok = 0;
+            } else if (lstat(path, &status) == 0 && (S_ISDIR(status.st_mode) || S_ISREG(status.st_mode))) {
+                ok = add_entry(entries, item->d_name, S_ISDIR(status.st_mode));
+            }
             free(path);
         }
     }
     closedir(handle);
-    return ok;
+    return ok ? LISTED : OUT_OF_MEMORY;
 }
 #endif
 
 static int is_skipped_directory(const char *name) {
-    if (name[0] == '.') {
-        return strcmp(name, ".weivel") != 0;
+    return strcmp(name, ".git") == 0 || strcmp(name, ".git" "hub") == 0 || strncmp(name, "build", 5) == 0 ||
+           strcmp(name, "siblings") == 0 || strcmp(name, "node_modules") == 0;
+}
+
+static void explain_listing_failure(int result, const char *directory, char *error, size_t error_size) {
+    if (result == OUT_OF_MEMORY) {
+        snprintf(error, error_size, "out of memory reading %s", directory);
+    } else {
+        snprintf(error, error_size, "cannot read the directory %s", directory);
     }
-    return strncmp(name, "build", 5) == 0 || strcmp(name, "siblings") == 0 || strcmp(name, "node_modules") == 0 ||
-           strcmp(name, "dist") == 0;
 }
 
 static char *join_relative(const char *relative, const char *name) {
@@ -196,9 +209,12 @@ static int walk(const char *root, const char *relative, text_list *files, char *
     char *directory = relative[0] == '\0' ? tree_normalize_root(root) : tree_join(root, relative);
     size_t at;
     int ok = directory != NULL;
-    if (ok && !list_directory(directory, &entries)) {
-        snprintf(error, error_size, "cannot read the directory %s", directory);
-        ok = 0;
+    if (ok) {
+        int listed = list_directory(directory, &entries);
+        if (listed != LISTED) {
+            explain_listing_failure(listed, directory, error, error_size);
+            ok = 0;
+        }
     }
     free(directory);
     if (entries.count > 1) {
@@ -238,12 +254,14 @@ int tree_list_directories(const char *directory, text_list *names, char *error, 
     entry_list entries = {NULL, 0, 0};
     size_t at;
     int ok = 1;
+    int listed;
     names->items = NULL;
     names->count = 0;
     error[0] = '\0';
-    if (!list_directory(directory, &entries)) {
+    listed = list_directory(directory, &entries);
+    if (listed != LISTED) {
         entry_list_free(&entries);
-        snprintf(error, error_size, "cannot read the directory %s", directory);
+        explain_listing_failure(listed, directory, error, error_size);
         return 0;
     }
     for (at = 0; ok && at < entries.count; at++) {

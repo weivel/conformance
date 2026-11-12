@@ -19,8 +19,9 @@ char *tree_normalize_root(const char *path);
 
 /**
  * Lists every file under `root` at any depth as a path relative to it with forward slashes, ordered by path.
- * Build output and tool state are not part of a repository's content, so a directory is skipped when its name starts
- * with a dot (except `.weivel`), starts with `build`, or is `siblings`, `node_modules` or `dist`.
+ * Version control, hosting configuration and build output are not part of a repository's content, so a directory is
+ * skipped when it is `.git`, the hosting-service directory next to it, `siblings` or `node_modules`, or its name starts
+ * with `build`. On POSIX a symbolic link is neither listed nor followed, and only regular files are listed.
  * Returns 1, or 0 with `error` filled.
  */
 int tree_list_files(const char *root, text_list *files, char *error, size_t error_size);

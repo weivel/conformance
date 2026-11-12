@@ -59,8 +59,20 @@ static int is_present(const text_list *directories, const char *name) {
     return 0;
 }
 
+static int holds_a_file(const char *source_directory, const char *name) {
+    char error[512];
+    text_list files;
+    char *directory = tree_join(source_directory, name);
+    int holds = directory != NULL && tree_list_files(directory, &files, error, sizeof error) && files.count > 0;
+    if (directory != NULL && holds) {
+        text_list_free(&files);
+    }
+    free(directory);
+    return holds;
+}
+
 static int report_offenders(const module_list *modules, const text_list *directories, const char *language,
-                            const char *source_root) {
+                            const char *source_root, const char *source_directory) {
     size_t at;
     int offenders = 0;
     for (at = 0; at < modules->count; at++) {
@@ -73,6 +85,10 @@ static int report_offenders(const module_list *modules, const text_list *directo
     for (at = 0; at < directories->count; at++) {
         if (!is_listed(modules, directories->items[at])) {
             fprintf(stderr, "%s: '%s' under %s is not a module on the list\n", language, directories->items[at],
+                    source_root);
+            offenders++;
+        } else if (!holds_a_file(source_directory, directories->items[at])) {
+            fprintf(stderr, "%s: module '%s' under %s holds no file\n", language, directories->items[at],
                     source_root);
             offenders++;
         }
@@ -115,7 +131,7 @@ static int check_root(const char *root, const module_list *modules, const char *
         free(directory);
         return -1;
     }
-    offenders = report_offenders(modules, &directories, language, source_root);
+    offenders = report_offenders(modules, &directories, language, source_root, directory);
     if (offenders == 0) {
         printf("weivel-parity: %s carries every required module and no other\n", language);
     }

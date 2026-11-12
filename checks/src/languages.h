@@ -15,7 +15,7 @@ typedef struct {
 } language_rules;
 
 /**
- * Reads the lines of `path` that begin with `language`. Each line is `<language> <kind> <value>`, where kind is
+ * Reads the lines of `path` that begin with `language`, or every line when `language` is NULL. Each line is `<language> <kind> <value>`, where kind is
  * `extension`, `name`, `pattern` (one `*` in a file name), `prefix` (a path prefix) or `source-root`.
  * Returns 1, or 0 with `error` filled for an unreadable file or a malformed line. `known` is 0 when no line named
  * the language.
