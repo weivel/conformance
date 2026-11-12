@@ -1,0 +1,52 @@
+{
+  "id": "consume/refuses-a-late-watch-from-a-released-plugin",
+  "op": "consume",
+  "covers": "invariant-14",
+  "given": {
+    "plugins": [
+      {
+        "id": "agenda",
+        "capabilities": {
+          "provides": [],
+          "consumes": [
+            "screens"
+          ]
+        }
+      },
+      {
+        "id": "calendar",
+        "capabilities": {
+          "provides": [
+            "screens"
+          ],
+          "consumes": []
+        }
+      }
+    ],
+    "steps": [
+      {
+        "plugin": "agenda",
+        "release": true
+      },
+      {
+        "plugin": "agenda",
+        "watch": "screens"
+      },
+      {
+        "plugin": "calendar",
+        "provide": "screens"
+      },
+      {
+        "plugin": "calendar",
+        "verify": true
+      }
+    ]
+  },
+  "then": {
+    "heard": {
+      "equals": [
+        []
+      ]
+    }
+  }
+}

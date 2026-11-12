@@ -203,6 +203,55 @@ is absence, not a refusal. The declaration check comes before the late (no longe
 `get`, `want` and `watch`, so an undeclared call from a plugin that is gone is refused and reported
 as undeclared, and only a declared one takes the late path; `ids` ignores lateness.
 
+### `consume`
+
+Given `{ plugins: [{ id, capabilities: { provides: [id], consumes: [id] } }], steps }`. A step names
+its plugin by `id`. `capabilities` goes into the manifest exactly as written, so the engine reads the
+declaration itself.
+**The driver drives a HOST, never a bare registry**: it builds a manifest per plugin, opens each
+plugin's context through the host in the order given, and makes every call through that plugin's own
+context. The refusal and the verified boundary both live in the host, so a driver that calls the
+registry directly answers a question about an engine that never refuses.
+**Each `provide` step hands the engine an implementation that names its provider**, an object
+carrying the providing plugin's id, so a consumer's answer is read off the objects the engine
+returned and never inferred from the steps the driver ran.
+Steps run in order, each one of `{ plugin, provide: id }`, `{ plugin, verify: true }`,
+`{ plugin, all: id }`, `{ plugin, watch: id }`, `{ plugin, quarantine: true }` and
+`{ plugin, release: true }`:
+
+- `provide` provides the named capability through the plugin's context. A vector provides only an id
+  the plugin lists under `capabilities.provides`.
+- `verify` runs the engine's own activation check for that plugin, which compares what it provided
+  with what it declared. A plugin whose check passes is verified. **A plugin whose check refuses is
+  quarantined exactly as a host would**, through the engine's own `markBroken`. A vector produces a
+  refused activation the real way: the plugin lists a capability under `provides` that no step
+  provides, and a `verify` step follows. The driver has no flag that forces a refusal.
+- `quarantine` marks the plugin broken, as a host does for a plugin that fails at run time.
+  `release` stops the plugin and releases what it holds.
+- `all` reads the implementations of that capability through the plugin's context at that step.
+- `watch` installs a listener through the plugin's context at that step, recording each
+  `[providerId, event]` it is handed, `event` being `"provide"` or `"withdraw"`.
+
+Answers `{ outcomes, heard, reported: [[plugin, id]], refusal: { detail, fix } | { message } | null }`:
+
+- `outcomes` holds one entry per `all` step, in step order: the provider ids of the implementations
+  the engine handed back, **in the order handed back**. An undeclared `all` answers `[]`.
+- `heard` holds one entry per `watch` step, in step order, read after the last step: the
+  `[providerId, event]` pairs that listener heard, in the order heard. An undeclared or late `watch`
+  is inert and answers `[]`. A `"withdraw"` is read off the implementation the listener was handed,
+  so it names the provider whose object left.
+- `reported` is read from the host's structured refusal record, one `[plugin, id]` pair per refusal
+  reported and never parsed out of diagnostic text, exactly as for `reach`.
+- `refusal` is the first refusal of the run as text, for the `mentions` check of the fix only.
+
+Invariant 14: an implementation joins `all` when its plugin's activation is verified, not when it
+is provided, and leaves when the plugin is quarantined or released, so a consumer is never handed a
+provider the host is about to refuse. A `watch` reports changes from its own installation onwards
+and never replays. `all` and `watch` answer for an id the plugin lists under `capabilities.consumes`
+or `capabilities.provides` and nothing else; the refusal is reported once per plugin and id, so an
+empty answer from an undeclared `all` is never mistaken for absence. The declaration check comes
+before the lateness check: a released plugin's `all` is let through and its `watch` is inert.
+
 ### `context`
 
 Given `{ host: { portable: path | null, secrets: boolean }, write: { key, value, layer? } }`.
