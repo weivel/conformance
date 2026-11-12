@@ -75,6 +75,11 @@ elseif(SCENARIO STREQUAL "clears_a_startup_clock_only_through_the_objects")
         "" ${the_shared_library})
     expect(0 "QueryPerformanceCounter, imported from KERNEL32.dll, reads the world \\(clock\\), but only the msvc-dll startup code calls it"
         "" ${the_shared_library_and_its_objects})
+    foreach(lookup "GetCurrentProcessId[^\n]*\\(process-identity\\)" "GetCurrentThreadId[^\n]*\\(process-identity\\)"
+            "IsDebuggerPresent[^\n]*\\(debugger\\)")
+        expect(1 "${lookup}; the msvc-dll startup code draws it in, but without the core's objects" ""
+            ${the_shared_library})
+    endforeach()
 elseif(SCENARIO STREQUAL "refuses_a_tool_that_reads_nothing")
     expect(2 "no imports read from [^\n]*so nothing was checked" "reads nothing of the world"
         ${GATE} ${RULES} ${FORMAT} ${SILENT} ${SHARED} ${OBJECTS})
