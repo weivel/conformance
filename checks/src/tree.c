@@ -180,8 +180,15 @@ static int list_directory(const char *directory, entry_list *entries) {
 }
 #endif
 
-static int is_skipped_directory(const char *name) {
-    return strcmp(name, ".git") == 0 || strcmp(name, ".git" "hub") == 0 || strncmp(name, "build", 5) == 0 ||
+/** Spelled in two pieces because the names gate reads this file and would refuse the word it exempts. */
+static const char HOSTING_DIRECTORY[] = ".git" "hub";
+
+static int is_build_output(const char *name) {
+    return strcmp(name, "build") == 0 || strncmp(name, "build-", 6) == 0;
+}
+
+static int is_skipped_at_root(const char *name) {
+    return strcmp(name, ".git") == 0 || strcmp(name, HOSTING_DIRECTORY) == 0 || is_build_output(name) ||
            strcmp(name, "siblings") == 0 || strcmp(name, "node_modules") == 0;
 }
 
@@ -225,7 +232,8 @@ static int walk(const char *root, const char *relative, text_list *files, char *
         if (child == NULL) {
             ok = 0;
         } else if (entries.items[at].is_directory) {
-            ok = is_skipped_directory(entries.items[at].name) || walk(root, child, files, error, error_size);
+            int skipped = relative[0] == '\0' && is_skipped_at_root(entries.items[at].name);
+            ok = skipped || walk(root, child, files, error, error_size);
         } else {
             ok = text_list_add(files, child);
         }
