@@ -7,11 +7,11 @@ static json_value *parse_text(const char *text) {
     return json_parse(text, strlen(text), NULL);
 }
 
-static void check_refused(const char *text, int line, int column) {
+static void check_refused(const char *text, int line, int column, const char *message) {
     json_error error = {0, 0, NULL};
     json_value *value = json_parse(text, strlen(text), &error);
     CHECK(value == NULL);
-    CHECK(error.message != NULL);
+    check_text(error.message, message, text);
     if (error.line != line || error.column != column) {
         fprintf(stderr, "input %s: expected %d:%d, got %d:%d (%s)\n", text, line, column, error.line, error.column,
                 error.message == NULL ? "(null)" : error.message);
@@ -81,27 +81,28 @@ static void reads_literals(void) {
 }
 
 static void refuses_a_trailing_comma(void) {
-    check_refused("[1,\n 2,\n]", 3, 1);
-    check_refused("{\"a\": 1,}", 1, 9);
+    check_refused("[1,\n 2,\n]", 3, 1, "trailing comma");
+    check_refused("{\"a\": 1,}", 1, 9, "trailing comma");
 }
 
 static void refuses_an_unterminated_string(void) {
-    check_refused("[\"abc", 1, 6);
-    check_refused("{\"a\":\n\"b", 2, 3);
+    check_refused("[\"abc", 1, 6, "unterminated string");
+    check_refused("{\"a\":\n\"b", 2, 3, "unterminated string");
 }
 
 static void refuses_a_lone_surrogate(void) {
-    check_refused("[\"\\ud83d\"]", 1, 9);
-    check_refused("[\"\\ude00\"]", 1, 9);
-    check_refused("[\"\\ud83d\\u0041\"]", 1, 15);
+    check_refused("[\"\\ud83d\"]", 1, 9, "lone high surrogate");
+    check_refused("[\"\\ude00\"]", 1, 9, "lone low surrogate");
+    check_refused("[\"\\ud83d\\u0041\"]", 1, 15,
+                  "high surrogate not followed by a low surrogate");
 }
 
 static void refuses_other_malformed_input(void) {
-    check_refused("", 1, 1);
-    check_refused("[1] x", 1, 5);
-    check_refused("[01]", 1, 3);
-    check_refused("{a: 1}", 1, 2);
-    check_refused("[\"a\tb\"]", 1, 4);
+    check_refused("", 1, 1, "unexpected end of input");
+    check_refused("[1] x", 1, 5, "unexpected text after the document");
+    check_refused("[01]", 1, 3, "leading zero in number");
+    check_refused("{a: 1}", 1, 2, "expected a string key");
+    check_refused("[\"a\tb\"]", 1, 4, "control character in string");
 }
 
 static void refuses_nesting_that_would_overflow_the_stack(void) {
