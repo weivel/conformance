@@ -36,3 +36,15 @@ function(conformance_test name)
 endfunction()
 
 conformance_test(json_test conformance_json)
+conformance_test(answer_test conformance_runner)
+conformance_test(match_test conformance_runner)
+conformance_test(runner_test conformance_runner)
+conformance_test(corpus_test conformance_runner)
+target_compile_definitions(corpus_test PRIVATE
+    KIT_VECTORS_DIR="${PROJECT_SOURCE_DIR}/vectors"
+    KIT_FIXTURES_DIR="${PROJECT_SOURCE_DIR}/test/fixtures")
+
+add_test(NAME runner_names_an_unknown_op
+    COMMAND weivel-conformance run ${PROJECT_SOURCE_DIR}/test/fixtures/unknown-op)
+set_tests_properties(runner_names_an_unknown_op PROPERTIES
+    PASS_REGULAR_EXPRESSION "unknown op 'reticulate'")

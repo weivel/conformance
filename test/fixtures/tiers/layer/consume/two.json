@@ -1,0 +1,1 @@
+{ "id": "consume/two", "op": "consume", "covers": "invariant-14", "given": {}, "then": { "heard": [] } }

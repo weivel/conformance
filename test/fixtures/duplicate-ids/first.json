@@ -2,6 +2,6 @@
   "id": "supports/same-id",
   "op": "supports",
   "covers": "12.1",
-  "given": { "host": { "applications": ["claude"], "api": 2 } },
+  "given": { "host": { "applications": ["editor"], "api": 2 } },
   "then": { "refusal": null }
 }
