@@ -76,9 +76,20 @@ mandatory need exactly as a unit's offer would, and the host never appears in `o
 
 ### `resolve`
 
-Given `{ requirement: { id, constraints, degradable }, provider: { advertised, attributesByPoll }, budgetMillis,
-pollMillis }`. Each entry of `attributesByPoll` is what the provider reports at that poll.
-Answers `{ served, atPoll, degraded, attributes, asks: [boolean], report, refusal }`.
+Given `{ requirement: { id, constraints, degradable }, provider: { advertised, attributesByPoll,
+servesOnlyUnconstrained? }, budgetMillis, pollMillis, vocabulary, wellKnownServices }`. Each entry of
+`attributesByPoll` is what the provider reports at that poll; once the list runs out the provider keeps reporting
+its last entry.
+**`vocabulary` and `wellKnownServices` are the host's configuration, and the vector states them** because the core
+mints neither: `vocabulary` is `[{ constraint, attribute, bound: "lower" | "upper" }]`, each naming which attribute
+a constraint is compared against and which way it bounds it, and `wellKnownServices` lists the ids any plugin may
+register, so the provider can register `requirement.id` without a namespace. A vector missing either is not
+answered. The provider and the consumer are two plugins opened on one core; time starts at 0 and advances by
+`pollMillis`.
+Answers `{ served, atPoll, degraded, asks: [boolean], report, refusal }`, and nothing at all when the want never
+settled. `served` is true when the want settled with the provider under its constraints, not degraded; `atPoll` is
+the poll, counted from 1, whose attributes led to that service, and null otherwise. `report` is the warning the
+core logs just before a degraded settlement, null when it did not degrade.
 `asks` is one boolean per time the core asked the provider to serve, true when that ask carried the consumer's
 constraints, so the degradable fallback asking once more with them before asking unconstrained reads as
 `[true, false]` and is observable rather than inferred. It is a boolean rather than the constraint set itself

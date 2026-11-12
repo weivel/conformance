@@ -4,6 +4,7 @@
 #include "text.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #define RESOLVE_MAXIMUM_ASKS 64
 #define RESOLVE_TICK_LIMIT 10000
@@ -30,23 +31,47 @@ typedef struct {
     int failed;
 } resolve_run;
 
-/**
- * @implNote Declared here because the core mints no constraint of its own, exactly as a host declares its
- * well-known services; it is the vocabulary every earlier driver of these vectors declared.
- */
-static weivel_constraint_vocabulary host_vocabulary(weivel_constraint_entry entries[2]) {
-    weivel_constraint_vocabulary vocabulary;
-    entries[0].size = (uint32_t)sizeof entries[0];
-    entries[0].constraint_name = "minReplicas";
-    entries[0].attribute_name = "maxReplicas";
-    entries[0].bound = WEIVEL_BOUND_LOWER;
-    entries[1].size = (uint32_t)sizeof entries[1];
-    entries[1].constraint_name = "maxLatencyMs";
-    entries[1].attribute_name = "latencyMs";
-    entries[1].bound = WEIVEL_BOUND_UPPER;
-    vocabulary.items = entries;
-    vocabulary.count = 2;
-    return vocabulary;
+static int is_array(const json_value *value) {
+    return value != NULL && json_kind_of(value) == JSON_ARRAY;
+}
+
+static int bound_of(const json_value *named, uint32_t *bound) {
+    const char *text = json_as_string(named);
+    if (text != NULL && strcmp(text, "lower") == 0) {
+        *bound = WEIVEL_BOUND_LOWER;
+        return 1;
+    }
+    if (text != NULL && strcmp(text, "upper") == 0) {
+        *bound = WEIVEL_BOUND_UPPER;
+        return 1;
+    }
+    return 0;
+}
+
+static int vocabulary_entry(const json_value *object, weivel_constraint_entry *entry) {
+    entry->size = (uint32_t)sizeof *entry;
+    entry->constraint_name = json_as_string(json_object_get(object, "constraint"));
+    entry->attribute_name = json_as_string(json_object_get(object, "attribute"));
+    return entry->constraint_name != NULL && entry->attribute_name != NULL &&
+           bound_of(json_object_get(object, "bound"), &entry->bound);
+}
+
+/** The host's vocabulary, which the vector states: the core mints no constraint of its own. */
+static int host_vocabulary(arena *owner, const json_value *array, weivel_constraint_vocabulary *vocabulary) {
+    size_t count = json_array_length(array);
+    weivel_constraint_entry *entries = arena_take(owner, count, sizeof *entries);
+    size_t at;
+    vocabulary->items = entries;
+    vocabulary->count = (uint32_t)count;
+    if (!is_array(array) || count > UINT32_MAX || (count > 0 && entries == NULL)) {
+        return 0;
+    }
+    for (at = 0; at < count; at++) {
+        if (!vocabulary_entry(json_array_at(array, at), &entries[at])) {
+            return 0;
+        }
+    }
+    return 1;
 }
 
 /**
@@ -131,12 +156,14 @@ static void forget_log(resolve_run *run) {
     run->log_just_before = NULL;
 }
 
-/** @implNote The core tells a degraded want's consumer why in the log that comes just before its settlement. */
+/** @implNote The core tells a degraded want's consumer why in the warning that comes just before its settlement. */
 static void read_event(const weivel_event *event, void *context) {
     resolve_run *run = context;
     if (event->kind == WEIVEL_EVENT_LOG) {
         forget_log(run);
-        run->log_just_before = text_duplicate(event->data.log.text == NULL ? "" : event->data.log.text);
+        if (event->data.log.level == WEIVEL_LOG_WARNING && event->data.log.text != NULL) {
+            run->log_just_before = text_duplicate(event->data.log.text);
+        }
         return;
     }
     if (event->kind == WEIVEL_EVENT_WANT_SETTLED) {
@@ -155,6 +182,8 @@ typedef struct {
     weivel_service_want need;
     weivel_manifest provider;
     weivel_manifest consumer;
+    weivel_strings well_known_services;
+    weivel_constraint_vocabulary vocabulary;
     int64_t budget_millis;
     int64_t poll_millis;
 } resolve_setup;
@@ -183,7 +212,10 @@ static int read_setup(arena *owner, const json_value *given, resolve_setup *setu
            json_as_int64(json_object_get(given, "pollMillis"), &setup->poll_millis) && setup->poll_millis > 0 &&
            facts_numbers(owner, json_object_get(provider, "advertised"), &setup->offer.attributes) &&
            facts_numbers(owner, json_object_get(requirement, "constraints"), &setup->need.constraints) &&
-           facts_choice(json_object_get(requirement, "degradable"), &setup->need.degradable);
+           facts_choice(json_object_get(requirement, "degradable"), &setup->need.degradable) &&
+           is_array(json_object_get(given, "wellKnownServices")) &&
+           facts_strings(owner, json_object_get(given, "wellKnownServices"), &setup->well_known_services) &&
+           host_vocabulary(owner, json_object_get(given, "vocabulary"), &setup->vocabulary);
 }
 
 static int read_provider_script(const json_value *given, resolve_run *run) {
@@ -253,13 +285,13 @@ static void write_optional_text(answer_writer *answer, const char *text) {
 }
 
 static void write_resolution(answer_writer *answer, const resolve_run *run) {
-    int served_by_provider = run->settled && run->implementation != 0;
+    int served = run->implementation != 0 && !run->degraded;
     uint32_t at;
     answer_begin_object(answer);
     answer_key(answer, "served");
-    answer_bool(answer, served_by_provider && !run->degraded);
+    answer_bool(answer, served);
     answer_key(answer, "atPoll");
-    if (served_by_provider) {
+    if (served) {
         answer_int(answer, run->reads_at_service);
     } else {
         answer_null(answer);
@@ -275,7 +307,7 @@ static void write_resolution(answer_writer *answer, const resolve_run *run) {
     answer_key(answer, "report");
     write_optional_text(answer, run->report);
     answer_key(answer, "refusal");
-    session_answer_refusal(answer, run->settled ? run->code : WEIVEL_REFUSAL_NONE, run->detail, run->fix);
+    session_answer_refusal(answer, run->code, run->detail, run->fix);
     answer_end_object(answer);
 }
 
@@ -287,20 +319,16 @@ static void release_run(resolve_run *run) {
 }
 
 static int drive(resolve_run *run, const resolve_setup *setup, answer_writer *answer) {
-    weivel_constraint_entry entries[2];
-    const char *well_known[1];
     weivel_core_options options = WEIVEL_INIT(weivel_core_options);
     int answered = 0;
-    well_known[0] = setup->service_id;
-    options.well_known_services.items = well_known;
-    options.well_known_services.count = 1;
-    options.constraint_vocabulary = host_vocabulary(entries);
+    options.well_known_services = setup->well_known_services;
+    options.constraint_vocabulary = setup->vocabulary;
     if (!session_open(&run->session, &options, read_event, run)) {
         return 0;
     }
     if (start_want(run, setup)) {
         advance_until_settled(run, setup->poll_millis);
-        answered = !run->failed && !run->session.failed;
+        answered = run->settled && !run->failed && !run->session.failed;
     }
     if (answered) {
         write_resolution(answer, run);

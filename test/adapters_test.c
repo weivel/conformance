@@ -27,6 +27,14 @@ static int answers_nothing(op_adapter adapter, const char *given_text) {
     return !answered;
 }
 
+#define HOST_SERVICES "\"wellKnownServices\":[\"store\"],"
+#define HOST_VOCABULARY_LOWER "{\"constraint\":\"minReplicas\",\"attribute\":\"maxReplicas\",\"bound\":\"lower\"},"
+#define HOST_VOCABULARY_UPPER "{\"constraint\":\"maxLatencyMs\",\"attribute\":\"latencyMs\",\"bound\":\"upper\"}"
+#define HOST_VOCABULARY "\"vocabulary\":[" HOST_VOCABULARY_LOWER HOST_VOCABULARY_UPPER "],"
+#define NEVER_REQUIREMENT "\"requirement\":{\"id\":\"store\",\"constraints\":{\"minReplicas\":3},\"degradable\":true},"
+#define NEVER_PROVIDER "\"provider\":{\"advertised\":{\"maxReplicas\":1},\"attributesByPoll\":[{\"maxReplicas\":1}]},"
+#define NEVER_SATISFIED NEVER_REQUIREMENT NEVER_PROVIDER
+
 static const char *text_at(const json_value *object, const char *key) {
     return json_as_string(json_object_get(object, key));
 }
@@ -94,6 +102,12 @@ static void refuses_to_answer_a_requirement_of_an_unknown_kind(void) {
     CHECK(answers_nothing(adapter_order, "{\"edgeSource\":\"everything\",\"units\":[]}"));
 }
 
+static void refuses_to_answer_a_unit_whose_lists_are_not_arrays(void) {
+    CHECK(answers_nothing(adapter_order, "{\"edgeSource\":\"services\",\"units\":[{\"id\":\"a\",\"provides\":{},"
+                                         "\"requires\":[]}]}"));
+    CHECK(answers_nothing(adapter_order, "{\"edgeSource\":\"services\",\"units\":[{\"id\":\"a\",\"provides\":[]}]}"));
+}
+
 static void hands_the_object_form_of_a_consumed_service_to_the_core(void) {
     json_value *answer = answer_of(adapter_unbound,
                                    "{\"manifest\":{\"importName\":\"agenda\",\"api\":1,\"services\":{\"consumes\":["
@@ -108,10 +122,8 @@ static void hands_the_object_form_of_a_consumed_service_to_the_core(void) {
 }
 
 static void reports_why_a_want_degraded_and_what_it_asked(void) {
-    json_value *answer = answer_of(adapter_resolve,
-                                   "{\"requirement\":{\"id\":\"store\",\"constraints\":{\"minReplicas\":3},"
-                                   "\"degradable\":true},\"provider\":{\"advertised\":{\"maxReplicas\":1},"
-                                   "\"attributesByPoll\":[{\"maxReplicas\":1}]},\"budgetMillis\":2000,\"pollMillis\":1000}");
+    json_value *answer = answer_of(adapter_resolve, "{" HOST_SERVICES HOST_VOCABULARY NEVER_SATISFIED
+                                                    "\"budgetMillis\":2000,\"pollMillis\":1000}");
     const json_value *asks = json_object_get(answer, "asks");
     const char *report = text_at(answer, "report");
     CHECK(answer != NULL);
@@ -119,13 +131,15 @@ static void reports_why_a_want_degraded_and_what_it_asked(void) {
     CHECK(flag_at(answer, "served") == 0);
     CHECK(report != NULL && strlen(report) > 0);
     CHECK(json_array_length(asks) == 1);
+    CHECK(json_kind_of(json_object_get(answer, "atPoll")) == JSON_NULL);
     CHECK(json_kind_of(json_object_get(answer, "refusal")) == JSON_NULL);
     json_free(answer);
 }
 
 static void counts_the_poll_that_served(void) {
     json_value *answer = answer_of(adapter_resolve,
-                                   "{\"requirement\":{\"id\":\"store\",\"constraints\":{\"maxLatencyMs\":50},"
+                                   "{" HOST_SERVICES HOST_VOCABULARY
+                                   "\"requirement\":{\"id\":\"store\",\"constraints\":{\"maxLatencyMs\":50},"
                                    "\"degradable\":false},\"provider\":{\"advertised\":{\"latencyMs\":90},"
                                    "\"attributesByPoll\":[{},{},{\"latencyMs\":40}]},\"budgetMillis\":9000,\"pollMillis\":1000}");
     int64_t at_poll = 0;
@@ -136,9 +150,21 @@ static void counts_the_poll_that_served(void) {
     json_free(answer);
 }
 
-static void refuses_to_answer_a_resolve_without_a_poll_interval(void) {
-    CHECK(answers_nothing(adapter_resolve, "{\"requirement\":{\"id\":\"store\",\"constraints\":{\"minReplicas\":1}},"
-                                           "\"provider\":{\"advertised\":{}},\"budgetMillis\":10}"));
+static void refuses_to_answer_a_resolve_missing_a_premise(void) {
+    CHECK(answers_nothing(adapter_resolve, "{" HOST_SERVICES HOST_VOCABULARY NEVER_SATISFIED "\"budgetMillis\":10}"));
+    CHECK(answers_nothing(adapter_resolve,
+                          "{" HOST_VOCABULARY NEVER_SATISFIED "\"budgetMillis\":2000,\"pollMillis\":1000}"));
+    CHECK(answers_nothing(adapter_resolve,
+                          "{" HOST_SERVICES NEVER_SATISFIED "\"budgetMillis\":2000,\"pollMillis\":1000}"));
+    CHECK(answers_nothing(adapter_resolve, "{" HOST_SERVICES
+                                           "\"vocabulary\":[{\"constraint\":\"minReplicas\",\"attribute\":\"maxReplicas\","
+                                           "\"bound\":\"sideways\"}]," NEVER_SATISFIED
+                                           "\"budgetMillis\":2000,\"pollMillis\":1000}"));
+}
+
+static void answers_nothing_for_a_want_that_never_settled(void) {
+    CHECK(answers_nothing(adapter_resolve, "{" HOST_SERVICES HOST_VOCABULARY NEVER_SATISFIED
+                                           "\"budgetMillis\":1000000000,\"pollMillis\":1}"));
 }
 
 static void hands_back_the_payload_it_was_given(void) {
@@ -155,10 +181,12 @@ int main(void) {
     starts_a_provider_before_the_consumer_that_needs_it();
     answers_each_edge_as_provider_then_consumer();
     refuses_to_answer_a_requirement_of_an_unknown_kind();
+    refuses_to_answer_a_unit_whose_lists_are_not_arrays();
     hands_the_object_form_of_a_consumed_service_to_the_core();
     reports_why_a_want_degraded_and_what_it_asked();
     counts_the_poll_that_served();
-    refuses_to_answer_a_resolve_without_a_poll_interval();
+    refuses_to_answer_a_resolve_missing_a_premise();
+    answers_nothing_for_a_want_that_never_settled();
     hands_back_the_payload_it_was_given();
     return check_summary("adapters_test");
 }

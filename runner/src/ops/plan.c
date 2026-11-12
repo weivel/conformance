@@ -29,6 +29,9 @@ static int is_kind(const json_value *entry, const char *kind) {
 
 static int has_known_kinds(const json_value *array) {
     size_t at;
+    if (array == NULL || json_kind_of(array) != JSON_ARRAY) {
+        return 0;
+    }
     for (at = 0; at < json_array_length(array); at++) {
         const json_value *entry = json_array_at(array, at);
         if (!is_kind(entry, "capability") && !is_kind(entry, "service")) {

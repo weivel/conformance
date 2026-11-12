@@ -3,6 +3,11 @@
   "op": "resolve",
   "covers": "12.4",
   "given": {
+    "wellKnownServices": ["storage.object"],
+    "vocabulary": [
+      { "constraint": "minReplicas", "attribute": "maxReplicas", "bound": "lower" },
+      { "constraint": "maxLatencyMs", "attribute": "latencyMs", "bound": "upper" }
+    ],
     "requirement": {
       "id": "storage.object",
       "constraints": {
