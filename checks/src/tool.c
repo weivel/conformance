@@ -39,6 +39,8 @@ static int text_append(growing_text *text, const char *data, size_t length) {
     return 1;
 }
 
+#ifdef _WIN32
+
 static int text_append_repeated(growing_text *text, char character, size_t times) {
     size_t at;
     for (at = 0; at < times; at++) {
@@ -48,8 +50,6 @@ static int text_append_repeated(growing_text *text, char character, size_t times
     }
     return 1;
 }
-
-#ifdef _WIN32
 
 /** Quotes one argument the way the C runtime's command-line parser reads it back, backslashes before a quote doubled. */
 static int append_quoted_argument(growing_text *line, const char *argument) {
