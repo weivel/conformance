@@ -56,3 +56,6 @@ The committed budget, `median_nanoseconds 360`, is 2.5 times the slowest CI runn
 drift job measured these medians in Release on 2026-11-12, four readings per runner over two runs: Windows 133.0 to
 143.9 ns, macOS 85 to 97 ns, Linux 63.2 to 69.3 ns. The factor is wide enough for runner noise and narrow enough that
 an added system call, allocation or sleep in the call path trips it.
+
+The core's drift job reads this kit at a pinned commit, the `kit_ref` of the core's drift workflow, so a change to a
+check, list or budget here reaches the core only when that pin moves, in the same wave.
