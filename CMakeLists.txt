@@ -36,6 +36,7 @@ function(conformance_test name)
 endfunction()
 
 conformance_test(json_test conformance_json)
+conformance_test(adapters_test conformance_runner)
 conformance_test(answer_test conformance_runner)
 conformance_test(match_test conformance_runner)
 conformance_test(runner_test conformance_runner)

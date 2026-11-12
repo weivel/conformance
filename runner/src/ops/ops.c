@@ -1,11 +1,23 @@
 #include "ops.h"
 
+#include "adapters.h"
+
 #include <string.h>
 
 static const op_entry OPS[] = {
-    {"supports", NULL}, {"boot", NULL},   {"order", NULL},   {"resolve", NULL}, {"revoke", NULL},
-    {"scope", NULL},    {"want", NULL},   {"reach", NULL},   {"unbound", NULL}, {"carry", NULL},
-    {"consume", NULL},  {"identity", NULL}, {"validate", NULL},
+    {"supports", adapter_supports},
+    {"boot", adapter_boot},
+    {"order", adapter_order},
+    {"resolve", adapter_resolve},
+    {"revoke", NULL},
+    {"scope", NULL},
+    {"want", NULL},
+    {"reach", NULL},
+    {"unbound", adapter_unbound},
+    {"carry", adapter_carry},
+    {"consume", NULL},
+    {"identity", NULL},
+    {"validate", NULL},
 };
 
 const op_entry *ops_all(size_t *count) {
