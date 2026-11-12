@@ -8,9 +8,11 @@
       "importName": "config-ledger",
       "api": "one",
       "entry": "dist/index.js",
-      "capabilities": [
-        "provider"
-      ]
+      "capabilities": {
+        "provides": [
+          "provider"
+        ]
+      }
     }
   },
   "then": {

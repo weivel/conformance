@@ -8,19 +8,21 @@
       "importName": "config-ledger",
       "api": 2,
       "entry": "dist/index.js",
-      "capabilities": [
-        "provider",
-        "provider",
-        "provider"
-      ]
+      "capabilities": {
+        "provides": [
+          "provider",
+          "provider",
+          "provider"
+        ]
+      }
     }
   },
   "then": {
     "valid": false,
     "paths": {
       "equals": [
-        "capabilities[1]",
-        "capabilities[2]"
+        "capabilities.provides[1]",
+        "capabilities.provides[2]"
       ]
     }
   }
