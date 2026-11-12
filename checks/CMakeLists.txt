@@ -8,6 +8,7 @@ foreach(check purity names parity core_gate)
     target_link_libraries(weivel-${program} PRIVATE checks_tree)
     conformance_strict_warnings(weivel-${program})
 endforeach()
+target_sources(weivel-core-gate PRIVATE src/core_rules.c src/core_sources.c)
 
 set(checks_test_scenarios
     purity_rejects_a_typescript_file_in_a_c_repo
@@ -130,10 +131,18 @@ set(core_gate_scenarios
     clears_a_startup_clock_only_through_the_objects:nothing
     refuses_a_tool_that_reads_nothing:nothing
     refuses_a_tool_it_cannot_run:nothing
-    reads_a_library_whose_path_holds_a_space_and_a_quote:nothing)
-set(core_gate_scenarios_on_windows_only clears_a_startup_clock_only_through_the_objects)
+    reads_a_library_whose_path_holds_a_space_and_a_quote:nothing
+    refuses_objects_the_library_was_not_built_from:nothing
+    refuses_an_object_without_a_symbol_table:nothing
+    source_scan_refuses_each_pattern:nothing
+    source_scan_accepts_lookalikes_and_the_mutex_file:nothing
+    source_scan_refuses_an_empty_tree:nothing)
+set(core_gate_scenarios_on_windows_only
+    clears_a_startup_clock_only_through_the_objects refuses_an_object_without_a_symbol_table)
 set(core_gate_scenarios_alike_everywhere
-    refuses_a_tool_that_reads_nothing refuses_a_tool_it_cannot_run reads_a_library_whose_path_holds_a_space_and_a_quote)
+    refuses_a_tool_that_reads_nothing refuses_a_tool_it_cannot_run reads_a_library_whose_path_holds_a_space_and_a_quote
+    source_scan_refuses_each_pattern source_scan_accepts_lookalikes_and_the_mutex_file
+    source_scan_refuses_an_empty_tree)
 
 set(core_gate_plants "")
 foreach(entry IN LISTS core_gate_scenarios)
@@ -145,6 +154,17 @@ list(REMOVE_DUPLICATES core_gate_plants)
 foreach(plant IN LISTS core_gate_plants)
     core_gate_fixture(${plant})
 endforeach()
+
+add_library(core_gate_nothing_missing_an_object STATIC ${core_gate_fixtures}/base.c ${core_gate_fixtures}/mutex.c)
+conformance_strict_warnings(core_gate_nothing_missing_an_object)
+set(core_gate_opaque_objects none)
+if(MSVC)
+    add_library(core_gate_nothing_whole_program STATIC
+        ${core_gate_fixtures}/base.c ${core_gate_fixtures}/mutex.c ${core_gate_fixtures}/plant_nothing.c)
+    conformance_strict_warnings(core_gate_nothing_whole_program)
+    target_compile_options(core_gate_nothing_whole_program PRIVATE /GL)
+    set(core_gate_opaque_objects $<TARGET_FILE:core_gate_nothing_whole_program>)
+endif()
 
 foreach(entry IN LISTS core_gate_scenarios)
     string(REPLACE ":" ";" parts ${entry})
@@ -167,6 +187,8 @@ foreach(entry IN LISTS core_gate_scenarios)
                 -DTOOL=${core_gate_tool} -DSILENT=$<TARGET_FILE:core_gate_silent_tool>
                 -DSHARED=$<TARGET_FILE:core_gate_${plant}_shared> -DOBJECTS=$<TARGET_FILE:core_gate_${plant}_static>
                 -DWORK=${PROJECT_BINARY_DIR}/checks-work
+                -DMISSING_AN_OBJECT=$<TARGET_FILE:core_gate_nothing_missing_an_object>
+                -DOPAQUE_OBJECTS=${core_gate_opaque_objects} -DCORE_SHARED=$<TARGET_FILE:weivel_core_shared>
                 -P ${PROJECT_SOURCE_DIR}/test/core_gate_test.cmake)
         set_tests_properties(${name} PROPERTIES SKIP_RETURN_CODE 77)
     endforeach()
@@ -175,3 +197,5 @@ endforeach()
 add_test(NAME core_reads_nothing_of_the_world
     COMMAND weivel-core-gate ${core_gate_rules} ${core_gate_format} ${core_gate_tool}
         $<TARGET_FILE:weivel_core_shared> $<TARGET_FILE:weivel_core>)
+add_test(NAME core_sources_read_nothing_of_the_world
+    COMMAND weivel-core-gate --sources ${core_gate_rules} ${PROJECT_SOURCE_DIR}/siblings/core)

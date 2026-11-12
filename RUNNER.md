@@ -293,6 +293,7 @@ weivel-purity <root> <role> <languages-file>
 weivel-names <root> <words-file>
 weivel-parity <root> <modules-file> <language> [languages-file]
 weivel-core-gate <rules-file> <msvc|gnu|apple> <tool> <shared-library> [<static-library>...]
+weivel-core-gate --sources <rules-file> <core-root>
 ```
 
 - Purity: the roles `c`, `core`, `kit` and `standard` allow C, headers, CMake, JSON and prose, and refuse a build file of any language in `checks/languages.txt`
@@ -316,4 +317,10 @@ weivel-core-gate <rules-file> <msvc|gnu|apple> <tool> <shared-library> [<static-
   startup code draws into a shared library. Anything else is an offender. An import table cannot say which object
   calls a lock, so lock calls are attributed through the objects, and without them the gate says they were not.
   The MSVC startup code imports a clock and the environment (`QueryPerformanceCounter`, `_configure_narrow_argv` and
-  others), so such an import passes only when the objects are given and none of them references it.
+  others), so such an import passes only when the objects are given and none of them references it. The objects
+  must be the ones the library was built from: every export must be defined by exactly one of them (a `startup-export`
+  line names what the toolchain exports by itself), and an object with no symbol table, such as one compiled for
+  link-time code generation, is refused.
+- Core gate, `--sources`: an import table cannot see an intrinsic, an inline system call or inline assembly, so the
+  same rules file also lists `forbid-source` names (`<reason> <word|call|prefix|text> <name>`) found anywhere under
+  the core's `src` and `include`, and `source-in-mutex-only` lock names refused outside the `mutex-source` file.

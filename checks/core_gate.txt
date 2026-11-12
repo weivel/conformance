@@ -43,6 +43,12 @@ allow-from-startup glibc-shared-library __cxa_finalize
 allow-from-startup glibc-shared-library _ITM_deregisterTMCloneTable
 allow-from-startup glibc-shared-library _ITM_registerTMCloneTable
 allow-from-startup glibc-shared-library __gmon_start__
+startup-export glibc-shared-library _init
+startup-export glibc-shared-library _fini
+startup-export glibc-shared-library _edata
+startup-export glibc-shared-library _end
+startup-export glibc-shared-library __bss_start
+startup-export apple-dylib _mh_dylib_header
 allow-from-startup msvc-dll IsDebuggerPresent
 allow-from-startup msvc-dll InitializeSListHead
 allow-from-startup msvc-dll DisableThreadLibraryCalls
@@ -219,9 +225,51 @@ forbid code-loading dlsym
 forbid code-loading *LoadLibrary*
 forbid code-loading LoadPackagedLibrary
 forbid code-loading GetProcAddress
+forbid process-identity GetCurrentProcessId
+forbid process-identity GetCurrentThreadId
+forbid debugger IsDebuggerPresent
+forbid memory-map VirtualQuery*
+forbid module-lookup *GetModuleHandle*
 forbid network socket
 forbid network connect
 forbid network getaddrinfo
 forbid network gethostbyname
 forbid network WSAStartup
 forbid-name json *json*
+mutex-source src/mutex.c
+forbid-source file-access word fopen
+forbid-source file-access word fopen64
+forbid-source file-access word fopen_s
+forbid-source file-access word freopen
+forbid-source file-access call open
+forbid-source file-access prefix CreateFile
+forbid-source environment word getenv
+forbid-source environment word secure_getenv
+forbid-source environment prefix GetEnvironmentVariable
+forbid-source clock call time
+forbid-source clock call clock
+forbid-source clock word clock_gettime
+forbid-source clock word timespec_get
+forbid-source clock word gettimeofday
+forbid-source clock word mach_absolute_time
+forbid-source clock prefix QueryPerformanceCounter
+forbid-source clock prefix GetTickCount
+forbid-source clock prefix GetSystemTime
+forbid-source clock prefix __rdtsc
+forbid-source clock word rdtsc
+forbid-source clock word rdtscp
+forbid-source system-call call syscall
+forbid-source inline-assembly word asm
+forbid-source inline-assembly prefix __asm
+forbid-source json text json
+source-in-mutex-only windows-lock prefix InitializeSRWLock
+source-in-mutex-only windows-lock prefix AcquireSRWLock
+source-in-mutex-only windows-lock prefix ReleaseSRWLock
+source-in-mutex-only windows-lock prefix TryAcquireSRWLock
+source-in-mutex-only windows-lock prefix InitializeCriticalSection
+source-in-mutex-only windows-lock prefix EnterCriticalSection
+source-in-mutex-only windows-lock prefix LeaveCriticalSection
+source-in-mutex-only posix-lock prefix pthread_mutex_
+source-in-mutex-only posix-lock prefix pthread_rwlock_
+source-in-mutex-only posix-lock prefix pthread_spin_
+source-in-mutex-only c11-lock prefix mtx_

@@ -3,39 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "core_rules.h"
+#include "core_sources.h"
 #include "tool.h"
 #include "tree.h"
 
-#define MAXIMUM_TOKENS 8
 
 typedef enum { FORMAT_MSVC, FORMAT_GNU, FORMAT_APPLE } symbol_format;
-
-typedef enum {
-    RULE_ALLOW_EVERYWHERE,
-    RULE_ALLOW_IN_MUTEX,
-    RULE_ALLOW_FROM_COMPILER,
-    RULE_ALLOW_FROM_STARTUP,
-    RULE_FORBID,
-    RULE_FORBID_NAME
-} rule_kind;
-
-static const char *const RULE_KIND_NAMES[] = {
-    "allow-everywhere", "allow-in-mutex", "allow-from-compiler", "allow-from-startup", "forbid", "forbid-name"};
-
-#define RULE_KIND_COUNT (sizeof(RULE_KIND_NAMES) / sizeof(RULE_KIND_NAMES[0]))
-#define MUTEX_MARKER_KIND "mutex-object-defines"
-
-typedef struct {
-    rule_kind kind;
-    char *reason;
-    char *pattern;
-} rule;
-
-typedef struct {
-    rule *items;
-    size_t count;
-    char *mutex_marker;
-} rule_set;
 
 typedef struct {
     char *label;
@@ -62,39 +36,6 @@ typedef struct {
     const object_symbols *mutex_object;
     size_t offenders;
 } verdict;
-
-static char *duplicate(const char *text, size_t length) {
-    char *copy = malloc(length + 1);
-    if (copy != NULL) {
-        memcpy(copy, text, length);
-        copy[length] = '\0';
-    }
-    return copy;
-}
-
-static size_t split_tokens(char *line, char **tokens) {
-    size_t count = 0;
-    char *cursor = line;
-    while (*cursor != '\0') {
-        while (*cursor == ' ' || *cursor == '\t') {
-            cursor++;
-        }
-        if (*cursor == '\0') {
-            break;
-        }
-        if (count < MAXIMUM_TOKENS) {
-            tokens[count] = cursor;
-        }
-        count++;
-        while (*cursor != '\0' && *cursor != ' ' && *cursor != '\t') {
-            cursor++;
-        }
-        if (*cursor != '\0') {
-            *cursor++ = '\0';
-        }
-    }
-    return count;
-}
 
 static char *next_line(char **cursor) {
     char *line = *cursor;
@@ -178,45 +119,6 @@ static const char *base_name(const char *path) {
     return base;
 }
 
-static int contains_ignoring_case(const char *text, const char *needle, size_t needle_length) {
-    size_t text_length = strlen(text);
-    size_t start;
-    size_t at;
-    for (start = 0; start + needle_length <= text_length; start++) {
-        for (at = 0; at < needle_length; at++) {
-            if (tolower((unsigned char)text[start + at]) != tolower((unsigned char)needle[at])) {
-                break;
-            }
-        }
-        if (at == needle_length) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-/** `*text*` matches a substring in any case, `text*` a prefix, anything else the whole symbol. */
-static int pattern_matches(const char *pattern, const char *symbol) {
-    size_t length = strlen(pattern);
-    if (length >= 2 && pattern[0] == '*' && pattern[length - 1] == '*') {
-        return contains_ignoring_case(symbol, pattern + 1, length - 2);
-    }
-    if (length >= 1 && pattern[length - 1] == '*') {
-        return strncmp(symbol, pattern, length - 1) == 0;
-    }
-    return strcmp(symbol, pattern) == 0;
-}
-
-static const rule *find_rule(const rule_set *rules, rule_kind kind, const char *symbol) {
-    size_t at;
-    for (at = 0; at < rules->count; at++) {
-        if (rules->items[at].kind == kind && pattern_matches(rules->items[at].pattern, symbol)) {
-            return &rules->items[at];
-        }
-    }
-    return NULL;
-}
-
 static int list_contains(const text_list *list, const char *text) {
     size_t at;
     for (at = 0; at < list->count; at++) {
@@ -225,90 +127,6 @@ static int list_contains(const text_list *list, const char *text) {
         }
     }
     return 0;
-}
-
-static int parse_rule_kind(const char *name, rule_kind *kind) {
-    size_t at;
-    for (at = 0; at < RULE_KIND_COUNT; at++) {
-        if (strcmp(name, RULE_KIND_NAMES[at]) == 0) {
-            *kind = (rule_kind)at;
-            return 1;
-        }
-    }
-    return 0;
-}
-
-static int add_rule(rule_set *rules, rule_kind kind, const char *reason, const char *pattern) {
-    rule *grown = realloc(rules->items, (rules->count + 1) * sizeof *grown);
-    if (grown == NULL) {
-        return 0;
-    }
-    rules->items = grown;
-    grown[rules->count].kind = kind;
-    grown[rules->count].reason = duplicate(reason, strlen(reason));
-    grown[rules->count].pattern = duplicate(pattern, strlen(pattern));
-    rules->count++;
-    return grown[rules->count - 1].reason != NULL && grown[rules->count - 1].pattern != NULL;
-}
-
-static int parse_rule_line(char *line, rule_set *rules, const char *path) {
-    char *tokens[MAXIMUM_TOKENS];
-    size_t count = split_tokens(line, tokens);
-    rule_kind kind;
-    if (count == 2 && strcmp(tokens[0], MUTEX_MARKER_KIND) == 0) {
-        free(rules->mutex_marker);
-        rules->mutex_marker = duplicate(tokens[1], strlen(tokens[1]));
-        return rules->mutex_marker != NULL;
-    }
-    if (count != 3 || !parse_rule_kind(tokens[0], &kind)) {
-        fprintf(stderr, "%s: cannot read the rule '%s'\n", path, tokens[0]);
-        return 0;
-    }
-    return add_rule(rules, kind, tokens[1], tokens[2]);
-}
-
-static size_t count_rules(const rule_set *rules, rule_kind kind) {
-    size_t at;
-    size_t count = 0;
-    for (at = 0; at < rules->count; at++) {
-        count += rules->items[at].kind == kind;
-    }
-    return count;
-}
-
-static int load_rules(const char *path, rule_set *rules) {
-    text_list lines;
-    char error[512];
-    size_t at;
-    int ok = 1;
-    if (!tree_read_lines(path, &lines, error, sizeof error)) {
-        fprintf(stderr, "%s\n", error);
-        return 0;
-    }
-    for (at = 0; ok && at < lines.count; at++) {
-        ok = parse_rule_line(lines.items[at], rules, path);
-    }
-    text_list_free(&lines);
-    if (ok && count_rules(rules, RULE_FORBID) == 0) {
-        fprintf(stderr, "%s: no forbid rules, so the gate would refuse nothing\n", path);
-        return 0;
-    }
-    if (ok && rules->mutex_marker == NULL) {
-        fprintf(stderr, "%s: no %s line, so a lock call cannot be attributed to the mutex object\n", path,
-            MUTEX_MARKER_KIND);
-        return 0;
-    }
-    return ok;
-}
-
-static void free_rules(rule_set *rules) {
-    size_t at;
-    for (at = 0; at < rules->count; at++) {
-        free(rules->items[at].reason);
-        free(rules->items[at].pattern);
-    }
-    free(rules->items);
-    free(rules->mutex_marker);
 }
 
 static int add_normalised(text_list *list, symbol_format format, const char *raw) {
@@ -325,7 +143,7 @@ static int add_normalised(text_list *list, symbol_format format, const char *raw
     if (format == FORMAT_GNU || format == FORMAT_APPLE) {
         length = strcspn(start, format == FORMAT_GNU ? "@" : "$");
     }
-    copy = duplicate(start, length);
+    copy = duplicate_text(start, length);
     if (copy == NULL) {
         return 0;
     }
@@ -506,7 +324,7 @@ static object_symbols *start_object(object_list *objects, const char *label) {
     }
     objects->items = grown;
     memset(&grown[objects->count], 0, sizeof grown[objects->count]);
-    grown[objects->count].label = duplicate(label, strlen(label));
+    grown[objects->count].label = duplicate_text(label, strlen(label));
     if (grown[objects->count].label == NULL) {
         return NULL;
     }
@@ -520,6 +338,9 @@ static int record_msvc_symbol(char *line, object_symbols *object) {
     size_t left_count;
     const char *section;
     const char *storage;
+    if (bar == NULL) {
+        return 1;
+    }
     *bar = '\0';
     left_count = split_tokens(line, left_tokens);
     if (left_count < 4 || left_count > MAXIMUM_TOKENS || split_tokens(bar + 2, right_tokens) == 0) {
@@ -546,31 +367,28 @@ static char *archive_member_label(char *line) {
     char *tokens[MAXIMUM_TOKENS];
     size_t count = split_tokens(line, tokens);
     const char *last = tokens[(count > MAXIMUM_TOKENS ? MAXIMUM_TOKENS : count) - 1];
-    return duplicate(base_name(last), strlen(base_name(last)));
+    return duplicate_text(base_name(last), strlen(base_name(last)));
 }
 
 static int parse_msvc_objects(char *output, const char *path, object_list *objects) {
     char *cursor = output;
     char *line;
-    char *member_label = NULL;
     object_symbols *object = NULL;
     int ok = 1;
     while (ok && (line = next_line(&cursor)) != NULL) {
         const char *text = skip_spaces(line);
         if (starts_with(text, "Archive member name at ")) {
+            char *member_label = archive_member_label(line);
+            object = member_label == NULL ? NULL : start_object(objects, member_label);
             free(member_label);
-            member_label = archive_member_label(line);
-            ok = member_label != NULL;
-        } else if (strcmp(text, "COFF SYMBOL TABLE") == 0) {
-            object = start_object(objects, member_label != NULL ? member_label : base_name(path));
             ok = object != NULL;
-            free(member_label);
-            member_label = NULL;
-        } else if (object != NULL && strstr(line, "| ") != NULL) {
+        } else if (strcmp(text, "COFF SYMBOL TABLE") == 0 && object == NULL) {
+            object = start_object(objects, base_name(path));
+            ok = object != NULL;
+        } else if (object != NULL) {
             ok = record_msvc_symbol(line, object);
         }
     }
-    free(member_label);
     return ok;
 }
 
@@ -660,13 +478,13 @@ static const object_symbols *referencing_object(const object_list *objects, cons
 }
 
 static int is_allowed_outside_the_mutex(const rule_set *rules, const char *symbol) {
-    return find_rule(rules, RULE_ALLOW_EVERYWHERE, symbol) != NULL ||
-           find_rule(rules, RULE_ALLOW_FROM_COMPILER, symbol) != NULL;
+    return rules_find(rules, RULE_ALLOW_EVERYWHERE, symbol) != NULL ||
+           rules_find(rules, RULE_ALLOW_FROM_COMPILER, symbol) != NULL;
 }
 
 static void check_object_reference(verdict *result, const object_symbols *object, const char *symbol) {
-    const rule *forbidden = find_rule(result->rules, RULE_FORBID, symbol);
-    if (find_rule(result->rules, RULE_FORBID_NAME, symbol) != NULL) {
+    const rule *forbidden = rules_find(result->rules, RULE_FORBID, symbol);
+    if (rules_find(result->rules, RULE_FORBID_NAME, symbol) != NULL) {
         return;
     }
     if (forbidden != NULL) {
@@ -674,7 +492,7 @@ static void check_object_reference(verdict *result, const object_symbols *object
     } else if (defined_in_the_objects(result->objects, symbol) ||
                is_allowed_outside_the_mutex(result->rules, symbol)) {
         return;
-    } else if (find_rule(result->rules, RULE_ALLOW_IN_MUTEX, symbol) != NULL) {
+    } else if (rules_find(result->rules, RULE_ALLOW_IN_MUTEX, symbol) != NULL) {
         if (object == result->mutex_object) {
             return;
         }
@@ -689,7 +507,7 @@ static void check_object_reference(verdict *result, const object_symbols *object
 static void check_names(verdict *result, const char *where, const text_list *names) {
     size_t at;
     for (at = 0; at < names->count; at++) {
-        const rule *forbidden = find_rule(result->rules, RULE_FORBID_NAME, names->items[at]);
+        const rule *forbidden = rules_find(result->rules, RULE_FORBID_NAME, names->items[at]);
         if (forbidden != NULL) {
             fprintf(stderr, "%s: %s carries a forbidden name (%s)\n", where, names->items[at], forbidden->reason);
             result->offenders++;
@@ -733,9 +551,9 @@ static void check_startup_import(verdict *result, const char *shared_path, const
 }
 
 static int check_import(verdict *result, const char *shared_path, const char *symbol, const char *source) {
-    const rule *forbidden = find_rule(result->rules, RULE_FORBID, symbol);
-    const rule *startup = find_rule(result->rules, RULE_ALLOW_FROM_STARTUP, symbol);
-    if (find_rule(result->rules, RULE_FORBID_NAME, symbol) != NULL) {
+    const rule *forbidden = rules_find(result->rules, RULE_FORBID, symbol);
+    const rule *startup = rules_find(result->rules, RULE_ALLOW_FROM_STARTUP, symbol);
+    if (rules_find(result->rules, RULE_FORBID_NAME, symbol) != NULL) {
         return 0;
     }
     if (forbidden != NULL && startup != NULL) {
@@ -744,7 +562,7 @@ static int check_import(verdict *result, const char *shared_path, const char *sy
         fprintf(stderr, "%s: %s, imported from %s, reads the world (%s)\n", shared_path, symbol, source,
             forbidden->reason);
         result->offenders++;
-    } else if (find_rule(result->rules, RULE_ALLOW_IN_MUTEX, symbol) != NULL) {
+    } else if (rules_find(result->rules, RULE_ALLOW_IN_MUTEX, symbol) != NULL) {
         return 1;
     } else if (startup == NULL && !is_allowed_outside_the_mutex(result->rules, symbol)) {
         fprintf(stderr, "%s: %s, imported from %s, is not on the allow list\n", shared_path, symbol, source);
@@ -832,6 +650,18 @@ static int parse_format(const char *name, symbol_format *format) {
     return 1;
 }
 
+static int every_object_has_a_symbol_table(const object_list *objects) {
+    size_t at;
+    int readable = 1;
+    for (at = 0; at < objects->count; at++) {
+        if (objects->items[at].named.count == 0) {
+            fprintf(stderr, "%s yields no symbol table, so what it calls cannot be judged\n", objects->items[at].label);
+            readable = 0;
+        }
+    }
+    return readable;
+}
+
 static int read_everything(symbol_format format, const char *tool, const char *shared_path,
     const char *const *object_paths, size_t object_path_count, shared_symbols *shared, object_list *objects) {
     size_t at;
@@ -850,6 +680,9 @@ static int read_everything(symbol_format format, const char *tool, const char *s
         if (!read_objects(format, tool, object_paths[at], objects)) {
             return 0;
         }
+    }
+    if (!every_object_has_a_symbol_table(objects)) {
+        return 0;
     }
     if (object_path_count > 0 && (objects->count == 0 || count_undefined(objects) == 0)) {
         fprintf(stderr, "no object references read from the objects given, so nothing was checked\n");
@@ -876,13 +709,45 @@ static void free_shared(shared_symbols *shared) {
     text_list_free(&shared->unreadable);
 }
 
+static size_t count_defining_objects(const object_list *objects, const char *symbol) {
+    size_t at;
+    size_t count = 0;
+    for (at = 0; at < objects->count; at++) {
+        count += list_contains(&objects->items[at].defined, symbol);
+    }
+    return count;
+}
+
+/**
+ * @implNote The startup exemption and the lock attribution both rest on the objects being the ones the shared library
+ * was linked from. Every export defined by exactly one object is the cheapest evidence a stale or unrelated library
+ * cannot give.
+ */
+static int objects_build_the_library(const rule_set *rules, const char *shared_path, const shared_symbols *shared,
+    const object_list *objects) {
+    size_t at;
+    int matched = 1;
+    for (at = 0; at < shared->exports.count; at++) {
+        const char *symbol = shared->exports.items[at];
+        size_t defining = count_defining_objects(objects, symbol);
+        if (defining != 1 && rules_find(rules, RULE_STARTUP_EXPORT, symbol) == NULL) {
+            fprintf(stderr, "%s exports %s, which %zu of the objects given define: they are not the objects it was "
+                            "built from\n",
+                shared_path, symbol, defining);
+            matched = 0;
+        }
+    }
+    return matched;
+}
+
 static int judge(const rule_set *rules, const char *shared_path, const shared_symbols *shared,
     const object_list *objects) {
     verdict result = {NULL, NULL, NULL, 0};
     result.rules = rules;
     result.objects = objects;
     if (objects->count > 0) {
-        if (!find_mutex_object(rules, objects, &result)) {
+        if (!objects_build_the_library(rules, shared_path, shared, objects) ||
+            !find_mutex_object(rules, objects, &result)) {
             return 2;
         }
         check_objects(&result);
@@ -901,26 +766,71 @@ static int judge(const rule_set *rules, const char *shared_path, const shared_sy
     return 0;
 }
 
-int main(int argc, char **argv) {
-    rule_set rules = {NULL, 0, NULL};
+static int binary_rules_are_usable(const char *path, const rule_set *rules) {
+    if (rules_count(rules, RULE_FORBID) == 0) {
+        fprintf(stderr, "%s: no forbid rules, so the gate would refuse nothing\n", path);
+        return 0;
+    }
+    if (rules->mutex_marker == NULL) {
+        fprintf(stderr, "%s: no mutex-object-defines line, so a lock call cannot be attributed\n", path);
+        return 0;
+    }
+    return 1;
+}
+
+static int source_rules_are_usable(const char *path, const rule_set *rules) {
+    if (rules_count(rules, RULE_FORBID_SOURCE) == 0) {
+        fprintf(stderr, "%s: no forbid-source rules, so the scan would refuse nothing\n", path);
+        return 0;
+    }
+    if (rules->mutex_source == NULL) {
+        fprintf(stderr, "%s: no mutex-source line, so a lock call cannot be placed\n", path);
+        return 0;
+    }
+    return 1;
+}
+
+static int gate_binary(int argc, char **argv) {
+    rule_set rules = {NULL, 0, NULL, NULL};
     shared_symbols shared;
     object_list objects = {NULL, 0};
     symbol_format format;
     int exit_code = 2;
-    setvbuf(stdout, NULL, _IONBF, 0);
-    if (argc < 5 || !parse_format(argv[2], &format)) {
-        fprintf(stderr,
-            "usage: weivel-core-gate <rules-file> <msvc|gnu|apple> <tool> <shared-library> [<static-library>...]\n");
+    if (!parse_format(argv[2], &format)) {
+        fprintf(stderr, "unknown format '%s': msvc, gnu or apple\n", argv[2]);
         return 2;
     }
     memset(&shared, 0, sizeof shared);
-    if (load_rules(argv[1], &rules) &&
+    if (rules_load(argv[1], &rules) && binary_rules_are_usable(argv[1], &rules) &&
         read_everything(format, argv[3], argv[4], (const char *const *)argv + 5, (size_t)(argc - 5), &shared,
             &objects)) {
         exit_code = judge(&rules, argv[4], &shared, &objects);
     }
     free_objects(&objects);
     free_shared(&shared);
-    free_rules(&rules);
+    rules_free(&rules);
     return exit_code;
+}
+
+static int gate_sources(const char *rules_path, const char *root) {
+    rule_set rules = {NULL, 0, NULL, NULL};
+    int exit_code = 2;
+    if (rules_load(rules_path, &rules) && source_rules_are_usable(rules_path, &rules)) {
+        exit_code = core_sources_scan(&rules, root);
+    }
+    rules_free(&rules);
+    return exit_code;
+}
+
+int main(int argc, char **argv) {
+    setvbuf(stdout, NULL, _IONBF, 0);
+    if (argc == 4 && strcmp(argv[1], "--sources") == 0) {
+        return gate_sources(argv[2], argv[3]);
+    }
+    if (argc >= 5) {
+        return gate_binary(argc, argv);
+    }
+    fprintf(stderr, "usage: weivel-core-gate <rules-file> <msvc|gnu|apple> <tool> <shared-library> "
+                    "[<static-library>...]\n       weivel-core-gate --sources <rules-file> <core-root>\n");
+    return 2;
 }
