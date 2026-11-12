@@ -281,3 +281,25 @@ identically. Each key of `then` is compared against the same key of the answer:
 | anything else | deep equality |
 
 A key absent from `then` asserts nothing, and a `then` with no key at all, or `present: false` or `absent: false`, is refused when the corpus loads.
+
+## The drift checks
+
+Three programs in `checks/`, each taking a repository root. They exit 0 when clean, 1 with every offender listed, and
+2 when they were given nothing to check (no files, no words, no modules) or are misused.
+
+```
+weivel-purity <root> <role> [languages-file]
+weivel-names <root> <words-file>
+weivel-parity <root> <modules-file> <language> [languages-file]
+```
+
+- Purity: the roles `c`, `core`, `kit` and `standard` allow C, headers, CMake, JSON and prose. Any other role is a
+  language named in `checks/languages.txt`, whose lines read `<language> <kind> <value>` with kind `extension`, `name`,
+  `pattern`, `prefix` or `source-root`; it allows its own files and prose, and a generated `.js` under a Java
+  repository is an offender.
+- Names: no file may carry a word from the list, case-folded. `LICENSE`, `.weivel/repo.json`, the list itself, binary
+  files and tool or build directories (dot directories, `build*`, `siblings`, `node_modules`, `dist`) are not read.
+- Parity: `MODULES` in the core lists the modules a language implements, one per line, with ` optional` after the
+  ones a repository may omit. A language repository carries one top-level directory per module, named exactly as
+  listed, under its `source-root` (`src` when none is given). A missing required module and a directory not on the list
+  are both offenders.

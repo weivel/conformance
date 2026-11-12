@@ -49,3 +49,5 @@ add_test(NAME runner_names_an_unknown_op
     COMMAND weivel-conformance run ${PROJECT_SOURCE_DIR}/test/fixtures/unknown-op)
 set_tests_properties(runner_names_an_unknown_op PROPERTIES
     PASS_REGULAR_EXPRESSION "unknown op 'reticulate'")
+
+add_subdirectory(checks)
