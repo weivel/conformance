@@ -122,6 +122,7 @@ set(core_gate_scenarios
     refuses_getenv:getenv
     refuses_fopen:fopen
     refuses_time:time
+    refuses_an_import_off_the_allow_list:qsort
     refuses_a_parser_it_imports:parser_import
     refuses_a_parser_inside_it:parser_inside
     refuses_a_lock_call_outside_the_mutex:lock_elsewhere
