@@ -1,1 +1,1 @@
-median_nanoseconds 500
+median_nanoseconds 360

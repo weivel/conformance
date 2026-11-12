@@ -52,7 +52,7 @@ that counts a vector it did not run as a pass reports a green it has not earned.
 malformed or nothing was measured. It warms with 200000 calls, then times 2000 batches of 1000 calls. A timing verdict
 from an unoptimised build means nothing, so the committed-budget test runs in a Release build only and skips elsewhere.
 
-The committed budget, `median_nanoseconds 500`, is one development machine's figure, until the CI runners'
-measurement replaces it: five Release runs gave medians of 184.6 to 196.4 ns (spread 12 to 22 ns, p99 313 to 389 ns),
-and the budget is about 2.5 times the highest, wide enough for machine noise and narrow enough that an added system
-call, allocation or sleep in the call path trips it.
+The committed budget, `median_nanoseconds 360`, is 2.5 times the slowest CI runner's highest median. The core's
+drift job measured these medians in Release on 2026-11-12, four readings per runner over two runs: Windows 133.0 to
+143.9 ns, macOS 85 to 97 ns, Linux 63.2 to 69.3 ns. The factor is wide enough for runner noise and narrow enough that
+an added system call, allocation or sleep in the call path trips it.
