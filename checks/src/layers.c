@@ -23,7 +23,7 @@ static int load_vector_ids(const char *directory, vector_ids *vectors, char *err
     text_list files;
     size_t at;
     memset(vectors, 0, sizeof *vectors);
-    if (!tree_list_files(directory, &files, error, error_size)) {
+    if (!tree_list_every_file(directory, &files, error, error_size)) {
         return 0;
     }
     for (at = 0; at < files.count; at++) {
@@ -92,7 +92,8 @@ static int is_source_file(const char *relative, const language_rules *rules) {
  * Marks every id a source file of the language under the test root names.
  *
  * @implNote Only the language's own source files count: a vector copied under the tests as a fixture carries its id
- * and would otherwise pass for a test that witnesses it.
+ * and would otherwise pass for a test that witnesses it. A directory directly under the test root that a repository
+ * walk skips (`build`, `node_modules` and the rest) is skipped here too, so build output cannot witness a vector.
  */
 static int mark_named_ids(const char *test_directory, const language_rules *rules, vector_ids *vectors, char *error,
                           size_t error_size) {

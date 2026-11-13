@@ -25,8 +25,17 @@ char *tree_normalize_root(const char *path);
  * nested `node_modules` is read like any other directory. On POSIX a symbolic link is neither listed nor followed, and
  * only regular files are listed.
  * Returns 1, or 0 with `error` filled.
+ *
+ * @implNote The skip applies to whatever directory is passed. So a directory inside a repository is passed only
+ * where a file found counts in the repository's favour, and goes to tree_list_every_file where a file found is judged.
  */
 int tree_list_files(const char *root, text_list *files, char *error, size_t error_size);
+
+/**
+ * Lists the files under `directory` as tree_list_files does and skips no directory by name. It is for a directory
+ * inside a repository whose every file is judged, where a skipped name would hide an offender.
+ */
+int tree_list_every_file(const char *directory, text_list *files, char *error, size_t error_size);
 
 /** Lists the immediate subdirectories of `directory`, by name, ordered. Returns 1, or 0 with `error` filled. */
 int tree_list_directories(const char *directory, text_list *names, char *error, size_t error_size);

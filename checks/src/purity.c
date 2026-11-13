@@ -25,17 +25,27 @@ static int has_suffix(const char *text, const char *suffix) {
     return text_length > suffix_length && strcmp(text + text_length - suffix_length, suffix) == 0;
 }
 
+/**
+ * Whether a file name matches a pattern holding at most one `*`, which stands for any characters.
+ *
+ * @implNote A pattern that begins with its star names files by their ending, as an extension does, so like an
+ * extension it needs a name before that ending: `*.cmake` does not match a file named `.cmake`. A star further in may
+ * stand for nothing, so `tsconfig*.json` matches `tsconfig.json`.
+ */
 static int matches_pattern(const char *name, const char *pattern) {
     const char *star = strchr(pattern, '*');
     size_t prefix_length;
     size_t suffix_length;
+    size_t least_star_length;
     size_t name_length = strlen(name);
     if (star == NULL) {
         return strcmp(name, pattern) == 0;
     }
     prefix_length = (size_t)(star - pattern);
     suffix_length = strlen(star + 1);
-    return name_length >= prefix_length + suffix_length && strncmp(name, pattern, prefix_length) == 0 &&
+    least_star_length = prefix_length == 0 ? 1 : 0;
+    return name_length >= prefix_length + least_star_length + suffix_length &&
+           strncmp(name, pattern, prefix_length) == 0 &&
            strcmp(name + name_length - suffix_length, star + 1) == 0;
 }
 

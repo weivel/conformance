@@ -211,7 +211,10 @@ static char *join_relative(const char *relative, const char *name) {
     return tree_join(relative, name);
 }
 
-static int walk(const char *root, const char *relative, text_list *files, char *error, size_t error_size) {
+typedef enum { SKIP_AT_THE_ROOT, SKIP_NOTHING } skip_choice;
+
+static int walk(const char *root, const char *relative, skip_choice skips, text_list *files, char *error,
+                size_t error_size) {
     entry_list entries = {NULL, 0, 0};
     char *directory = relative[0] == '\0' ? tree_normalize_root(root) : tree_join(root, relative);
     size_t at;
@@ -232,8 +235,9 @@ static int walk(const char *root, const char *relative, text_list *files, char *
         if (child == NULL) {
             ok = 0;
         } else if (entries.items[at].is_directory) {
-            int skipped = relative[0] == '\0' && is_skipped_at_root(entries.items[at].name);
-            ok = skipped || walk(root, child, files, error, error_size);
+            int skipped = skips == SKIP_AT_THE_ROOT && relative[0] == '\0' &&
+                          is_skipped_at_root(entries.items[at].name);
+            ok = skipped || walk(root, child, skips, files, error, error_size);
         } else {
             ok = text_list_add(files, child);
         }
@@ -246,16 +250,24 @@ static int walk(const char *root, const char *relative, text_list *files, char *
     return ok;
 }
 
-int tree_list_files(const char *root, text_list *files, char *error, size_t error_size) {
+static int list_files(const char *root, skip_choice skips, text_list *files, char *error, size_t error_size) {
     files->items = NULL;
     files->count = 0;
     error[0] = '\0';
-    if (!walk(root, "", files, error, error_size)) {
+    if (!walk(root, "", skips, files, error, error_size)) {
         text_list_free(files);
         return 0;
     }
     sort_text_list(files);
     return 1;
+}
+
+int tree_list_files(const char *root, text_list *files, char *error, size_t error_size) {
+    return list_files(root, SKIP_AT_THE_ROOT, files, error, error_size);
+}
+
+int tree_list_every_file(const char *directory, text_list *files, char *error, size_t error_size) {
+    return list_files(directory, SKIP_NOTHING, files, error, error_size);
 }
 
 int tree_list_directories(const char *directory, text_list *names, char *error, size_t error_size) {
