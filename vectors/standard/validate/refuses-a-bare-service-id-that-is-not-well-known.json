@@ -25,7 +25,7 @@
       ]
     },
     "refusal": {
-      "hasFix": true
+      "code": "not_well_known"
     }
   }
 }

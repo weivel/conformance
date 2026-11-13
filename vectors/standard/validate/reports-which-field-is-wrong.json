@@ -23,10 +23,7 @@
       ]
     },
     "refusal": {
-      "mentions": [
-        "api"
-      ],
-      "hasFix": true
+      "code": "wrong_type"
     }
   }
 }
