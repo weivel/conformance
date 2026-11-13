@@ -25,6 +25,9 @@ set(checks_test_scenarios
     purity_rejects_editor_and_cache_directories
     purity_rejects_language_build_files_in_a_c_repo
     purity_refuses_an_unknown_role
+    purity_accepts_a_c_layer_and_rejects_a_typescript_file_in_it
+    purity_refuses_a_native_role_when_the_list_names_no_native_language
+    names_rejects_a_forbidden_name_in_a_c_layer
     names_rejects_a_header_and_prose_but_not_tool_state
     names_accepts_a_clean_tree
     names_skips_build_output_binary_files_and_the_words_file
@@ -51,6 +54,13 @@ set(checks_test_scenarios
     parity_refuses_a_language_without_a_source_root
     parity_refuses_to_run_without_the_languages_file
     parity_rejects_a_loose_file_under_the_source_root
+    parity_accepts_a_c_layer
+    parity_rejects_a_c_layer_missing_a_module
+    parity_rejects_a_loose_c_file_under_the_source_root
+    parity_rejects_a_public_header_of_no_module
+    parity_refuses_a_c_layer_without_its_public_headers
+    parity_reads_no_header_root_a_language_does_not_name
+    layers_reads_c_tests_and_no_build_script
     layers_accepts_a_suite_naming_every_vector
     layers_rejects_a_vector_no_test_names
     layers_does_not_count_an_id_inside_a_longer_one

@@ -1,3 +1,10 @@
+c extension .c
+c extension .h
+c name CMakeLists.txt
+c pattern *.cmake
+c source-root src
+c test-root test
+c header-root include/weivel/c
 java extension .java
 java name build.gradle
 java name settings.gradle

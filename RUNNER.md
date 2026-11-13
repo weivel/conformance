@@ -359,11 +359,13 @@ weivel-core-gate <rules-file> <msvc|gnu|apple> <tool> <shared-library> [<static-
 weivel-core-gate --sources <rules-file> <core-root>
 ```
 
-- Purity: the roles `c`, `core`, `kit` and `standard` allow C, headers, CMake, JSON and prose, and refuse a build file of any language in `checks/languages.txt`
-  (`package.json`, `tsconfig.json`, `build.gradle`) wherever it sits. Any other role is a
-  language named in `checks/languages.txt`, whose lines read `<language> <kind> <value>` with kind `extension`, `name`,
-  `pattern`, `prefix`, `source-root` or `test-root`; it allows its own files and prose, and a generated `.js` under a Java
-  repository is an offender.
+- Purity: the roles `c`, `core`, `kit` and `standard` are written in the language `checks/languages.txt` lists as
+  `c`, so they allow what its lines allow (C, headers, CMake), JSON as data and prose, and refuse a build file of any
+  other language in the list (`package.json`, `tsconfig.json`, `build.gradle`) wherever it sits. The C language
+  implementation is the role `c` and the language `c`: one word, read by purity as the role and by parity and layers
+  as the language. Any other role is a language named in `checks/languages.txt`, whose lines read
+  `<language> <kind> <value>` with kind `extension`, `name`, `pattern`, `prefix`, `source-root`, `test-root` or
+  `header-root`; it allows its own files and prose, and a generated `.js` under a Java repository is an offender.
 - Names: no file may carry a word from the list, case-folded. `LICENSE`, `.weivel/repo.json`, the list itself, binary
   files and, at the root only, the directories `.git`, the hosting-service directory beside it, `build`, `build-*`,
   `siblings` and `node_modules` are not read. Purity and the core's source scan skip the same root directories, and
@@ -383,7 +385,11 @@ weivel-core-gate --sources <rules-file> <core-root>
   listed, under its `source-root`. A missing required module, a directory not on the list, a module directory that
   holds no file and a loose file directly under the source root are all offenders. A language `checks/languages.txt`
   does not list, or lists without a `source-root`, is refused rather than read as `src`, so a new language is added to
-  the list before its repository is checked.
+  the list before its repository is checked. A language that publishes its interface apart from its sources names
+  where with a `header-root`, as C does with `include/weivel/c`: every file there belongs to a listed module, by its
+  own name without the extension (`core.h`) or by the directory it sits in (`host/entry.h`), anything else is an
+  offender, and a repository without that directory is refused. A file beside the header root, such as the one header
+  that includes the rest, is not read.
 - Layers: every layer vector's id, its path under `vectors/layer` without `.json`
   (`consume/a-throwing-listener-does-not-silence-the-others`), must appear in some source file of the language, one
   with an `extension` the list gives it, under its `test-root`, standing on its own: a longer id, a file path that
