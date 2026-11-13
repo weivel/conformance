@@ -2,7 +2,7 @@ add_library(checks_tree STATIC src/tree.c src/languages.c src/tool.c)
 target_include_directories(checks_tree PUBLIC src)
 conformance_strict_warnings(checks_tree)
 
-foreach(check purity names parity core_gate)
+foreach(check purity names parity layers core_gate)
     string(REPLACE "_" "-" program ${check})
     add_executable(weivel-${program} src/${check}.c)
     target_link_libraries(weivel-${program} PRIVATE checks_tree)
@@ -50,13 +50,21 @@ set(checks_test_scenarios
     parity_refuses_a_language_it_does_not_know
     parity_refuses_a_language_without_a_source_root
     parity_refuses_to_run_without_the_languages_file
-    parity_rejects_a_loose_file_under_the_source_root)
+    parity_rejects_a_loose_file_under_the_source_root
+    layers_accepts_a_suite_naming_every_vector
+    layers_rejects_a_vector_no_test_names
+    layers_does_not_count_an_id_inside_a_longer_one
+    layers_reads_only_the_test_root
+    layers_refuses_a_language_it_does_not_know
+    layers_refuses_a_language_without_a_test_root
+    layers_refuses_a_directory_without_vectors
+    layers_refuses_a_repository_without_its_test_root)
 
 foreach(scenario IN LISTS checks_test_scenarios)
     add_test(NAME ${scenario}
         COMMAND ${CMAKE_COMMAND} -DSCENARIO=${scenario} -DWORK=${PROJECT_BINARY_DIR}/checks-work
             -DPURITY=$<TARGET_FILE:weivel-purity> -DNAMES=$<TARGET_FILE:weivel-names>
-            -DPARITY=$<TARGET_FILE:weivel-parity>
+            -DPARITY=$<TARGET_FILE:weivel-parity> -DLAYERS=$<TARGET_FILE:weivel-layers>
             -DLANGUAGES=${CMAKE_CURRENT_SOURCE_DIR}/languages.txt -DWORDS=${CMAKE_CURRENT_SOURCE_DIR}/names.txt
             -DMODULES=${PROJECT_SOURCE_DIR}/siblings/core/MODULES
             -DOPAQUE=${PROJECT_SOURCE_DIR}/test/fixtures/opaque-bytes

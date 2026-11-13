@@ -312,14 +312,15 @@ A key absent from `then` asserts nothing, and a `then` with no key at all, or `p
 
 ## The drift checks
 
-Four programs in `checks/`. Three take a repository root and the fourth a built core. They exit 0 when clean, 1 with
-every offender listed, and 2 when they were given nothing to check (no files, no words, no modules, no symbols) or are
-misused.
+Five programs in `checks/`. Four take a repository root and the fifth a built core. They exit 0 when clean, 1 with
+every offender listed, and 2 when they were given nothing to check (no files, no words, no modules, no vectors, no
+symbols) or are misused.
 
 ```
 weivel-purity <root> <role> <languages-file>
 weivel-names <root> <words-file>
 weivel-parity <root> <modules-file> <language> <languages-file>
+weivel-layers <root> <layer-vector-directory> <language> <languages-file>
 weivel-core-gate <rules-file> <msvc|gnu|apple> <tool> <shared-library> [<static-library>...]
 weivel-core-gate --sources <rules-file> <core-root>
 ```
@@ -327,7 +328,7 @@ weivel-core-gate --sources <rules-file> <core-root>
 - Purity: the roles `c`, `core`, `kit` and `standard` allow C, headers, CMake, JSON and prose, and refuse a build file of any language in `checks/languages.txt`
   (`package.json`, `tsconfig.json`, `build.gradle`) wherever it sits. Any other role is a
   language named in `checks/languages.txt`, whose lines read `<language> <kind> <value>` with kind `extension`, `name`,
-  `pattern`, `prefix` or `source-root`; it allows its own files and prose, and a generated `.js` under a Java
+  `pattern`, `prefix`, `source-root` or `test-root`; it allows its own files and prose, and a generated `.js` under a Java
   repository is an offender.
 - Names: no file may carry a word from the list, case-folded. `LICENSE`, `.weivel/repo.json`, the list itself, binary
   files and, at the root only, the directories `.git`, the hosting-service directory beside it, `build`, `build-*`,
@@ -348,6 +349,13 @@ weivel-core-gate --sources <rules-file> <core-root>
   holds no file and a loose file directly under the source root are all offenders. A language `checks/languages.txt`
   does not list, or lists without a `source-root`, is refused rather than read as `src`, so a new language is added to
   the list before its repository is checked.
+- Layers: every layer vector's id, its path under `vectors/layer` without `.json`
+  (`consume/a-throwing-listener-does-not-silence-the-others`), must appear in some file under the language's `test-root`,
+  standing on its own: a longer id or a file path that contains it does not count. A missing id is an offender. A
+  language the list does not name, or names without a `test-root`, is refused, never read as the whole repository,
+  because sources and fixtures outside the tests would then satisfy it. It runs for a language implementation, never
+  for `core`, `standard` or `kit`, and only proves each vector is named; the language's own coverage test, which reads
+  its describe names, stays the strong check.
 - Core gate: reads the built core with the platform's own tool (`dumpbin` beside the MSVC compiler, `nm` elsewhere):
   the shared library's imports and exports, and, when given, each object of the static library built from the same
   sources. `checks/core_gate.txt` holds the rules, one `<kind> <reason> <symbol>` per line: `forbid` names what reads

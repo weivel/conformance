@@ -11,12 +11,13 @@ typedef struct {
     text_list patterns;
     text_list prefixes;
     char *source_root;
+    char *test_root;
     int known;
 } language_rules;
 
 /**
  * Reads the lines of `path` that begin with `language`, or every line when `language` is NULL. Each line is `<language> <kind> <value>`, where kind is
- * `extension`, `name`, `pattern` (one `*` in a file name), `prefix` (a path prefix) or `source-root`.
+ * `extension`, `name`, `pattern` (one `*` in a file name), `prefix` (a path prefix), `source-root` or `test-root`.
  * Returns 1, or 0 with `error` filled for an unreadable file or a malformed line. `known` is 0 when no line named
  * the language.
  */

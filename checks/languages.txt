@@ -6,8 +6,10 @@ java name gradlew
 java name gradlew.bat
 java prefix gradle/wrapper/
 java source-root src/main/java
+java test-root src/test/java
 typescript extension .ts
 typescript name package.json
 typescript name package-lock.json
 typescript pattern tsconfig*.json
 typescript source-root src
+typescript test-root test
