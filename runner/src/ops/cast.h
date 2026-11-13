@@ -34,7 +34,7 @@ int session_open_pair(core_session *session, hearing *log, arena *owner, const c
                       weivel_handle *provider, weivel_handle *consumer);
 
 /** A step's string member, or NULL when it has none. */
-const char *step_text(const json_value *step, const char *key);
+const char *step_text(const weivel_json_value *step, const char *key);
 
 /** Writes `[[plugin, id]]`, one pair per reach refusal the core reported, in the order reported. 0 for a plugin
  * the cast does not know. */

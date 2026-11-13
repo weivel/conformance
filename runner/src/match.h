@@ -24,15 +24,15 @@
  * `result` is the whole answer object, and is never NULL: a vector no adapter answered is errored by the
  * runner and never reaches here.
  */
-size_t match_then(const json_value *then, const json_value *result, text_builder *reasons);
+size_t match_then(const weivel_json_value *then, const weivel_json_value *result, text_builder *reasons);
 
 /**
  * The reason a `then` cannot be judged, or NULL: `{"present": false}` and `{"absent": false}` assert nothing,
  * and a vector holding one is refused when the corpus loads.
  */
-const char *match_refuse_meaningless(const json_value *then);
+const char *match_refuse_meaningless(const weivel_json_value *then);
 
 /** Writes a value as compact JSON, so a reason can quote what an adapter answered. */
-void match_render(text_builder *out, const json_value *value);
+void match_render(text_builder *out, const weivel_json_value *value);
 
 #endif

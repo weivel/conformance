@@ -4,16 +4,16 @@
 #include <stdlib.h>
 
 static size_t failures_of(const char *then_text, const char *result_text, text_builder *reasons) {
-    json_value *then = json_parse(then_text, strlen(then_text), NULL);
-    json_value *result = json_parse(result_text, strlen(result_text), NULL);
+    weivel_json_value *then = weivel_json_parse(then_text, strlen(then_text), NULL);
+    weivel_json_value *result = weivel_json_parse(result_text, strlen(result_text), NULL);
     size_t failures = 0;
     CHECK(then != NULL);
     CHECK(result != NULL);
     if (then != NULL && result != NULL) {
         failures = match_then(then, result, reasons);
     }
-    json_free(then);
-    json_free(result);
+    weivel_json_free(then);
+    weivel_json_free(result);
     return failures;
 }
 

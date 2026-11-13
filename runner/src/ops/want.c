@@ -20,22 +20,22 @@ typedef struct {
     int64_t horizon;
 } want_run;
 
-static int optional_millis(const json_value *value, int *present, int64_t *millis) {
+static int optional_millis(const weivel_json_value *value, int *present, int64_t *millis) {
     *present = 0;
     *millis = 0;
-    if (value == NULL || json_kind_of(value) == JSON_NULL) {
+    if (value == NULL || weivel_json_kind_of(value) == WEIVEL_JSON_NULL) {
         return 1;
     }
     *present = 1;
-    return json_as_int64(value, millis);
+    return weivel_json_as_int64(value, millis);
 }
 
-static int read_script(want_run *run, const json_value *given) {
-    run->service_id = json_as_string(json_object_get(json_object_get(given, "service"), "id"));
+static int read_script(want_run *run, const weivel_json_value *given) {
+    run->service_id = weivel_json_as_string(weivel_json_object_get(weivel_json_object_get(given, "service"), "id"));
     return run->service_id != NULL &&
-           optional_millis(json_object_get(given, "registerAtMillis"), &run->registers, &run->register_at) &&
-           optional_millis(json_object_get(given, "timeoutMillis"), &run->timed, &run->timeout_millis) &&
-           json_as_int64(json_object_get(given, "horizonMillis"), &run->horizon);
+           optional_millis(weivel_json_object_get(given, "registerAtMillis"), &run->registers, &run->register_at) &&
+           optional_millis(weivel_json_object_get(given, "timeoutMillis"), &run->timed, &run->timeout_millis) &&
+           weivel_json_as_int64(weivel_json_object_get(given, "horizonMillis"), &run->horizon);
 }
 
 static int advance_to(want_run *run, int64_t now) {
@@ -134,7 +134,7 @@ static int write_settlement(answer_writer *answer, want_run *run) {
     return 0;
 }
 
-int adapter_want(const json_value *given, answer_writer *answer) {
+int adapter_want(const weivel_json_value *given, answer_writer *answer) {
     want_run run;
     arena owner;
     int answered = 0;

@@ -32,13 +32,13 @@ static int ask_unbound(core_session *session, const weivel_manifest *manifest, a
     return !session->failed;
 }
 
-int adapter_unbound(const json_value *given, answer_writer *answer) {
+int adapter_unbound(const weivel_json_value *given, answer_writer *answer) {
     arena owner;
     weivel_manifest manifest;
     core_session session;
     int answered = 0;
     arena_init(&owner);
-    if (facts_manifest(&owner, json_object_get(given, "manifest"), &manifest) &&
+    if (facts_manifest(&owner, weivel_json_object_get(given, "manifest"), &manifest) &&
         session_open(&session, NULL, NULL, NULL)) {
         answered = ask_unbound(&session, &manifest, answer);
         session_close(&session);

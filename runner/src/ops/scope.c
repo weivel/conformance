@@ -16,7 +16,7 @@ typedef struct {
     uint32_t count;
 } scope_consumers;
 
-static const char *consumer_of(const json_value *step) {
+static const char *consumer_of(const weivel_json_value *step) {
     const char *consumer = step_text(step, "consumer");
     return consumer != NULL ? consumer : step_text(step, "release");
 }
@@ -32,18 +32,18 @@ static int index_of(const scope_consumers *consumers, const char *name, uint32_t
     return 0;
 }
 
-static uint32_t count_steps(const json_value *steps, const char *name, const char *key) {
+static uint32_t count_steps(const weivel_json_value *steps, const char *name, const char *key) {
     uint32_t count = 0;
     size_t at;
-    for (at = 0; at < json_array_length(steps); at++) {
-        const json_value *step = json_array_at(steps, at);
+    for (at = 0; at < weivel_json_array_length(steps); at++) {
+        const weivel_json_value *step = weivel_json_array_at(steps, at);
         const char *consumer = step_text(step, "consumer");
         count += (uint32_t)(consumer != NULL && strcmp(consumer, name) == 0 && step_text(step, key) != NULL);
     }
     return count;
 }
 
-static int declare(arena *owner, const json_value *steps, const char *name, weivel_manifest *manifest) {
+static int declare(arena *owner, const weivel_json_value *steps, const char *name, weivel_manifest *manifest) {
     uint32_t offers = count_steps(steps, name, "register");
     uint32_t wants = count_steps(steps, name, "want");
     weivel_service_offer *offer = arena_take(owner, offers, sizeof *offer);
@@ -57,8 +57,8 @@ static int declare(arena *owner, const json_value *steps, const char *name, weiv
     if ((offers > 0 && offer == NULL) || (wants > 0 && want == NULL)) {
         return 0;
     }
-    for (at = 0; at < json_array_length(steps); at++) {
-        const json_value *step = json_array_at(steps, at);
+    for (at = 0; at < weivel_json_array_length(steps); at++) {
+        const weivel_json_value *step = weivel_json_array_at(steps, at);
         const char *consumer = step_text(step, "consumer");
         if (consumer == NULL || strcmp(consumer, name) != 0) {
             continue;
@@ -78,19 +78,19 @@ static int declare(arena *owner, const json_value *steps, const char *name, weiv
     return 1;
 }
 
-static int gather_consumers(arena *owner, const json_value *steps, scope_consumers *consumers) {
-    size_t length = json_array_length(steps);
+static int gather_consumers(arena *owner, const weivel_json_value *steps, scope_consumers *consumers) {
+    size_t length = weivel_json_array_length(steps);
     size_t at;
     uint32_t found;
     consumers->count = 0;
     consumers->names = arena_take(owner, length, sizeof *consumers->names);
     consumers->manifests = arena_take(owner, length, sizeof *consumers->manifests);
-    if (steps == NULL || json_kind_of(steps) != JSON_ARRAY || length == 0 || consumers->names == NULL ||
+    if (steps == NULL || weivel_json_kind_of(steps) != WEIVEL_JSON_ARRAY || length == 0 || consumers->names == NULL ||
         consumers->manifests == NULL) {
         return 0;
     }
     for (at = 0; at < length; at++) {
-        const char *name = consumer_of(json_array_at(steps, at));
+        const char *name = consumer_of(weivel_json_array_at(steps, at));
         if (name != NULL && !index_of(consumers, name, &found)) {
             consumers->names[consumers->count++] = name;
         }
@@ -119,7 +119,7 @@ static int lookup_step(core_session *session, const char *id, scope_outcome *out
     return status == WEIVEL_STATUS_OK || status == WEIVEL_STATUS_NONE;
 }
 
-static int consumer_step(core_session *session, const cast *opened, const json_value *step, scope_outcome *outcome) {
+static int consumer_step(core_session *session, const cast *opened, const weivel_json_value *step, scope_outcome *outcome) {
     weivel_handle plugin = cast_handle(opened, step_text(step, "consumer"));
     weivel_handle registration = 0;
     weivel_status status;
@@ -134,7 +134,7 @@ static int consumer_step(core_session *session, const cast *opened, const json_v
     return plugin != 0 && status == WEIVEL_STATUS_OK;
 }
 
-static int run_step(core_session *session, const cast *opened, const json_value *step, scope_outcome *outcome) {
+static int run_step(core_session *session, const cast *opened, const weivel_json_value *step, scope_outcome *outcome) {
     weivel_status status;
     if (step_text(step, "lookup") != NULL) {
         return lookup_step(session, step_text(step, "lookup"), outcome);
@@ -185,7 +185,7 @@ static int write_scope(answer_writer *answer, core_session *session, const heari
     return 1;
 }
 
-static int run_script(core_session *session, hearing *log, arena *owner, const json_value *steps,
+static int run_script(core_session *session, hearing *log, arena *owner, const weivel_json_value *steps,
                       answer_writer *answer) {
     scope_consumers consumers;
     cast opened;
@@ -195,20 +195,20 @@ static int run_script(core_session *session, hearing *log, arena *owner, const j
         !cast_open(owner, session, (const char *const *)consumers.names, consumers.manifests, consumers.count, &opened)) {
         return 0;
     }
-    outcomes = arena_take(owner, json_array_length(steps), sizeof *outcomes);
+    outcomes = arena_take(owner, weivel_json_array_length(steps), sizeof *outcomes);
     if (outcomes == NULL) {
         return 0;
     }
-    for (at = 0; at < json_array_length(steps); at++) {
-        if (!run_step(session, &opened, json_array_at(steps, at), &outcomes[at])) {
+    for (at = 0; at < weivel_json_array_length(steps); at++) {
+        if (!run_step(session, &opened, weivel_json_array_at(steps, at), &outcomes[at])) {
             return 0;
         }
     }
-    return write_scope(answer, session, log, outcomes, json_array_length(steps)) && !log->failed &&
+    return write_scope(answer, session, log, outcomes, weivel_json_array_length(steps)) && !log->failed &&
            !session->failed;
 }
 
-int adapter_scope(const json_value *given, answer_writer *answer) {
+int adapter_scope(const weivel_json_value *given, answer_writer *answer) {
     core_session session;
     hearing log;
     arena owner;
@@ -216,7 +216,7 @@ int adapter_scope(const json_value *given, answer_writer *answer) {
     hearing_init(&log);
     arena_init(&owner);
     if (session_open(&session, NULL, hearing_read, &log)) {
-        answered = run_script(&session, &log, &owner, json_object_get(given, "steps"), answer);
+        answered = run_script(&session, &log, &owner, weivel_json_object_get(given, "steps"), answer);
         session_close(&session);
     }
     hearing_release(&log);

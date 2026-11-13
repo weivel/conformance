@@ -115,9 +115,9 @@ static char *read_file(const char *path, size_t *length) {
     return text;
 }
 
-static const json_value *object_member(const json_value *object, const char *key) {
-    const json_value *member = json_object_get(object, key);
-    return json_kind_of(member) == JSON_OBJECT ? member : NULL;
+static const weivel_json_value *object_member(const weivel_json_value *object, const char *key) {
+    const weivel_json_value *member = weivel_json_object_get(object, key);
+    return weivel_json_kind_of(member) == WEIVEL_JSON_OBJECT ? member : NULL;
 }
 
 static int refuse(char *error, size_t error_size, const char *format, const char *path, const char *detail) {
@@ -147,7 +147,7 @@ static int check_shape(const vector *candidate, char *error, size_t error_size) 
     if (match_refuse_meaningless(candidate->then) != NULL) {
         return refuse(error, error_size, "%s is not a valid vector: %s", path, match_refuse_meaningless(candidate->then));
     }
-    if (json_object_size(candidate->then) == 0) {
+    if (weivel_json_object_size(candidate->then) == 0) {
         return refuse(error, error_size, "%s is not a valid vector: %s", path, "then asserts nothing");
     }
     if (!id_belongs_to_op(candidate->id, candidate->op)) {
@@ -208,7 +208,7 @@ static int place(vector *candidate, const char *path, char *error, size_t error_
 }
 
 static void vector_free(vector *candidate) {
-    json_free(candidate->document);
+    weivel_json_free(candidate->document);
     free(candidate->directory);
     free(candidate->path);
 }
@@ -216,11 +216,11 @@ static void vector_free(vector *candidate) {
 static int parse_document(vector *candidate, const char *path, char *error, size_t error_size) {
     size_t length = 0;
     char *text = read_file(path, &length);
-    json_error parse_error = {0, 0, NULL};
+    weivel_json_error parse_error = {0, 0, NULL};
     if (text == NULL) {
         return refuse(error, error_size, "%s is not readable: %s", path, "the file cannot be read");
     }
-    candidate->document = json_parse(text, length, &parse_error);
+    candidate->document = weivel_json_parse(text, length, &parse_error);
     free(text);
     if (candidate->document == NULL) {
         snprintf(error, error_size, "%s is not readable JSON: %s (line %d, column %d)", path,
@@ -236,9 +236,9 @@ static int read_vector(const char *path, vector *candidate, char *error, size_t 
         return 0;
     }
     candidate->path = text_duplicate(path);
-    candidate->id = json_as_string(json_object_get(candidate->document, "id"));
-    candidate->op = json_as_string(json_object_get(candidate->document, "op"));
-    candidate->covers = json_as_string(json_object_get(candidate->document, "covers"));
+    candidate->id = weivel_json_as_string(weivel_json_object_get(candidate->document, "id"));
+    candidate->op = weivel_json_as_string(weivel_json_object_get(candidate->document, "op"));
+    candidate->covers = weivel_json_as_string(weivel_json_object_get(candidate->document, "covers"));
     candidate->given = object_member(candidate->document, "given");
     candidate->then = object_member(candidate->document, "then");
     return candidate->path != NULL && place(candidate, path, error, error_size);

@@ -12,7 +12,7 @@
  * It returns 0 when it cannot answer, and the vector is then errored: an absence is never a pass. An adapter
  * never reads a vector's `then`, because one that does is marking its own paper.
  */
-typedef int (*op_adapter)(const json_value *given, answer_writer *answer);
+typedef int (*op_adapter)(const weivel_json_value *given, answer_writer *answer);
 
 typedef struct {
     const char *op;

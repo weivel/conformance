@@ -7,23 +7,23 @@
 static vector make_vector(const char *then_text, vector_tier tier) {
     static const char GIVEN[] = "{}";
     vector candidate;
-    json_value *document;
+    weivel_json_value *document;
     char text[512];
     snprintf(text, sizeof text, "{\"id\":\"supports/example\",\"op\":\"supports\",\"covers\":\"12.1\",\"given\":%s,\"then\":%s}",
              GIVEN, then_text);
-    document = json_parse(text, strlen(text), NULL);
+    document = weivel_json_parse(text, strlen(text), NULL);
     memset(&candidate, 0, sizeof candidate);
     candidate.document = document;
-    candidate.id = json_as_string(json_object_get(document, "id"));
-    candidate.op = json_as_string(json_object_get(document, "op"));
-    candidate.covers = json_as_string(json_object_get(document, "covers"));
-    candidate.given = json_object_get(document, "given");
-    candidate.then = json_object_get(document, "then");
+    candidate.id = weivel_json_as_string(weivel_json_object_get(document, "id"));
+    candidate.op = weivel_json_as_string(weivel_json_object_get(document, "op"));
+    candidate.covers = weivel_json_as_string(weivel_json_object_get(document, "covers"));
+    candidate.given = weivel_json_object_get(document, "given");
+    candidate.then = weivel_json_object_get(document, "then");
     candidate.tier = tier;
     return candidate;
 }
 
-static int answers_supported(const json_value *given, answer_writer *answer) {
+static int answers_supported(const weivel_json_value *given, answer_writer *answer) {
     (void)given;
     answer_begin_object(answer);
     answer_key(answer, "supported");
@@ -32,25 +32,25 @@ static int answers_supported(const json_value *given, answer_writer *answer) {
     return 1;
 }
 
-static int answers_nothing(const json_value *given, answer_writer *answer) {
+static int answers_nothing(const weivel_json_value *given, answer_writer *answer) {
     (void)given;
     (void)answer;
     return 0;
 }
 
-static int answers_half_a_document(const json_value *given, answer_writer *answer) {
+static int answers_half_a_document(const weivel_json_value *given, answer_writer *answer) {
     (void)given;
     answer_begin_object(answer);
     return 1;
 }
 
-static int answers_a_valid_document_after_a_misuse(const json_value *given, answer_writer *answer) {
+static int answers_a_valid_document_after_a_misuse(const weivel_json_value *given, answer_writer *answer) {
     answers_supported(given, answer);
     answer_key(answer, "stray");
     return 1;
 }
 
-static int answers_text_that_is_not_an_object(const json_value *given, answer_writer *answer) {
+static int answers_text_that_is_not_an_object(const weivel_json_value *given, answer_writer *answer) {
     (void)given;
     answer_string(answer, "supported");
     return 1;
@@ -58,7 +58,7 @@ static int answers_text_that_is_not_an_object(const json_value *given, answer_wr
 
 static int calls_made = 0;
 
-static int counts_its_calls(const json_value *given, answer_writer *answer) {
+static int counts_its_calls(const weivel_json_value *given, answer_writer *answer) {
     calls_made++;
     return answers_supported(given, answer);
 }
@@ -70,7 +70,7 @@ static verdict_status judged_as(const char *then_text, vector_tier tier, op_adap
     judge_vector(&candidate, adapter, &judged);
     status = judged.status;
     free(judged.reasons);
-    json_free(candidate.document);
+    weivel_json_free(candidate.document);
     return status;
 }
 
@@ -126,7 +126,7 @@ static int exit_code_for(const verdict_status *statuses, size_t count, text_buil
     }
     exit_code = report_write(verdicts, count, out);
     verdicts_free(verdicts, count);
-    json_free(candidate.document);
+    weivel_json_free(candidate.document);
     return exit_code;
 }
 

@@ -27,8 +27,8 @@ static void conclude(verdict *judged, verdict_status status, const char *reasons
 }
 
 static void judge_answer(const vector *candidate, const char *answer_text, verdict *judged) {
-    json_error parse_error = {0, 0, NULL};
-    json_value *answer = json_parse(answer_text, strlen(answer_text), &parse_error);
+    weivel_json_error parse_error = {0, 0, NULL};
+    weivel_json_value *answer = weivel_json_parse(answer_text, strlen(answer_text), &parse_error);
     text_builder reasons;
     if (answer == NULL) {
         text_init(&reasons);
@@ -38,9 +38,9 @@ static void judge_answer(const vector *candidate, const char *answer_text, verdi
         text_release(&reasons);
         return;
     }
-    if (json_kind_of(answer) != JSON_OBJECT) {
+    if (weivel_json_kind_of(answer) != WEIVEL_JSON_OBJECT) {
         conclude(judged, VERDICT_ERRORED, "the answer is not an object\n");
-        json_free(answer);
+        weivel_json_free(answer);
         return;
     }
     text_init(&reasons);
@@ -50,7 +50,7 @@ static void judge_answer(const vector *candidate, const char *answer_text, verdi
         conclude(judged, VERDICT_FAILED, text_view(&reasons));
     }
     text_release(&reasons);
-    json_free(answer);
+    weivel_json_free(answer);
 }
 
 static void judge_with_adapter(const vector *candidate, op_adapter adapter, verdict *judged) {

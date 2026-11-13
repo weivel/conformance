@@ -2,20 +2,20 @@
 
 #include <stdint.h>
 
-static int is_absent(const json_value *value) {
-    return value == NULL || json_kind_of(value) == JSON_NULL;
+static int is_absent(const weivel_json_value *value) {
+    return value == NULL || weivel_json_kind_of(value) == WEIVEL_JSON_NULL;
 }
 
-static int list_length(const json_value *array, uint32_t *length) {
+static int list_length(const weivel_json_value *array, uint32_t *length) {
     size_t count;
     if (is_absent(array)) {
         *length = 0;
         return 1;
     }
-    if (json_kind_of(array) != JSON_ARRAY) {
+    if (weivel_json_kind_of(array) != WEIVEL_JSON_ARRAY) {
         return 0;
     }
-    count = json_array_length(array);
+    count = weivel_json_array_length(array);
     if (count > UINT32_MAX) {
         return 0;
     }
@@ -23,21 +23,21 @@ static int list_length(const json_value *array, uint32_t *length) {
     return 1;
 }
 
-static int optional_string(const json_value *value, const char **text) {
+static int optional_string(const weivel_json_value *value, const char **text) {
     if (is_absent(value)) {
         *text = NULL;
         return 1;
     }
-    *text = json_as_string(value);
+    *text = weivel_json_as_string(value);
     return *text != NULL;
 }
 
-static int required_string(const json_value *value, const char **text) {
-    *text = json_as_string(value);
+static int required_string(const weivel_json_value *value, const char **text) {
+    *text = weivel_json_as_string(value);
     return *text != NULL;
 }
 
-int facts_strings(arena *owner, const json_value *array, weivel_strings *strings) {
+int facts_strings(arena *owner, const weivel_json_value *array, weivel_strings *strings) {
     uint32_t count;
     const char **items;
     uint32_t at;
@@ -54,7 +54,7 @@ int facts_strings(arena *owner, const json_value *array, weivel_strings *strings
         return 0;
     }
     for (at = 0; at < count; at++) {
-        if (!required_string(json_array_at(array, at), &items[at])) {
+        if (!required_string(weivel_json_array_at(array, at), &items[at])) {
             return 0;
         }
     }
@@ -63,7 +63,7 @@ int facts_strings(arena *owner, const json_value *array, weivel_strings *strings
     return 1;
 }
 
-int facts_numbers(arena *owner, const json_value *object, weivel_numbers *numbers) {
+int facts_numbers(arena *owner, const weivel_json_value *object, weivel_numbers *numbers) {
     size_t count;
     weivel_number *items;
     size_t at;
@@ -72,10 +72,10 @@ int facts_numbers(arena *owner, const json_value *object, weivel_numbers *number
     if (is_absent(object)) {
         return 1;
     }
-    if (json_kind_of(object) != JSON_OBJECT) {
+    if (weivel_json_kind_of(object) != WEIVEL_JSON_OBJECT) {
         return 0;
     }
-    count = json_object_size(object);
+    count = weivel_json_object_size(object);
     if (count == 0) {
         return 1;
     }
@@ -88,8 +88,8 @@ int facts_numbers(arena *owner, const json_value *object, weivel_numbers *number
     }
     for (at = 0; at < count; at++) {
         items[at].size = (uint32_t)sizeof items[at];
-        items[at].name = json_object_key_at(object, at);
-        if (!json_as_double(json_object_value_at(object, at), &items[at].value)) {
+        items[at].name = weivel_json_object_key_at(object, at);
+        if (!weivel_json_as_double(weivel_json_object_value_at(object, at), &items[at].value)) {
             return 0;
         }
     }
@@ -98,33 +98,33 @@ int facts_numbers(arena *owner, const json_value *object, weivel_numbers *number
     return 1;
 }
 
-int facts_choice(const json_value *flag, uint32_t *choice) {
+int facts_choice(const weivel_json_value *flag, uint32_t *choice) {
     int value = 0;
     if (is_absent(flag)) {
         *choice = WEIVEL_CHOICE_DEFAULT;
         return 1;
     }
-    if (!json_as_bool(flag, &value)) {
+    if (!weivel_json_as_bool(flag, &value)) {
         return 0;
     }
     *choice = value ? WEIVEL_CHOICE_YES : WEIVEL_CHOICE_NO;
     return 1;
 }
 
-static int service_want(arena *owner, const json_value *entry, weivel_service_want *want) {
+static int service_want(arena *owner, const weivel_json_value *entry, weivel_service_want *want) {
     want->size = (uint32_t)sizeof *want;
-    if (json_kind_of(entry) == JSON_STRING) {
-        want->id = json_as_string(entry);
+    if (weivel_json_kind_of(entry) == WEIVEL_JSON_STRING) {
+        want->id = weivel_json_as_string(entry);
         return 1;
     }
-    return json_kind_of(entry) == JSON_OBJECT && required_string(json_object_get(entry, "id"), &want->id) &&
-           optional_string(json_object_get(entry, "provider"), &want->provider) &&
-           facts_choice(json_object_get(entry, "optional"), &want->optional) &&
-           facts_choice(json_object_get(entry, "degradable"), &want->degradable) &&
-           facts_numbers(owner, json_object_get(entry, "constraints"), &want->constraints);
+    return weivel_json_kind_of(entry) == WEIVEL_JSON_OBJECT && required_string(weivel_json_object_get(entry, "id"), &want->id) &&
+           optional_string(weivel_json_object_get(entry, "provider"), &want->provider) &&
+           facts_choice(weivel_json_object_get(entry, "optional"), &want->optional) &&
+           facts_choice(weivel_json_object_get(entry, "degradable"), &want->degradable) &&
+           facts_numbers(owner, weivel_json_object_get(entry, "constraints"), &want->constraints);
 }
 
-int facts_service_wants(arena *owner, const json_value *array, weivel_service_wants *wants) {
+int facts_service_wants(arena *owner, const weivel_json_value *array, weivel_service_wants *wants) {
     uint32_t count;
     weivel_service_want *items;
     uint32_t at;
@@ -141,7 +141,7 @@ int facts_service_wants(arena *owner, const json_value *array, weivel_service_wa
         return 0;
     }
     for (at = 0; at < count; at++) {
-        if (!service_want(owner, json_array_at(array, at), &items[at])) {
+        if (!service_want(owner, weivel_json_array_at(array, at), &items[at])) {
             return 0;
         }
     }
@@ -150,17 +150,17 @@ int facts_service_wants(arena *owner, const json_value *array, weivel_service_wa
     return 1;
 }
 
-static int service_offer(arena *owner, const json_value *entry, weivel_service_offer *offer) {
+static int service_offer(arena *owner, const weivel_json_value *entry, weivel_service_offer *offer) {
     offer->size = (uint32_t)sizeof *offer;
-    if (json_kind_of(entry) == JSON_STRING) {
-        offer->id = json_as_string(entry);
+    if (weivel_json_kind_of(entry) == WEIVEL_JSON_STRING) {
+        offer->id = weivel_json_as_string(entry);
         return 1;
     }
-    return json_kind_of(entry) == JSON_OBJECT && required_string(json_object_get(entry, "id"), &offer->id) &&
-           facts_numbers(owner, json_object_get(entry, "attributes"), &offer->attributes);
+    return weivel_json_kind_of(entry) == WEIVEL_JSON_OBJECT && required_string(weivel_json_object_get(entry, "id"), &offer->id) &&
+           facts_numbers(owner, weivel_json_object_get(entry, "attributes"), &offer->attributes);
 }
 
-int facts_service_offers(arena *owner, const json_value *array, weivel_service_offers *offers) {
+int facts_service_offers(arena *owner, const weivel_json_value *array, weivel_service_offers *offers) {
     uint32_t count;
     weivel_service_offer *items;
     uint32_t at;
@@ -177,7 +177,7 @@ int facts_service_offers(arena *owner, const json_value *array, weivel_service_o
         return 0;
     }
     for (at = 0; at < count; at++) {
-        if (!service_offer(owner, json_array_at(array, at), &items[at])) {
+        if (!service_offer(owner, weivel_json_array_at(array, at), &items[at])) {
             return 0;
         }
     }
@@ -186,45 +186,45 @@ int facts_service_offers(arena *owner, const json_value *array, weivel_service_o
     return 1;
 }
 
-static int api_level(const json_value *value, uint32_t *api) {
+static int api_level(const weivel_json_value *value, uint32_t *api) {
     int64_t level = 0;
     if (is_absent(value)) {
         *api = 0;
         return 1;
     }
-    if (!json_as_int64(value, &level) || level < 0 || level > UINT32_MAX) {
+    if (!weivel_json_as_int64(value, &level) || level < 0 || level > UINT32_MAX) {
         return 0;
     }
     *api = (uint32_t)level;
     return 1;
 }
 
-static int import_name(const json_value *object, const char **name) {
-    const json_value *named = json_object_get(object, "importName");
-    return optional_string(is_absent(named) ? json_object_get(object, "id") : named, name);
+static int import_name(const weivel_json_value *object, const char **name) {
+    const weivel_json_value *named = weivel_json_object_get(object, "importName");
+    return optional_string(is_absent(named) ? weivel_json_object_get(object, "id") : named, name);
 }
 
-static int capability_declarations(arena *owner, const json_value *object, weivel_capability_declarations *declared) {
-    return facts_strings(owner, json_object_get(object, "provides"), &declared->provides) &&
-           facts_strings(owner, json_object_get(object, "consumes"), &declared->consumes);
+static int capability_declarations(arena *owner, const weivel_json_value *object, weivel_capability_declarations *declared) {
+    return facts_strings(owner, weivel_json_object_get(object, "provides"), &declared->provides) &&
+           facts_strings(owner, weivel_json_object_get(object, "consumes"), &declared->consumes);
 }
 
-static int service_declarations(arena *owner, const json_value *object, weivel_service_declarations *declared) {
-    return facts_service_offers(owner, json_object_get(object, "provides"), &declared->provides) &&
-           facts_service_wants(owner, json_object_get(object, "consumes"), &declared->consumes);
+static int service_declarations(arena *owner, const weivel_json_value *object, weivel_service_declarations *declared) {
+    return facts_service_offers(owner, weivel_json_object_get(object, "provides"), &declared->provides) &&
+           facts_service_wants(owner, weivel_json_object_get(object, "consumes"), &declared->consumes);
 }
 
-int facts_manifest(arena *owner, const json_value *object, weivel_manifest *manifest) {
+int facts_manifest(arena *owner, const weivel_json_value *object, weivel_manifest *manifest) {
     weivel_manifest built = WEIVEL_INIT(weivel_manifest);
     *manifest = built;
-    if (object == NULL || json_kind_of(object) != JSON_OBJECT) {
+    if (object == NULL || weivel_json_kind_of(object) != WEIVEL_JSON_OBJECT) {
         return 0;
     }
-    return import_name(object, &manifest->import_name) && api_level(json_object_get(object, "api"), &manifest->api) &&
-           optional_string(json_object_get(object, "entry"), &manifest->entry) &&
-           optional_string(json_object_get(object, "identity"), &manifest->identity) &&
-           facts_strings(owner, json_object_get(object, "targets"), &manifest->targets) &&
-           facts_strings(owner, json_object_get(object, "permissions"), &manifest->permissions) &&
-           capability_declarations(owner, json_object_get(object, "capabilities"), &manifest->capabilities) &&
-           service_declarations(owner, json_object_get(object, "services"), &manifest->services);
+    return import_name(object, &manifest->import_name) && api_level(weivel_json_object_get(object, "api"), &manifest->api) &&
+           optional_string(weivel_json_object_get(object, "entry"), &manifest->entry) &&
+           optional_string(weivel_json_object_get(object, "identity"), &manifest->identity) &&
+           facts_strings(owner, weivel_json_object_get(object, "targets"), &manifest->targets) &&
+           facts_strings(owner, weivel_json_object_get(object, "permissions"), &manifest->permissions) &&
+           capability_declarations(owner, weivel_json_object_get(object, "capabilities"), &manifest->capabilities) &&
+           service_declarations(owner, weivel_json_object_get(object, "services"), &manifest->services);
 }
