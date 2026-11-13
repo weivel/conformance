@@ -93,8 +93,9 @@ as above, and witnesses:
 A layer hands the core a deadline that has fallen due before it makes any other call, whether or not its timer has
 fired. The clock can pass the deadline before the scheduler takes its turn, and a registration made then must not
 serve a want the core would have timed out: the wrapper reads its clock before the call and advances the core first.
-A harness that fires due tasks itself cannot satisfy this for the layer, because here the suite's scheduler runs
-nothing before the registration.
+The vector binds a layer only in a suite whose scheduler runs no task before the registration: in any other harness,
+one that fires due tasks on the way among them, the timer hands the core the time and the wrapper's check is never
+witnessed, so there the rule is held by review.
 
 The suite builds the provider and the consumer through its layer, asks with the vector's timeout on a clock it
 controls, moves the clock to `registerAtMillis` without running a task (`schedulerRunsBeforeRegistering` false),
