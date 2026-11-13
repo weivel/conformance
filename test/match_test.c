@@ -59,7 +59,25 @@ static void code_holds_when_the_refusal_carries_it(void) {
 
 static void a_dropped_wording_assertion_is_not_an_assertion(void) {
     fails("{\"refusal\":{\"mentions\":[\"a\"]}}", "{\"refusal\":{\"detail\":\"a\"}}", "mentions");
-    fails("{\"refusal\":{\"hasFix\":true}}", "{\"refusal\":{\"fix\":\"f\"}}", "hasFix");
+}
+
+static void subject_holds_when_the_refusal_names_it(void) {
+    holds("{\"refusal\":{\"code\":\"undeclared\",\"subject\":\"a:b\"}}",
+          "{\"refusal\":{\"code\":\"undeclared\",\"subject\":\"a:b\"}}", "same subject");
+    fails("{\"refusal\":{\"subject\":\"a:b\"}}", "{\"refusal\":{\"subject\":\"a:c\"}}", "other subject");
+    fails("{\"refusal\":{\"subject\":\"a:b\"}}", "{\"refusal\":{\"detail\":\"a:b\"}}", "subject in the wording");
+    fails("{\"refusal\":{\"subject\":\"a:b\"}}", "{\"refusal\":null}", "no refusal");
+    holds("{\"refusal\":{\"subject\":null}}", "{\"refusal\":{\"subject\":null}}", "no subject");
+    holds("{\"refusal\":{\"subject\":null}}", "{\"refusal\":{\"code\":\"stale_handle\"}}", "subject absent");
+    fails("{\"refusal\":{\"subject\":null}}", "{\"refusal\":{\"subject\":\"a\"}}", "a subject where none is");
+}
+
+static void has_fix_holds_when_the_refusal_answers_it(void) {
+    holds("{\"refusal\":{\"hasFix\":true}}", "{\"refusal\":{\"hasFix\":true}}", "has a fix");
+    holds("{\"report\":{\"hasFix\":false}}", "{\"report\":{\"hasFix\":false}}", "has none");
+    fails("{\"refusal\":{\"hasFix\":true}}", "{\"refusal\":{\"hasFix\":false}}", "answered none");
+    fails("{\"refusal\":{\"hasFix\":true}}", "{\"refusal\":{\"fix\":\"f\"}}", "inferred from the wording");
+    fails("{\"refusal\":{\"hasFix\":false}}", "{\"refusal\":{}}", "not answered");
 }
 
 static void an_unknown_assertion_beside_a_known_one_fails(void) {
@@ -140,6 +158,8 @@ int main(void) {
     null_holds_for_an_absent_or_null_key();
     code_holds_when_the_refusal_carries_it();
     a_dropped_wording_assertion_is_not_an_assertion();
+    subject_holds_when_the_refusal_names_it();
+    has_fix_holds_when_the_refusal_answers_it();
     an_unknown_assertion_beside_a_known_one_fails();
     before_holds_when_the_order_is_respected();
     contains_holds_when_every_element_is_there();

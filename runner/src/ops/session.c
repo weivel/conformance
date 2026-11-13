@@ -41,40 +41,46 @@ void session_close(core_session *session) {
     session->core = NULL;
 }
 
-int session_still_kept(core_session *session, weivel_handle handle) {
-    weivel_status status = weivel_unregister(session->core, handle, NULL);
-    session_drain(session);
-    return status == WEIVEL_STATUS_OK;
+int session_still_live(core_session *session, weivel_handle handle) {
+    uint32_t condition = 0;
+    if (weivel_handle_state(session->core, handle, &condition, NULL) != WEIVEL_STATUS_OK) {
+        return 0;
+    }
+    return condition == WEIVEL_HANDLE_WAITING || condition == WEIVEL_HANDLE_WATCHING;
 }
 
 const char *session_refusal_name(uint32_t code) {
     return code < sizeof REFUSAL_NAMES / sizeof REFUSAL_NAMES[0] ? REFUSAL_NAMES[code] : NULL;
 }
 
-void session_answer_refusal(answer_writer *answer, uint32_t code, const char *detail, const char *fix) {
-    const char *name = session_refusal_name(code);
-    if (code == WEIVEL_REFUSAL_NONE) {
+static void answer_text_or_null(answer_writer *answer, const char *text) {
+    if (text == NULL) {
+        answer_null(answer);
+    } else {
+        answer_string(answer, text);
+    }
+}
+
+void session_answer_refusal(answer_writer *answer, const session_refusal *refusal) {
+    const char *name = session_refusal_name(refusal->code);
+    if (refusal->code == WEIVEL_REFUSAL_NONE) {
         answer_null(answer);
         return;
     }
     answer_begin_object(answer);
     answer_key(answer, "code");
     if (name == NULL) {
-        answer_int(answer, code);
+        answer_int(answer, refusal->code);
     } else {
         answer_string(answer, name);
     }
     answer_key(answer, "detail");
-    if (detail == NULL) {
-        answer_null(answer);
-    } else {
-        answer_string(answer, detail);
-    }
+    answer_text_or_null(answer, refusal->detail);
     answer_key(answer, "fix");
-    if (fix == NULL) {
-        answer_null(answer);
-    } else {
-        answer_string(answer, fix);
-    }
+    answer_text_or_null(answer, refusal->fix);
+    answer_key(answer, "subject");
+    answer_text_or_null(answer, refusal->subject);
+    answer_key(answer, "hasFix");
+    answer_bool(answer, refusal->has_fix != 0);
     answer_end_object(answer);
 }

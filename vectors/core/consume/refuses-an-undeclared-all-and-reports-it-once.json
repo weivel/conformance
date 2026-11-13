@@ -71,6 +71,6 @@
         ]
       ]
     },
-    "refusal": { "code": "undeclared" }
+    "refusal": { "code": "undeclared", "subject": "screens", "hasFix": true }
   }
 }

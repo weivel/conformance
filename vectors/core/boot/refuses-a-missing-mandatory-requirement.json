@@ -20,7 +20,7 @@
     ]
   },
   "then": {
-    "refusal": { "code": "unmet_need" },
+    "refusal": { "code": "unmet_need", "subject": "storage.object", "hasFix": true },
     "started": {
       "equals": []
     }

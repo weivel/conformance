@@ -152,7 +152,7 @@ static const char *want_state(core_session *session, const hearing *log, weivel_
     if (settlement != NULL) {
         return want_state_in_scope(settlement);
     }
-    return session_still_kept(session, want) ? "pending" : NULL;
+    return session_still_live(session, want) ? "pending" : NULL;
 }
 
 static int write_scope(answer_writer *answer, core_session *session, const hearing *log,

@@ -117,7 +117,7 @@ static void write_outcome(answer_writer *answer, int settled, int timed_out, con
 static int write_settlement(answer_writer *answer, want_run *run) {
     const heard_event *settlement = hearing_settlement(&run->log, run->want);
     if (settlement == NULL) {
-        if (!session_still_kept(&run->session, run->want)) {
+        if (!session_still_live(&run->session, run->want)) {
             return 0;
         }
         write_outcome(answer, 0, 0, NULL);

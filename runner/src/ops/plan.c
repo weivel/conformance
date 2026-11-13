@@ -187,13 +187,18 @@ static int write_ids(answer_writer *answer, const registered_units *registered, 
 }
 
 static void write_first_refusal(answer_writer *answer, const weivel_activation_plan *plan) {
+    session_refusal refusal;
     answer_key(answer, "refusal");
     if (plan->refusal_count == 0) {
         answer_null(answer);
         return;
     }
-    session_answer_refusal(answer, plan->refusals[0].refusal.code, plan->refusals[0].refusal.detail,
-                           plan->refusals[0].refusal.fix);
+    refusal.code = plan->refusals[0].refusal.code;
+    refusal.detail = plan->refusals[0].refusal.detail;
+    refusal.fix = plan->refusals[0].refusal.fix;
+    refusal.subject = plan->refusal_subjects[0].subject;
+    refusal.has_fix = plan->refusal_subjects[0].has_fix;
+    session_answer_refusal(answer, &refusal);
 }
 
 static int write_boot(answer_writer *answer, const registered_units *registered, const weivel_activation_plan *plan) {

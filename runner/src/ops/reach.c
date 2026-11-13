@@ -315,7 +315,7 @@ static const char *settle_want(reach_run *run, reach_outcome *outcome) {
         outcome->served = settlement->implementation;
         return want_state_in_reach(settlement);
     }
-    return session_still_kept(&run->session, outcome->handle) ? "absent" : NULL;
+    return session_still_live(&run->session, outcome->handle) ? "absent" : NULL;
 }
 
 static const char *settle_watch(reach_run *run, reach_outcome *outcome) {
@@ -326,7 +326,7 @@ static const char *settle_watch(reach_run *run, reach_outcome *outcome) {
     if (outcome->served != 0) {
         return "served";
     }
-    return session_still_kept(&run->session, outcome->handle) ? "absent" : NULL;
+    return session_still_live(&run->session, outcome->handle) ? "absent" : NULL;
 }
 
 /** Settles each want and watch after the last step, as RUNNER.md reads them; 0 when the core gave no answer. */

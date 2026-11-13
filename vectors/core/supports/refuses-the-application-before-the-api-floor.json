@@ -18,7 +18,7 @@
     }
   },
   "then": {
-    "refusal": { "code": "incompatible" },
+    "refusal": { "code": "incompatible", "subject": "studio-thing", "hasFix": true },
     "supported": false,
     "axis": "application"
   }

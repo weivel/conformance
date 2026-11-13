@@ -4,6 +4,8 @@
 #include "ops/standard_refusal.h"
 #include "ops/want_states.h"
 
+#include <weivel/core.h>
+
 /** The adapter's answer to `given_text`, parsed; NULL when it answered nothing or an incomplete document. */
 static weivel_json_value *answer_of(op_adapter adapter, const char *given_text) {
     weivel_json_value *given = weivel_json_parse(given_text, strlen(given_text), NULL);
@@ -53,6 +55,10 @@ static int flag_at(const weivel_json_value *object, const char *key) {
     return flag;
 }
 
+static const weivel_json_value *refusal_of(const weivel_json_value *answer) {
+    return weivel_json_object_get(answer, "refusal");
+}
+
 static void names_every_refusal_code_as_the_header_spells_it(void) {
     check_text(session_refusal_name(WEIVEL_REFUSAL_MALFORMED_CALL), "malformed_call", "malformed call");
     check_text(session_refusal_name(WEIVEL_REFUSAL_INCOMPATIBLE), "incompatible", "incompatible");
@@ -72,6 +78,39 @@ static void answers_the_api_axis_when_only_the_floor_refuses(void) {
     check_text(text_at(answer, "axis"), "api", "axis");
     check_text(text_at(weivel_json_object_get(answer, "refusal"), "code"), "incompatible", "refusal code");
     CHECK(text_at(weivel_json_object_get(answer, "refusal"), "detail") != NULL);
+    check_text(text_at(refusal_of(answer), "subject"), "thing", "incompatible subject");
+    CHECK(flag_at(refusal_of(answer), "hasFix") == 1);
+    weivel_json_free(answer);
+}
+
+static void names_the_need_a_refused_boot_lacks(void) {
+    weivel_json_value *answer = answer_of(adapter_boot, "{\"units\":[{\"id\":\"consumer\",\"provides\":[],"
+                                                        "\"requires\":[{\"id\":\"store\",\"optional\":false,"
+                                                        "\"degradable\":false}]}]}");
+    check_text(text_at(refusal_of(answer), "code"), "unmet_need", "boot code");
+    check_text(text_at(refusal_of(answer), "subject"), "store", "boot subject");
+    CHECK(flag_at(refusal_of(answer), "hasFix") == 1);
+    weivel_json_free(answer);
+}
+
+static void names_the_id_an_undeclared_reach_was_for(void) {
+    weivel_json_value *answer = answer_of(adapter_reach, "{\"plugins\":[{\"id\":\"notes\",\"consumes\":[]}],"
+                                                         "\"steps\":[{\"plugin\":\"notes\",\"get\":\"clock\"}]}");
+    check_text(text_at(refusal_of(answer), "code"), "undeclared", "reach code");
+    check_text(text_at(refusal_of(answer), "subject"), "clock", "reach subject");
+    CHECK(flag_at(refusal_of(answer), "hasFix") == 1);
+    weivel_json_free(answer);
+}
+
+static void names_the_constraint_a_refused_want_missed(void) {
+    weivel_json_value *answer = answer_of(adapter_resolve,
+                                          "{" HOST_SERVICES HOST_VOCABULARY
+                                          "\"requirement\":{\"id\":\"store\",\"constraints\":{\"minReplicas\":3},"
+                                          "\"degradable\":false}," NEVER_PROVIDER
+                                          "\"budgetMillis\":2000,\"pollMillis\":1000}");
+    check_text(text_at(refusal_of(answer), "code"), "unmet_constraint", "resolve code");
+    check_text(text_at(refusal_of(answer), "subject"), "minReplicas", "resolve subject");
+    CHECK(flag_at(refusal_of(answer), "hasFix") == 1);
     weivel_json_free(answer);
 }
 
@@ -133,11 +172,14 @@ static void reports_why_a_want_degraded_and_what_it_asked(void) {
     weivel_json_value *answer = answer_of(adapter_resolve, "{" HOST_SERVICES HOST_VOCABULARY NEVER_SATISFIED
                                                     "\"budgetMillis\":2000,\"pollMillis\":1000}");
     const weivel_json_value *asks = weivel_json_object_get(answer, "asks");
-    const char *report = text_at(answer, "report");
+    const weivel_json_value *report = weivel_json_object_get(answer, "report");
+    const char *text = text_at(report, "text");
     CHECK(answer != NULL);
     CHECK(flag_at(answer, "degraded") == 1);
     CHECK(flag_at(answer, "served") == 0);
-    CHECK(report != NULL && strlen(report) > 0);
+    CHECK(text != NULL && strlen(text) > 0);
+    check_text(text_at(report, "subject"), "minReplicas", "degrade subject");
+    CHECK(flag_at(report, "hasFix") == 0);
     CHECK(weivel_json_array_length(asks) == 1);
     CHECK(is_null_at(answer, "atPoll"));
     CHECK(is_null_at(answer, "refusal"));
@@ -196,6 +238,50 @@ static void answers_a_want_nothing_settles_as_pending(void) {
     weivel_json_free(answer);
 }
 
+static void ignore_event(const weivel_event *event, void *context) {
+    (void)event;
+    (void)context;
+}
+
+/** Reading that a want waits must leave it waiting, so a provider arriving afterwards still settles it. */
+static void reads_a_waiting_want_without_ending_it(void) {
+    core_session session;
+    weivel_core_options options = WEIVEL_INIT(weivel_core_options);
+    const char *store = "store";
+    weivel_manifest manifests[2] = {WEIVEL_INIT(weivel_manifest), WEIVEL_INIT(weivel_manifest)};
+    weivel_service_offer offer = WEIVEL_INIT(weivel_service_offer);
+    weivel_service_want need = WEIVEL_INIT(weivel_service_want);
+    weivel_handle plugins[2] = {0, 0};
+    weivel_handle want = 0;
+    weivel_handle registration = 0;
+    uint32_t condition = 0;
+    size_t at;
+    offer.id = store;
+    need.id = store;
+    manifests[0].import_name = "provider";
+    manifests[0].services.provides.items = &offer;
+    manifests[0].services.provides.count = 1;
+    manifests[1].import_name = "consumer";
+    manifests[1].services.consumes.items = &need;
+    manifests[1].services.consumes.count = 1;
+    options.well_known_services.items = &store;
+    options.well_known_services.count = 1;
+    CHECK(session_open(&session, &options, ignore_event, NULL));
+    for (at = 0; at < 2; at++) {
+        CHECK(weivel_register_manifest(session.core, &manifests[at], &plugins[at], NULL) == WEIVEL_STATUS_OK);
+        CHECK(weivel_open_plugin(session.core, plugins[at], NULL, NULL) == WEIVEL_STATUS_OK);
+    }
+    CHECK(weivel_want_service(session.core, plugins[1], store, NULL, &want, NULL) == WEIVEL_STATUS_OK);
+    CHECK(session_still_live(&session, want));
+    CHECK(session_still_live(&session, want));
+    CHECK(weivel_register_service(session.core, plugins[0], store, &registration, NULL) == WEIVEL_STATUS_OK);
+    CHECK(weivel_handle_state(session.core, want, &condition, NULL) == WEIVEL_STATUS_OK);
+    CHECK(condition == WEIVEL_HANDLE_SETTLED);
+    CHECK(!session_still_live(&session, want));
+    CHECK(!session_still_live(&session, registration));
+    session_close(&session);
+}
+
 static void answers_nothing_for_a_step_naming_no_plugin(void) {
     CHECK(answers_nothing(adapter_reach, "{\"plugins\":[{\"id\":\"notes\",\"consumes\":[\"clock\"]}],"
                                          "\"steps\":[{\"plugin\":\"stranger\",\"get\":\"clock\"}]}"));
@@ -234,12 +320,12 @@ static void names_every_standard_refusal_code_as_the_header_spells_it(void) {
     check_text(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_MISSING_FIELD), "missing_field", "missing field");
     check_text(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_NOT_WELL_KNOWN), "not_well_known", "not well known");
     check_text(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_NAME_MISMATCH), "name_mismatch", "name mismatch");
-    CHECK(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_NAME_MISMATCH + 1) == NULL);
+    CHECK(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_LAST + 1) == NULL);
 }
 
 static void names_every_standard_refusal_code_up_to_the_highest(void) {
     uint32_t code;
-    CHECK(standard_refusal_named_codes() == WEIVEL_STANDARD_REFUSAL_NAME_MISMATCH + 1);
+    CHECK(standard_refusal_named_codes() == WEIVEL_STANDARD_REFUSAL_LAST + 1);
     for (code = 0; code < standard_refusal_named_codes(); code++) {
         if (standard_refusal_name(code) == NULL) {
             fprintf(stderr, "standard refusal code %u has no name\n", (unsigned)code);
@@ -313,6 +399,9 @@ static void answers_whether_a_value_is_an_identity(void) {
 int main(void) {
     names_every_refusal_code_as_the_header_spells_it();
     answers_the_api_axis_when_only_the_floor_refuses();
+    names_the_need_a_refused_boot_lacks();
+    names_the_id_an_undeclared_reach_was_for();
+    names_the_constraint_a_refused_want_missed();
     starts_a_provider_before_the_consumer_that_needs_it();
     answers_each_edge_as_provider_then_consumer();
     refuses_to_answer_a_requirement_of_an_unknown_kind();
@@ -325,6 +414,7 @@ int main(void) {
     answers_nothing_for_a_want_that_never_settled();
     hands_back_the_payload_it_was_given();
     answers_a_want_nothing_settles_as_pending();
+    reads_a_waiting_want_without_ending_it();
     answers_nothing_for_a_step_naming_no_plugin();
     reads_a_rejection_only_for_the_codes_the_contract_means();
     names_every_standard_refusal_code_as_the_header_spells_it();

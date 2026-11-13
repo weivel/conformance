@@ -103,7 +103,13 @@ int write_reported(answer_writer *answer, const hearing *log, const cast *opened
 }
 
 void write_first_refusal(answer_writer *answer, const hearing *log) {
-    session_answer_refusal(answer, log->first_refusal, log->first_detail, log->first_fix);
+    session_refusal refusal;
+    refusal.code = log->first_refusal;
+    refusal.detail = log->first_detail;
+    refusal.fix = log->first_fix;
+    refusal.subject = log->first_subject;
+    refusal.has_fix = log->first_has_fix;
+    session_answer_refusal(answer, &refusal);
 }
 
 void write_text_or_null(answer_writer *answer, const char *text) {

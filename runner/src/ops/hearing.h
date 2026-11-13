@@ -38,6 +38,8 @@ typedef struct {
     uint32_t first_refusal;
     char *first_detail;
     char *first_fix;
+    char *first_subject;
+    uint32_t first_has_fix;
     int failed;
 } hearing;
 
