@@ -1,0 +1,61 @@
+{
+  "id": "lifecycle/destroy-releases-a-plugin-whose-activate-is-in-flight",
+  "op": "lifecycle",
+  "covers": "invariant-11",
+  "given": {
+    "edgeSource": "capabilities",
+    "plugins": [
+      {
+        "id": "agenda",
+        "provides": [],
+        "consumes": [
+          "calendar:events"
+        ],
+        "activate": [
+          {
+            "want": "calendar:events"
+          }
+        ],
+        "deactivate": []
+      }
+    ],
+    "steps": [
+      {
+        "activate": [
+          "agenda"
+        ]
+      },
+      {
+        "destroy": true
+      },
+      {
+        "verify": "agenda"
+      }
+    ]
+  },
+  "then": {
+    "trace": {
+      "before": [
+        [
+          "activate agenda",
+          "deactivate agenda"
+        ],
+        [
+          "deactivate agenda",
+          "rejected agenda calendar:events stopped"
+        ]
+      ]
+    },
+    "pending": {
+      "equals": []
+    },
+    "verifies": {
+      "equals": [
+        "quiet"
+      ]
+    },
+    "loud": {
+      "equals": 0
+    }
+  }
+}

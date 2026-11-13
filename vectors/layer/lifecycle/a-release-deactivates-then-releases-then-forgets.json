@@ -1,0 +1,91 @@
+{
+  "id": "lifecycle/a-release-deactivates-then-releases-then-forgets",
+  "op": "lifecycle",
+  "covers": "invariant-11",
+  "given": {
+    "edgeSource": "capabilities",
+    "plugins": [
+      {
+        "id": "calendar",
+        "provides": [
+          "calendar:events"
+        ],
+        "consumes": [
+          "mail:inbox"
+        ],
+        "activate": [
+          {
+            "register": "calendar:events"
+          },
+          {
+            "want": "mail:inbox",
+            "await": false
+          }
+        ],
+        "deactivate": [
+          {
+            "get": "calendar:events"
+          }
+        ]
+      },
+      {
+        "id": "agenda",
+        "provides": [],
+        "consumes": [
+          "calendar:events"
+        ],
+        "activate": [
+          {
+            "want": "calendar:events"
+          }
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "activate": [
+          "calendar",
+          "agenda"
+        ]
+      },
+      {
+        "release": "calendar"
+      },
+      {
+        "plugin": "agenda",
+        "get": "calendar:events"
+      }
+    ]
+  },
+  "then": {
+    "trace": {
+      "before": [
+        [
+          "deactivate calendar",
+          "got calendar calendar:events"
+        ],
+        [
+          "got calendar calendar:events",
+          "rejected calendar mail:inbox stopped"
+        ],
+        [
+          "rejected calendar mail:inbox stopped",
+          "missed agenda calendar:events"
+        ]
+      ]
+    },
+    "active": {
+      "equals": [
+        "agenda"
+      ]
+    },
+    "forgotten": {
+      "equals": [
+        "calendar"
+      ]
+    },
+    "pending": {
+      "equals": []
+    }
+  }
+}

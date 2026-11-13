@@ -22,7 +22,8 @@ A vector's directory says which suite judges it.
   core, through an adapter that drives the standard's library (`siblings/standard`) in-process.
 - `vectors/layer/<op>/` is witnessed by each language's own layer suite, because the core never calls a host
   language. `vectors/layer/LAYER.md` says what each suite must witness. The runner loads and counts these and
-  does not run them; the report lists them as awaiting a layer.
+  does not run them; the report lists them as awaiting a layer. The `lifecycle` op is asked only here: the kit
+  knows it so its vectors load, and no adapter answers it, so a core vector of that op would be errored.
 
 ## Adapters
 

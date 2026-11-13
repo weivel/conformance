@@ -1,0 +1,33 @@
+{
+  "id": "want/a-settled-want-disarms-the-timer",
+  "op": "want",
+  "covers": "invariant-8",
+  "given": {
+    "service": {
+      "id": "accounts"
+    },
+    "registerAtMillis": 500,
+    "timeoutMillis": 1000,
+    "horizonMillis": 10000
+  },
+  "then": {
+    "settled": true,
+    "timedOut": false,
+    "atMillis": {
+      "equals": 500
+    },
+    "refusal": null,
+    "timer": {
+      "equals": [
+        [
+          0,
+          1000
+        ],
+        [
+          500,
+          null
+        ]
+      ]
+    }
+  }
+}

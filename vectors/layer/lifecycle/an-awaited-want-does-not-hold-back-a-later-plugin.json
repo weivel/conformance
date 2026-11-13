@@ -1,0 +1,77 @@
+{
+  "id": "lifecycle/an-awaited-want-does-not-hold-back-a-later-plugin",
+  "op": "lifecycle",
+  "covers": "invariant-8",
+  "given": {
+    "edgeSource": "capabilities",
+    "plugins": [
+      {
+        "id": "agenda",
+        "provides": [],
+        "consumes": [
+          "calendar:events"
+        ],
+        "activate": [
+          {
+            "want": "calendar:events"
+          }
+        ]
+      },
+      {
+        "id": "calendar",
+        "provides": [
+          "calendar:events"
+        ],
+        "consumes": [],
+        "activate": [
+          {
+            "register": "calendar:events"
+          }
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "activate": [
+          "agenda",
+          "calendar"
+        ]
+      }
+    ]
+  },
+  "then": {
+    "plans": {
+      "equals": [
+        [
+          "agenda",
+          "calendar"
+        ]
+      ]
+    },
+    "trace": {
+      "before": [
+        [
+          "activate agenda",
+          "activate calendar"
+        ],
+        [
+          "activate calendar",
+          "registered calendar calendar:events"
+        ],
+        [
+          "registered calendar calendar:events",
+          "settled agenda calendar:events"
+        ]
+      ]
+    },
+    "active": {
+      "equals": [
+        "agenda",
+        "calendar"
+      ]
+    },
+    "pending": {
+      "equals": []
+    }
+  }
+}
