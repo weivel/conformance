@@ -4,7 +4,7 @@
 
 int adapter_identity(const weivel_json_value *given, answer_writer *answer) {
     const weivel_json_value *value = weivel_json_object_get(given, "value");
-    weivel_standard_identity identity = {0};
+    weivel_standard_identity identity = WEIVEL_INIT(weivel_standard_identity);
     weivel_status status;
     if (weivel_json_kind_of(value) != WEIVEL_JSON_STRING) {
         return 0;

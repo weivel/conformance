@@ -237,6 +237,39 @@ static void names_every_standard_refusal_code_as_the_header_spells_it(void) {
     CHECK(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_NAME_MISMATCH + 1) == NULL);
 }
 
+static void names_every_standard_refusal_code_up_to_the_highest(void) {
+    uint32_t code;
+    CHECK(standard_refusal_named_codes() == WEIVEL_STANDARD_REFUSAL_NAME_MISMATCH + 1);
+    for (code = 0; code < standard_refusal_named_codes(); code++) {
+        if (standard_refusal_name(code) == NULL) {
+            fprintf(stderr, "standard refusal code %u has no name\n", (unsigned)code);
+            CHECK(!"every standard refusal code is named");
+        }
+    }
+}
+
+static int answers_refusal(const char *detail, const char *fix) {
+    weivel_standard_refusal refusal = WEIVEL_INIT(weivel_standard_refusal);
+    answer_writer answer;
+    int answered;
+    refusal.code = WEIVEL_STANDARD_REFUSAL_INVALID_VALUE;
+    refusal.detail = detail;
+    refusal.fix = fix;
+    refusal.path = "importName";
+    answer_init(&answer);
+    answered = standard_answer_refusal(&answer, &refusal);
+    answer_release(&answer);
+    return answered;
+}
+
+static void answers_nothing_for_a_refusal_missing_its_detail_or_fix(void) {
+    CHECK(answers_refusal("importName is not a valid import name", "use lowercase words"));
+    CHECK(!answers_refusal("", "use lowercase words"));
+    CHECK(!answers_refusal("importName is not a valid import name", ""));
+    CHECK(!answers_refusal(NULL, "use lowercase words"));
+    CHECK(!answers_refusal("importName is not a valid import name", NULL));
+}
+
 static void answers_nothing_for_a_schema_other_than_the_published_one(void) {
     CHECK(answers_nothing(adapter_validate, "{\"schema\":\"library.schema.json\"," BARE_ROUTING "}"));
     CHECK(answers_nothing(adapter_validate, "{" BARE_ROUTING "}"));
@@ -295,6 +328,8 @@ int main(void) {
     answers_nothing_for_a_step_naming_no_plugin();
     reads_a_rejection_only_for_the_codes_the_contract_means();
     names_every_standard_refusal_code_as_the_header_spells_it();
+    names_every_standard_refusal_code_up_to_the_highest();
+    answers_nothing_for_a_refusal_missing_its_detail_or_fix();
     answers_nothing_for_a_schema_other_than_the_published_one();
     skips_the_well_known_rule_only_when_the_list_is_absent();
     hands_the_validator_a_string_with_an_escaped_newline_intact();
