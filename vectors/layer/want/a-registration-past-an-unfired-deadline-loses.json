@@ -1,0 +1,41 @@
+{
+  "id": "want/a-registration-past-an-unfired-deadline-loses",
+  "op": "want",
+  "covers": "invariant-8",
+  "given": {
+    "service": {
+      "id": "accounts"
+    },
+    "registerAtMillis": 1500,
+    "timeoutMillis": 1000,
+    "horizonMillis": 10000,
+    "schedulerRunsBeforeRegistering": false
+  },
+  "then": {
+    "settled": false,
+    "timedOut": true,
+    "atMillis": {
+      "equals": 1500
+    },
+    "refusal": {
+      "code": "timed_out",
+      "subject": "accounts",
+      "hasFix": true
+    },
+    "timer": {
+      "equals": [
+        [
+          0,
+          1000
+        ],
+        [
+          1500,
+          null
+        ]
+      ]
+    },
+    "fired": {
+      "equals": []
+    }
+  }
+}
