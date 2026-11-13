@@ -319,7 +319,7 @@ misused.
 ```
 weivel-purity <root> <role> <languages-file>
 weivel-names <root> <words-file>
-weivel-parity <root> <modules-file> <language> [languages-file]
+weivel-parity <root> <modules-file> <language> <languages-file>
 weivel-core-gate <rules-file> <msvc|gnu|apple> <tool> <shared-library> [<static-library>...]
 weivel-core-gate --sources <rules-file> <core-root>
 ```
@@ -341,8 +341,10 @@ weivel-core-gate --sources <rules-file> <core-root>
   does not trip the list. A lockfile that is not a JSON object is an offender, never passed unread.
 - Parity: `MODULES` in the core lists the modules a language implements, one per line, with ` optional` after the
   ones a repository may omit. A language repository carries one top-level directory per module, named exactly as
-  listed, under its `source-root` (`src` when none is given). A missing required module and a directory not on the list
-  are both offenders, and so is a module directory that holds no file.
+  listed, under its `source-root`. A missing required module, a directory not on the list, a module directory that
+  holds no file and a loose file directly under the source root are all offenders. A language `checks/languages.txt`
+  does not list, or lists without a `source-root`, is refused rather than read as `src`, so a new language is added to
+  the list before its repository is checked.
 - Core gate: reads the built core with the platform's own tool (`dumpbin` beside the MSVC compiler, `nm` elsewhere):
   the shared library's imports and exports, and, when given, each object of the static library built from the same
   sources. `checks/core_gate.txt` holds the rules, one `<kind> <reason> <symbol>` per line: `forbid` names what reads

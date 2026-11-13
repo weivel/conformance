@@ -44,7 +44,11 @@ set(checks_test_scenarios
     parity_finds_java_modules_under_its_source_root
     parity_rejects_an_empty_module_directory
     parity_refuses_an_empty_directory
-    parity_refuses_an_empty_module_list)
+    parity_refuses_an_empty_module_list
+    parity_refuses_a_language_it_does_not_know
+    parity_refuses_a_language_without_a_source_root
+    parity_refuses_to_run_without_the_languages_file
+    parity_rejects_a_loose_file_under_the_source_root)
 
 foreach(scenario IN LISTS checks_test_scenarios)
     add_test(NAME ${scenario}
