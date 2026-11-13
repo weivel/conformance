@@ -1,0 +1,37 @@
+{
+  "id": "want/a-timed-want-arms-the-timer-at-its-deadline",
+  "op": "want",
+  "covers": "invariant-8",
+  "given": {
+    "service": {
+      "id": "accounts"
+    },
+    "registerAtMillis": null,
+    "timeoutMillis": 1000,
+    "horizonMillis": 10000
+  },
+  "then": {
+    "settled": false,
+    "timedOut": true,
+    "atMillis": {
+      "equals": 1000
+    },
+    "refusal": {
+      "code": "timed_out",
+      "subject": "accounts",
+      "hasFix": true
+    },
+    "timer": {
+      "equals": [
+        [
+          0,
+          1000
+        ],
+        [
+          1000,
+          null
+        ]
+      ]
+    }
+  }
+}

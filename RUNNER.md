@@ -22,7 +22,8 @@ A vector's directory says which suite judges it.
   core, through an adapter that drives the standard's library (`siblings/standard`) in-process.
 - `vectors/layer/<op>/` is witnessed by each language's own layer suite, because the core never calls a host
   language. `vectors/layer/LAYER.md` says what each suite must witness. The runner loads and counts these and
-  does not run them; the report lists them as awaiting a layer.
+  does not run them; the report lists them as awaiting a layer. The `lifecycle` op is asked only here: the kit
+  knows it so its vectors load, and no adapter answers it, so a core vector of that op would be errored.
 
 ## Adapters
 
@@ -310,16 +311,50 @@ identically. Each key of `then` is compared against the same key of the answer:
 
 A key absent from `then` asserts nothing, and a `then` with no key at all, or `present: false` or `absent: false`, is refused when the corpus loads.
 
+## Benchmark budgets
+
+Every timing bound lives here, so no implementation sets its own. `benchmarks/budget.txt` is the core's: one line,
+`median_nanoseconds <number>`, the median a Release build of the core's control call may take, held by
+`weivel-benchmark-control-call gate`.
+
+A language that reaches the core through a foreign function interface reads its bounds from
+`benchmarks/<language>.txt` of the kit commit it pins. Each line is fields separated by one space:
+
+- `<gate> <platform> <number>`: `control-call` is weivel's control call over a bare call through the same binding,
+  `library-call` a C library function reached through weivel over the same function reached directly. The platform is
+  the runner's system, `linux`, `windows` or `macos`, whatever the language itself calls it. The number is the highest
+  per-round median ratio CI measured there, and the bound is that number times `ratio-margin`. A platform with no line
+  has no bound, and a gate run there fails.
+- `ratio-margin <number>`: how far over its highest measured ratio a run may go.
+- `quiet-noise <number>`: how far from 1 the ratio of two paths of identical cost is on a quiet run.
+- `worst-noise <number>`: the noisiest such deviation measured; a run whose two identical direct paths differ by more
+  is not judged.
+- `noise-margin <number>`: how many times its own noise, or the quiet noise when it was quieter, a same-language pair
+  may differ by.
+
+Each gate on each platform and each of the four bounds appears exactly once, every number positive;
+`language_budget_of_<language>_is_well_formed` holds each file to that.
+
+**The same-language gate in every language is the identity check**: the service a consumer resolves is the
+provider's own object, pointer equality in C and reference identity elsewhere. The noise bounds only judge the
+timing a language reports beside it. The ratio gates over a bare foreign call apply only to a language that crosses
+one, so a C layer has no file here and gates its control call against the core's own `budget.txt`.
+
+`typescript.txt` carries `weivel/typescript`'s bounds as they stood on 2026-11-13, unchanged but for the platform
+names (`win32` is `windows`, `darwin` is `macos`): the control call measured with the core's timer armed in Test run
+43451359295, the library call in Test run 43444931168, and the noise in Test runs 43438389364 and 43441441323.
+
 ## The drift checks
 
-Four programs in `checks/`. Three take a repository root and the fourth a built core. They exit 0 when clean, 1 with
-every offender listed, and 2 when they were given nothing to check (no files, no words, no modules, no symbols) or are
-misused.
+Five programs in `checks/`. Four take a repository root and the fifth a built core. They exit 0 when clean, 1 with
+every offender listed, and 2 when they were given nothing to check (no files, no words, no modules, no vectors, no
+symbols) or are misused.
 
 ```
 weivel-purity <root> <role> <languages-file>
 weivel-names <root> <words-file>
-weivel-parity <root> <modules-file> <language> [languages-file]
+weivel-parity <root> <modules-file> <language> <languages-file>
+weivel-layers <root> <layer-vector-directory> <language> <languages-file>
 weivel-core-gate <rules-file> <msvc|gnu|apple> <tool> <shared-library> [<static-library>...]
 weivel-core-gate --sources <rules-file> <core-root>
 ```
@@ -327,12 +362,15 @@ weivel-core-gate --sources <rules-file> <core-root>
 - Purity: the roles `c`, `core`, `kit` and `standard` allow C, headers, CMake, JSON and prose, and refuse a build file of any language in `checks/languages.txt`
   (`package.json`, `tsconfig.json`, `build.gradle`) wherever it sits. Any other role is a
   language named in `checks/languages.txt`, whose lines read `<language> <kind> <value>` with kind `extension`, `name`,
-  `pattern`, `prefix` or `source-root`; it allows its own files and prose, and a generated `.js` under a Java
+  `pattern`, `prefix`, `source-root` or `test-root`; it allows its own files and prose, and a generated `.js` under a Java
   repository is an offender.
 - Names: no file may carry a word from the list, case-folded. `LICENSE`, `.weivel/repo.json`, the list itself, binary
   files and, at the root only, the directories `.git`, the hosting-service directory beside it, `build`, `build-*`,
   `siblings` and `node_modules` are not read. Purity and the core's source scan skip the same root directories, and
   nothing deeper is skipped by name. A file is binary when a NUL byte occurs in its first 8 KB, and each skipped file is printed.
+  The list always comes from the pinned kit commit, never from the tree under test, so a repository cannot shorten the
+  list it is checked with; a file whose trimmed, non-empty lines are the list word for word is that list's copy and
+  is not read, which is how the kit's own `checks/names.txt` passes.
   A `package-lock.json` at any depth is read as JSON through the standard's reader, not as text, and only where it can
   name a dependency or its origin: the top-level `name`, every key of `packages`, each entry's `name`, `version` and
   `resolved`, and the keys and specs of its `dependencies`, `devDependencies`, `optionalDependencies`,
@@ -341,8 +379,17 @@ weivel-core-gate --sources <rules-file> <core-root>
   does not trip the list. A lockfile that is not a JSON object is an offender, never passed unread.
 - Parity: `MODULES` in the core lists the modules a language implements, one per line, with ` optional` after the
   ones a repository may omit. A language repository carries one top-level directory per module, named exactly as
-  listed, under its `source-root` (`src` when none is given). A missing required module and a directory not on the list
-  are both offenders, and so is a module directory that holds no file.
+  listed, under its `source-root`. A missing required module, a directory not on the list, a module directory that
+  holds no file and a loose file directly under the source root are all offenders. A language `checks/languages.txt`
+  does not list, or lists without a `source-root`, is refused rather than read as `src`, so a new language is added to
+  the list before its repository is checked.
+- Layers: every layer vector's id, its path under `vectors/layer` without `.json`
+  (`consume/a-throwing-listener-does-not-silence-the-others`), must appear in some file under the language's `test-root`,
+  standing on its own: a longer id or a file path that contains it does not count. A missing id is an offender. A
+  language the list does not name, or names without a `test-root`, is refused, never read as the whole repository,
+  because sources and fixtures outside the tests would then satisfy it. It runs for a language implementation, never
+  for `core`, `standard` or `kit`, and only proves each vector is named; the language's own coverage test, which reads
+  its describe names, stays the strong check.
 - Core gate: reads the built core with the platform's own tool (`dumpbin` beside the MSVC compiler, `nm` elsewhere):
   the shared library's imports and exports, and, when given, each object of the static library built from the same
   sources. `checks/core_gate.txt` holds the rules, one `<kind> <reason> <symbol>` per line: `forbid` names what reads

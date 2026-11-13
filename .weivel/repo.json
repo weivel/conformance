@@ -9,12 +9,12 @@
     {
       "id": "github:1455223370",
       "importName": "core",
-      "commit": "06380d6a4aa424517e716c305324d418b241dfc1"
+      "commit": "24a414be3ed44638ae91c79eabbc5a45da0847e7"
     },
     {
       "id": "github:1456093642",
       "importName": "standard",
-      "commit": "86d74d58249c9a306250427bc94afdd83db9ad9a"
+      "commit": "ad401a8a4cd5ff2efc5cc3ebc958d9662029943d"
     }
   ]
 }

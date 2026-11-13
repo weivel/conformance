@@ -5,7 +5,6 @@
 #include "languages.h"
 #include "tree.h"
 
-#define DEFAULT_SOURCE_ROOT "src"
 #define OPTIONAL_SUFFIX " optional"
 
 typedef struct {
@@ -106,16 +105,44 @@ static char *copy_text(const char *text) {
 
 static char *resolve_source_root(const char *languages_path, const char *language, char *error, size_t error_size) {
     language_rules rules;
-    char *source_root;
-    if (languages_path == NULL) {
-        return copy_text(DEFAULT_SOURCE_ROOT);
-    }
+    char *source_root = NULL;
     if (!language_rules_load(languages_path, language, &rules, error, error_size)) {
         return NULL;
     }
-    source_root = copy_text(rules.source_root != NULL ? rules.source_root : DEFAULT_SOURCE_ROOT);
+    if (!rules.known) {
+        snprintf(error, error_size, "%s names no language '%s', so its module layout is unknown", languages_path,
+                 language);
+    } else if (rules.source_root == NULL) {
+        snprintf(error, error_size, "%s gives %s no source-root, so its modules have nowhere to be found",
+                 languages_path, language);
+    } else {
+        source_root = copy_text(rules.source_root);
+    }
     language_rules_free(&rules);
     return source_root;
+}
+
+static int is_loose_file(const char *relative) {
+    return strchr(relative, '/') == NULL;
+}
+
+static int report_loose_files(const char *source_directory, const char *language, const char *source_root, char *error,
+                              size_t error_size) {
+    text_list files;
+    size_t at;
+    int offenders = 0;
+    if (!tree_list_files(source_directory, &files, error, error_size)) {
+        return -1;
+    }
+    for (at = 0; at < files.count; at++) {
+        if (is_loose_file(files.items[at])) {
+            fprintf(stderr, "%s: '%s' under %s is a loose file, outside every module\n", language, files.items[at],
+                    source_root);
+            offenders++;
+        }
+    }
+    text_list_free(&files);
+    return offenders;
 }
 
 static int check_root(const char *root, const module_list *modules, const char *language, const char *source_root,
@@ -131,7 +158,10 @@ static int check_root(const char *root, const module_list *modules, const char *
         free(directory);
         return -1;
     }
-    offenders = report_offenders(modules, &directories, language, source_root, directory);
+    offenders = report_loose_files(directory, language, source_root, error, error_size);
+    if (offenders >= 0) {
+        offenders += report_offenders(modules, &directories, language, source_root, directory);
+    }
     if (offenders == 0) {
         printf("weivel-parity: %s carries every required module and no other\n", language);
     }
@@ -166,14 +196,14 @@ int main(int argument_count, char **arguments) {
     char *root;
     char *source_root;
     int offenders;
-    if (argument_count < 4 || argument_count > 5) {
-        fprintf(stderr, "usage: weivel-parity <root> <modules-file> <language> [languages-file]\n");
+    if (argument_count != 5) {
+        fprintf(stderr, "usage: weivel-parity <root> <modules-file> <language> <languages-file>\n");
         return 2;
     }
     if (!load_modules(arguments[2], &lines, &modules)) {
         return 2;
     }
-    source_root = resolve_source_root(argument_count == 5 ? arguments[4] : NULL, arguments[3], error, sizeof error);
+    source_root = resolve_source_root(arguments[4], arguments[3], error, sizeof error);
     root = tree_normalize_root(arguments[1]);
     if (source_root == NULL || root == NULL) {
         fprintf(stderr, "weivel-parity: %s\n", error[0] != '\0' ? error : "out of memory");

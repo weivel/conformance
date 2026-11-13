@@ -20,17 +20,24 @@ static text_list *list_for_kind(language_rules *rules, const char *kind) {
     return NULL;
 }
 
+static int replace_text(char **slot, const char *value) {
+    char *copy = malloc(strlen(value) + 1);
+    if (copy == NULL) {
+        return 0;
+    }
+    memcpy(copy, value, strlen(value) + 1);
+    free(*slot);
+    *slot = copy;
+    return 1;
+}
+
 static int apply_line(language_rules *rules, const char *kind, const char *value) {
     text_list *list;
     if (strcmp(kind, "source-root") == 0) {
-        char *copy = malloc(strlen(value) + 1);
-        if (copy == NULL) {
-            return 0;
-        }
-        memcpy(copy, value, strlen(value) + 1);
-        free(rules->source_root);
-        rules->source_root = copy;
-        return 1;
+        return replace_text(&rules->source_root, value);
+    }
+    if (strcmp(kind, "test-root") == 0) {
+        return replace_text(&rules->test_root, value);
     }
     list = list_for_kind(rules, kind);
     return list != NULL && text_list_add(list, value);
@@ -96,5 +103,6 @@ void language_rules_free(language_rules *rules) {
     text_list_free(&rules->patterns);
     text_list_free(&rules->prefixes);
     free(rules->source_root);
+    free(rules->test_root);
     memset(rules, 0, sizeof *rules);
 }
