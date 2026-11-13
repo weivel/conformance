@@ -42,7 +42,9 @@ foreach(case
         not-a-number:carries.no.positive.number
         zero:carries.no.positive.number
         unknown-bound:names.no.known.bound
-        extra-field:is.neither)
+        extra-field:is.neither
+        missing-a-platform:library-call.macos..is.missing
+        unknown-gate:names.no.ratio.gate)
     string(REPLACE ":" ";" parts ${case})
     list(GET parts 0 fixture)
     list(GET parts 1 reason)
