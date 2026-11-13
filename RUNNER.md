@@ -366,6 +366,11 @@ weivel-core-gate --sources <rules-file> <core-root>
   as the language. Any other role is a language named in `checks/languages.txt`, whose lines read
   `<language> <kind> <value>` with kind `extension`, `name`, `pattern`, `prefix`, `source-root`, `test-root` or
   `header-root`; it allows its own files and prose, and a generated `.js` under a Java repository is an offender.
+  A `pattern` holds one `*`, standing for any characters. A pattern that begins with it names files by their ending,
+  as an `extension` does, and like one needs a name before that ending: `*.cmake` does not allow a file named
+  `.cmake`. A star further in may stand for nothing, so `tsconfig*.json` allows `tsconfig.json`.
+  `languages_list_holds_the_pinned_lines` holds the list to its exact lines, so what a role allows or refuses changes
+  only together with that test.
 - Names: no file may carry a word from the list, case-folded. `LICENSE`, `.weivel/repo.json`, the list itself, binary
   files and, at the root only, the directories `.git`, the hosting-service directory beside it, `build`, `build-*`,
   `siblings` and `node_modules` are not read. Purity and the core's source scan skip the same root directories, and
@@ -383,18 +388,30 @@ weivel-core-gate --sources <rules-file> <core-root>
 - Parity: `MODULES` in the core lists the modules a language implements, one per line, with ` optional` after the
   ones a repository may omit. A language repository carries one top-level directory per module, named exactly as
   listed, under its `source-root`. A missing required module, a directory not on the list, a module directory that
-  holds no file and a loose file directly under the source root are all offenders. A language `checks/languages.txt`
-  does not list, or lists without a `source-root`, is refused rather than read as `src`, so a new language is added to
-  the list before its repository is checked. A language that publishes its interface apart from its sources names
-  where with a `header-root`, as C does with `include/weivel/c`: every file there belongs to a listed module, by its
-  own name without the extension (`core.h`) or by the directory it sits in (`host/entry.h`), anything else is an
-  offender, and a repository without that directory is refused. A file beside the header root, such as the one header
-  that includes the rest, is not read.
+  holds no file and a loose file directly under the source root are all offenders. Every directory directly under the
+  source root is judged, whatever its name. A module holds a file when one sits in it at any depth, except under a
+  directory directly inside the module that carries a name skipped at a repository root (`build`, `build-*`,
+  `siblings`, `node_modules`, `.git` and the hosting-service directory), so a module holding only build output holds
+  no file. A language `checks/languages.txt` does not list, or lists without a `source-root`, is refused rather than
+  read as `src`, so a new language is added to the list before its repository is checked. A language that publishes
+  its interface apart from its sources names where with a `header-root`, as C does with `include/weivel/c`.
+  Every file under the header root is read, at any
+  depth and in a directory of any name: nothing is skipped there, `build` and `siblings` included. Each must carry one
+  of the language's `extension`s after a name (`.c` or `.h` for C, so `core.json`, `core.md` and a file named `.h` are
+  offenders) and belong to a listed module, by its own name without the extension (`core.h`) or by the first
+  directory it sits under (`host/entry.h`); anything else is an offender. A header root that is missing or holds no
+  file is refused with 2, because nothing was checked, and so is a language given a `header-root` and no `extension`.
+  The header root refuses strays and asks no header of any module: a module with no header there, or with several,
+  passes. Parity reads nothing else under `include/`, so a file beside the header root, such as the one header that
+  includes the rest, is not read by it.
 - Layers: every layer vector's id, its path under `vectors/layer` without `.json`
   (`consume/a-throwing-listener-does-not-silence-the-others`), must appear in some source file of the language, one
   with an `extension` the list gives it, under its `test-root`, standing on its own: a longer id, a file path that
-  contains it, or a vector copied under the tests as a `.json` fixture does not count. A missing id is an offender. A
-  language the list does not name, or names without a `test-root` or an `extension`, is refused, never read as the
+  contains it, or a vector copied under the tests as a `.json` fixture does not count. A missing id is an offender.
+  Under the layer vector directory nothing is skipped, so a vector in a directory of any name is asked for. Under the
+  test root a directory directly beneath it that carries a name skipped at a repository root (`build`, `build-*`,
+  `siblings`, `node_modules`, `.git` and the hosting-service directory) is not read, so build output names no vector.
+  A language the list does not name, or names without a `test-root` or an `extension`, is refused, never read as the
   whole repository,
   because sources and fixtures outside the tests would then satisfy it. It runs for a language implementation, never
   for `core`, `standard` or `kit`, and only proves each vector is named; the language's own coverage test, which reads

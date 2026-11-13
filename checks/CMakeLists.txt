@@ -60,6 +60,14 @@ set(checks_test_scenarios
     parity_rejects_a_public_header_of_no_module
     parity_refuses_a_c_layer_without_its_public_headers
     parity_reads_no_header_root_a_language_does_not_name
+    parity_reads_every_directory_under_the_header_root
+    parity_refuses_a_header_root_holding_no_file
+    parity_rejects_a_public_header_without_the_language_extension
+    parity_refuses_a_header_root_whose_language_has_no_extension
+    parity_counts_no_build_output_as_a_module_file
+    layers_demands_a_vector_under_any_directory_name
+    layers_counts_no_build_output_under_the_test_root
+    purity_rejects_a_file_named_only_by_a_pattern_suffix
     layers_reads_c_tests_and_no_build_script
     layers_accepts_a_suite_naming_every_vector
     layers_rejects_a_vector_no_test_names
@@ -92,6 +100,9 @@ add_test(NAME kit_names_no_foreign_word_with_a_pinned_list
 add_test(NAME names_list_holds_the_nine_words
     COMMAND ${CMAKE_COMMAND} -DWORDS=${CMAKE_CURRENT_SOURCE_DIR}/names.txt
         -P ${PROJECT_SOURCE_DIR}/test/names_list_test.cmake)
+add_test(NAME languages_list_holds_the_pinned_lines
+    COMMAND ${CMAKE_COMMAND} -DLANGUAGES=${CMAKE_CURRENT_SOURCE_DIR}/languages.txt
+        -P ${PROJECT_SOURCE_DIR}/test/languages_list_test.cmake)
 add_test(NAME core_is_pure
     COMMAND weivel-purity ${PROJECT_SOURCE_DIR}/siblings/core core ${CMAKE_CURRENT_SOURCE_DIR}/languages.txt)
 

@@ -58,6 +58,12 @@ static int is_present(const text_list *directories, const char *name) {
     return 0;
 }
 
+/**
+ * Whether a module directory holds a file at any depth.
+ *
+ * @implNote A directory directly inside the module that a repository walk skips (`build`, `node_modules` and the
+ * rest) is skipped here too, so a module holding nothing but build output still holds no file.
+ */
 static int holds_a_file(const char *source_directory, const char *name) {
     char error[512];
     text_list files;
@@ -106,6 +112,9 @@ static int load_layout(const char *languages_path, const char *language, languag
     } else if (rules->source_root == NULL) {
         snprintf(error, error_size, "%s gives %s no source-root, so its modules have nowhere to be found",
                  languages_path, language);
+    } else if (rules->header_root != NULL && rules->extensions.count == 0) {
+        snprintf(error, error_size, "%s gives %s a header-root and no extension, so none of its headers can be told",
+                 languages_path, language);
     } else {
         return 1;
     }
@@ -122,7 +131,7 @@ static int report_loose_files(const char *source_directory, const char *language
     text_list files;
     size_t at;
     int offenders = 0;
-    if (!tree_list_files(source_directory, &files, error, error_size)) {
+    if (!tree_list_every_file(source_directory, &files, error, error_size)) {
         return -1;
     }
     for (at = 0; at < files.count; at++) {
@@ -150,9 +159,48 @@ static int names_a_module(const module_list *modules, const char *relative) {
     return 0;
 }
 
+static const char *file_name(const char *relative) {
+    const char *slash = strrchr(relative, '/');
+    return slash == NULL ? relative : slash + 1;
+}
+
+/** Whether the file's name ends in one of the language's extensions and holds something before it. */
+static int carries_an_extension(const language_rules *rules, const char *relative) {
+    const char *name = file_name(relative);
+    size_t length = strlen(name);
+    size_t at;
+    for (at = 0; at < rules->extensions.count; at++) {
+        const char *extension = rules->extensions.items[at];
+        size_t extension_length = strlen(extension);
+        if (length > extension_length && strcmp(name + length - extension_length, extension) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int is_stray_header(const module_list *modules, const language_rules *rules, const char *language,
+                           const char *relative) {
+    if (!carries_an_extension(rules, relative)) {
+        fprintf(stderr, "%s: '%s' under %s carries none of the language's extensions\n", language, relative,
+                rules->header_root);
+        return 1;
+    }
+    if (!names_a_module(modules, relative)) {
+        fprintf(stderr, "%s: '%s' under %s belongs to no module on the list\n", language, relative,
+                rules->header_root);
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * Counts the files under the header root that are no header of a listed module, or answers -1 with `error` filled
+ * when the header root cannot be read or holds no file, since nothing was then checked.
+ */
 static int report_stray_headers(const char *root, const module_list *modules, const char *language,
-                                const char *header_root, char *error, size_t error_size) {
-    char *directory = tree_join(root, header_root);
+                                const language_rules *rules, char *error, size_t error_size) {
+    char *directory = tree_join(root, rules->header_root);
     text_list files;
     size_t at;
     int offenders = 0;
@@ -160,19 +208,19 @@ static int report_stray_headers(const char *root, const module_list *modules, co
         snprintf(error, error_size, "out of memory");
         return -1;
     }
-    if (!tree_list_files(directory, &files, error, error_size)) {
+    if (!tree_list_every_file(directory, &files, error, error_size)) {
         free(directory);
         return -1;
     }
+    free(directory);
+    if (files.count == 0) {
+        snprintf(error, error_size, "no file under %s, so nothing was checked", rules->header_root);
+        return -1;
+    }
     for (at = 0; at < files.count; at++) {
-        if (!names_a_module(modules, files.items[at])) {
-            fprintf(stderr, "%s: '%s' under %s belongs to no module on the list\n", language, files.items[at],
-                    header_root);
-            offenders++;
-        }
+        offenders += is_stray_header(modules, rules, language, files.items[at]);
     }
     text_list_free(&files);
-    free(directory);
     return offenders;
 }
 
@@ -202,7 +250,7 @@ static int check_root(const char *root, const module_list *modules, const char *
                       const language_rules *rules, char *error, size_t error_size) {
     int offenders = count_source_offenders(root, modules, language, rules->source_root, error, error_size);
     if (offenders >= 0 && rules->header_root != NULL) {
-        int stray = report_stray_headers(root, modules, language, rules->header_root, error, error_size);
+        int stray = report_stray_headers(root, modules, language, rules, error, error_size);
         offenders = stray < 0 ? -1 : offenders + stray;
     }
     if (offenders == 0) {
