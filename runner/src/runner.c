@@ -27,7 +27,7 @@ static void conclude(verdict *judged, verdict_status status, const char *reasons
 }
 
 static void judge_answer(const vector *candidate, const char *answer_text, verdict *judged) {
-    weivel_json_error parse_error = {0, 0, NULL};
+    weivel_json_error parse_error = {0};
     weivel_json_value *answer = weivel_json_parse(answer_text, strlen(answer_text), &parse_error);
     text_builder reasons;
     if (answer == NULL) {
