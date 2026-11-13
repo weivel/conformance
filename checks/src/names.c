@@ -81,6 +81,57 @@ static int report_words(const char *relative, char *data, size_t size, const tex
     return offenders;
 }
 
+static int is_blank(char character) {
+    return character == ' ' || character == '\t' || character == '\r';
+}
+
+static int line_is_word(const char *start, size_t length, const char *word) {
+    size_t at;
+    if (length != strlen(word)) {
+        return 0;
+    }
+    for (at = 0; at < length; at++) {
+        if (tolower((unsigned char)start[at]) != (unsigned char)word[at]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/**
+ * Whether the text's trimmed, non-empty lines are the word list, word for word and in order, whatever its line
+ * endings.
+ *
+ * @implNote The kit is checked with the list from its pinned commit, which sits outside the tree, so the kit's own
+ * copy of the list has to be recognised by what it says rather than where it lies.
+ */
+static int is_a_copy_of_the_words(const char *data, size_t size, const text_list *words) {
+    size_t matched = 0;
+    size_t at = 0;
+    while (at < size) {
+        size_t end = at;
+        size_t start = at;
+        while (end < size && data[end] != '\n') {
+            end++;
+        }
+        at = end + 1;
+        while (start < end && is_blank(data[start])) {
+            start++;
+        }
+        while (end > start && is_blank(data[end - 1])) {
+            end--;
+        }
+        if (end == start) {
+            continue;
+        }
+        if (matched == words->count || !line_is_word(data + start, end - start, words->items[matched])) {
+            return 0;
+        }
+        matched++;
+    }
+    return matched == words->count;
+}
+
 static void scan_file(const char *root, const char *relative, const char *words_path, const text_list *words,
                       scan_result *result) {
     char *full;
@@ -102,6 +153,8 @@ static void scan_file(const char *root, const char *relative, const char *words_
         result->offenders += lockfile_report_words(relative, data, size, words);
     } else if (is_binary(data, size)) {
         fprintf(stderr, "%s: skipped as binary\n", relative);
+    } else if (is_a_copy_of_the_words(data, size, words)) {
+        fprintf(stderr, "%s: skipped as a copy of the word list\n", relative);
     } else {
         result->files_read++;
         result->offenders += report_words(relative, data, size, words);

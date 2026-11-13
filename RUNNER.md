@@ -333,6 +333,9 @@ weivel-core-gate --sources <rules-file> <core-root>
   files and, at the root only, the directories `.git`, the hosting-service directory beside it, `build`, `build-*`,
   `siblings` and `node_modules` are not read. Purity and the core's source scan skip the same root directories, and
   nothing deeper is skipped by name. A file is binary when a NUL byte occurs in its first 8 KB, and each skipped file is printed.
+  The list always comes from the pinned kit commit, never from the tree under test, so a repository cannot shorten the
+  list it is checked with; a file whose trimmed, non-empty lines are the list word for word is that list's copy and
+  is not read, which is how the kit's own `checks/names.txt` passes.
   A `package-lock.json` at any depth is read as JSON through the standard's reader, not as text, and only where it can
   name a dependency or its origin: the top-level `name`, every key of `packages`, each entry's `name`, `version` and
   `resolved`, and the keys and specs of its `dependencies`, `devDependencies`, `optionalDependencies`,

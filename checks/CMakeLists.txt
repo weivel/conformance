@@ -38,6 +38,8 @@ set(checks_test_scenarios
     names_rejects_a_forbidden_origin_in_a_lockfile
     names_reads_no_funding_license_or_integrity_in_a_lockfile
     names_refuses_a_lockfile_it_cannot_read
+    names_skips_a_copy_of_its_word_list
+    names_reads_a_list_that_is_not_its_word_list
     parity_rejects_a_missing_module
     parity_rejects_a_module_not_on_the_list
     parity_accepts_every_module_with_or_without_the_optional_one
@@ -65,6 +67,9 @@ add_test(NAME kit_is_pure
     COMMAND weivel-purity ${PROJECT_SOURCE_DIR} kit ${CMAKE_CURRENT_SOURCE_DIR}/languages.txt)
 add_test(NAME kit_names_no_foreign_word
     COMMAND weivel-names ${PROJECT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/names.txt)
+configure_file(names.txt ${PROJECT_BINARY_DIR}/pinned-kit/names.txt COPYONLY)
+add_test(NAME kit_names_no_foreign_word_with_a_pinned_list
+    COMMAND weivel-names ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR}/pinned-kit/names.txt)
 add_test(NAME names_list_holds_the_nine_words
     COMMAND ${CMAKE_COMMAND} -DWORDS=${CMAKE_CURRENT_SOURCE_DIR}/names.txt
         -P ${PROJECT_SOURCE_DIR}/test/names_list_test.cmake)
