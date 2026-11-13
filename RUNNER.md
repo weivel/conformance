@@ -333,6 +333,12 @@ weivel-core-gate --sources <rules-file> <core-root>
   files and, at the root only, the directories `.git`, the hosting-service directory beside it, `build`, `build-*`,
   `siblings` and `node_modules` are not read. Purity and the core's source scan skip the same root directories, and
   nothing deeper is skipped by name. A file is binary when a NUL byte occurs in its first 8 KB, and each skipped file is printed.
+  A `package-lock.json` at any depth is read as JSON through the standard's reader, not as text, and only where it can
+  name a dependency or its origin: the top-level `name`, every key of `packages`, each entry's `name`, `version` and
+  `resolved`, and the keys and specs of its `dependencies`, `devDependencies`, `optionalDependencies`,
+  `peerDependencies`, `peerDependenciesMeta` and `requires`, recursing into a legacy nested `dependencies` tree.
+  `funding`, `license`, `integrity` and every other member name no dependency and are not read, so npm's own metadata
+  does not trip the list. A lockfile that is not a JSON object is an offender, never passed unread.
 - Parity: `MODULES` in the core lists the modules a language implements, one per line, with ` optional` after the
   ones a repository may omit. A language repository carries one top-level directory per module, named exactly as
   listed, under its `source-root` (`src` when none is given). A missing required module and a directory not on the list

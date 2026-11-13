@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "lockfile.h"
 #include "tree.h"
 
 static const char *const EXEMPT_PATHS[] = {"LICENSE", ".weivel/repo.json"};
@@ -96,7 +97,10 @@ static void scan_file(const char *root, const char *relative, const char *words_
         return;
     }
     free(full);
-    if (is_binary(data, size)) {
+    if (lockfile_is_lockfile(relative)) {
+        result->files_read++;
+        result->offenders += lockfile_report_words(relative, data, size, words);
+    } else if (is_binary(data, size)) {
         fprintf(stderr, "%s: skipped as binary\n", relative);
     } else {
         result->files_read++;

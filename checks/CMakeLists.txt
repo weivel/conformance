@@ -9,6 +9,8 @@ foreach(check purity names parity core_gate)
     conformance_strict_warnings(weivel-${program})
 endforeach()
 target_sources(weivel-core-gate PRIVATE src/core_rules.c src/core_sources.c)
+target_sources(weivel-names PRIVATE src/lockfile.c)
+target_link_libraries(weivel-names PRIVATE weivel_standard)
 
 set(checks_test_scenarios
     purity_rejects_a_typescript_file_in_a_c_repo
@@ -32,6 +34,10 @@ set(checks_test_scenarios
     names_reads_a_text_file_whose_first_nul_comes_late
     names_refuses_an_empty_directory
     names_refuses_an_empty_word_list
+    names_rejects_a_forbidden_package_key_in_a_lockfile
+    names_rejects_a_forbidden_origin_in_a_lockfile
+    names_reads_no_funding_license_or_integrity_in_a_lockfile
+    names_refuses_a_lockfile_it_cannot_read
     parity_rejects_a_missing_module
     parity_rejects_a_module_not_on_the_list
     parity_accepts_every_module_with_or_without_the_optional_one
