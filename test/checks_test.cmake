@@ -332,7 +332,9 @@ elseif(SCENARIO STREQUAL "parity_rejects_a_public_header_of_no_module")
     expect(0 "every required module" "" ${PARITY} ${root} ${MODULES} c ${LANGUAGES})
     plant("include/weivel/c/extras.h" "")
     plant("include/weivel/c/plugins/entry.h" "")
-    expect(1 "'extras\\.h' under include/weivel/c belongs to no module on the list.*'plugins/entry\\.h' under include/weivel/c belongs to no module on the list"
+    plant("include/weivel/c/cor.h" "")
+    plant("include/weivel/c/timers.h" "")
+    expect(1 "'cor\\.h' under include/weivel/c belongs to no module.*'extras\\.h' under include/weivel/c belongs to no module.*'plugins/entry\\.h' under include/weivel/c belongs to no module.*'timers\\.h' under include/weivel/c belongs to no module on the list"
         "every required module|handles\\.h|host/entry\\.h" ${PARITY} ${root} ${MODULES} c ${LANGUAGES})
 elseif(SCENARIO STREQUAL "parity_refuses_a_c_layer_without_its_public_headers")
     plant_c_layer()
