@@ -2,7 +2,7 @@
 #define CONFORMANCE_OPS_H
 
 #include "answer.h"
-#include "json.h"
+#include "weivel/json.h"
 
 /**
  * Asks the engine under test one question and writes its answer.

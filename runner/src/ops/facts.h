@@ -2,7 +2,7 @@
 #define CONFORMANCE_OPS_FACTS_H
 
 #include "arena.h"
-#include "json.h"
+#include "weivel/json.h"
 
 #include <weivel/core.h>
 

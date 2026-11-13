@@ -1,7 +1,7 @@
 #ifndef CONFORMANCE_VECTORS_H
 #define CONFORMANCE_VECTORS_H
 
-#include "json.h"
+#include "weivel/json.h"
 
 #include <stddef.h>
 

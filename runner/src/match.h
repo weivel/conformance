@@ -1,7 +1,7 @@
 #ifndef CONFORMANCE_MATCH_H
 #define CONFORMANCE_MATCH_H
 
-#include "json.h"
+#include "weivel/json.h"
 #include "text.h"
 
 #include <stddef.h>
