@@ -41,25 +41,25 @@ static void write_paths(answer_writer *answer, const weivel_strings *paths) {
     answer_end_array(answer);
 }
 
-static void write_validation(answer_writer *answer, const weivel_standard_validation *validation) {
+static int write_validation(answer_writer *answer, const weivel_standard_validation *validation) {
+    int refusal_answered;
     answer_begin_object(answer);
     answer_key(answer, "valid");
     answer_bool(answer, validation->valid != 0);
     answer_key(answer, "paths");
     write_paths(answer, &validation->paths);
     answer_key(answer, "refusal");
-    standard_answer_refusal(answer, &validation->refusal);
+    refusal_answered = standard_answer_refusal(answer, &validation->refusal);
     answer_end_object(answer);
+    return refusal_answered;
 }
 
 static int ask_validate(const char *manifest, const weivel_standard_validation_options *options,
                         answer_writer *answer) {
     weivel_standard_validation validation = WEIVEL_INIT(weivel_standard_validation);
     weivel_status status = weivel_standard_validate(manifest, strlen(manifest), options, &validation);
-    int answered = status == WEIVEL_STATUS_OK || status == WEIVEL_STATUS_REFUSED;
-    if (answered) {
-        write_validation(answer, &validation);
-    }
+    int answered = (status == WEIVEL_STATUS_OK || status == WEIVEL_STATUS_REFUSED) &&
+                   standard_refusal_is_answerable(&validation.refusal) && write_validation(answer, &validation);
     weivel_standard_validation_release(&validation);
     return answered;
 }

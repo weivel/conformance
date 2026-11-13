@@ -216,7 +216,7 @@ static void vector_free(vector *candidate) {
 static int parse_document(vector *candidate, const char *path, char *error, size_t error_size) {
     size_t length = 0;
     char *text = read_file(path, &length);
-    weivel_json_error parse_error = {0};
+    weivel_json_error parse_error = {.size = (uint32_t)sizeof(weivel_json_error)};
     if (text == NULL) {
         return refuse(error, error_size, "%s is not readable: %s", path, "the file cannot be read");
     }
