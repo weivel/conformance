@@ -34,6 +34,16 @@ making, and then witnesses:
   `activation_mismatch`, the subject `flaky` (the plugin's import name) and a fix;
 - the refused check is not a refusal of the run: nothing is added to `reported`, and the first refusal is none.
 
+## The `want` op's clock and scheduler
+
+A `want` vector runs on a clock and a scheduler the suite owns and hands the layer in place of the language's own. The
+scheduler runs a task the layer gave it only when the suite moves time forward over the task's due time, at that
+time, and never on its own. `fired` lists, in order, the clock's time each time the suite's scheduler actually ran a
+callback the layer had scheduled and not cancelled: it witnesses what the timer did, where `timer` witnesses only what
+the layer said it did. With `schedulerRunsBeforeRegistering` false, the suite moves its clock to `registerAtMillis`
+without running any task its scheduler holds, so no timer of the layer's fires before the registration; absent, the
+scheduler runs every task due on the way.
+
 ## `want/a-registration-at-the-deadline-loses`
 
 A want whose deadline and a provider's registration fall at the same moment times out: the deadline is handed to
@@ -61,7 +71,8 @@ null for a disarm. It then witnesses:
 - `timer` exactly: armed at 1000 when the want was made at 0, and disarmed at 1000, once the want had timed out and
   the core announced that no deadline is left;
 - the want ends timed out at 1000, its refusal `timed_out` with the subject `accounts` and a fix, because the timer
-  firing at the announced deadline is what handed the core that time.
+  firing at the announced deadline is what handed the core that time;
+- `fired` exactly: the scheduler ran the layer's callback once, at 1000.
 
 ## `want/a-settled-want-disarms-the-timer`
 
@@ -73,7 +84,28 @@ as above, and witnesses:
 
 - `timer` exactly: armed at 1000 when the want was made at 0, and disarmed at 500, when the registration settled the
   want, so the timer never fires;
-- the want is served at 500 and never times out, with no refusal.
+- the want is served at 500 and never times out, with no refusal;
+- `fired` exactly empty: the scheduler never ran a callback of the layer's, so a timer that reports the disarm but
+  leaves its callback scheduled fails here.
+
+## `want/a-registration-past-an-unfired-deadline-loses`
+
+A layer hands the core a deadline that has fallen due before it makes any other call, whether or not its timer has
+fired. The clock can pass the deadline before the scheduler takes its turn, and a registration made then must not
+serve a want the core would have timed out: the wrapper reads its clock before the call and advances the core first.
+A harness that fires due tasks itself cannot satisfy this for the layer, because here the suite's scheduler runs
+nothing before the registration.
+
+The suite builds the provider and the consumer through its layer, asks with the vector's timeout on a clock it
+controls, moves the clock to `registerAtMillis` without running a task (`schedulerRunsBeforeRegistering` false),
+registers the provider, runs the clock to `horizonMillis`, records the timer's moves as above, and witnesses:
+
+- the want ends timed out when the registration is made, at 1500, never served, its refusal `timed_out` with the
+  subject `accounts` and a fix;
+- `timer` exactly: armed at 1000 when the want was made at 0, and disarmed at 1500 by the advance the layer made
+  before the registration;
+- `fired` exactly empty: the timer never fired, so only the layer's own check before the call handed the core the
+  time.
 
 ## The `lifecycle` op
 

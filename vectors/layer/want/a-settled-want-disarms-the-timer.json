@@ -28,6 +28,9 @@
           null
         ]
       ]
+    },
+    "fired": {
+      "equals": []
     }
   }
 }
