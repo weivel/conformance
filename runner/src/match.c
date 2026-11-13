@@ -271,12 +271,12 @@ static size_t check_code(const char *key, const weivel_json_value *expected, con
     return 1;
 }
 
-/** A null subject holds when the refusal names nothing, so its `subject` is absent or null. */
+/** A null subject holds when the refusal answers `subject` and it is null; a subject never answered fails. */
 static size_t check_subject(const char *key, const weivel_json_value *expected, const weivel_json_value *actual,
                             text_builder *reasons) {
     const weivel_json_value *carried = weivel_json_object_get(actual, "subject");
     int holds = weivel_json_kind_of(expected) == WEIVEL_JSON_NULL
-                    ? weivel_json_kind_of(actual) == WEIVEL_JSON_OBJECT && !is_present(carried)
+                    ? carried != NULL && weivel_json_kind_of(carried) == WEIVEL_JSON_NULL
                     : carried != NULL && deep_equal(expected, carried);
     if (holds) {
         return 0;
