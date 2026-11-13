@@ -55,6 +55,7 @@ set(checks_test_scenarios
     layers_rejects_a_vector_no_test_names
     layers_does_not_count_an_id_inside_a_longer_one
     layers_reads_only_the_test_root
+    layers_ignores_a_vector_copied_under_the_test_root
     layers_refuses_a_language_it_does_not_know
     layers_refuses_a_language_without_a_test_root
     layers_refuses_a_directory_without_vectors
