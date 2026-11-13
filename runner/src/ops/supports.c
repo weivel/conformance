@@ -13,14 +13,14 @@ static const char *axis_name(uint32_t axis) {
     }
 }
 
-static int host_options(arena *owner, const json_value *host, weivel_core_options *options) {
+static int host_options(arena *owner, const weivel_json_value *host, weivel_core_options *options) {
     int64_t api = 0;
-    const json_value *level = json_object_get(host, "api");
-    if (level != NULL && (!json_as_int64(level, &api) || api < 1 || api > UINT32_MAX)) {
+    const weivel_json_value *level = weivel_json_object_get(host, "api");
+    if (level != NULL && (!weivel_json_as_int64(level, &api) || api < 1 || api > UINT32_MAX)) {
         return 0;
     }
     options->api = (uint32_t)api;
-    return facts_strings(owner, json_object_get(host, "applications"), &options->applications);
+    return facts_strings(owner, weivel_json_object_get(host, "applications"), &options->applications);
 }
 
 static void write_support(answer_writer *answer, const weivel_support *support) {
@@ -51,15 +51,15 @@ static int ask_supports(core_session *session, const weivel_manifest *facts, ans
     return !session->failed;
 }
 
-int adapter_supports(const json_value *given, answer_writer *answer) {
+int adapter_supports(const weivel_json_value *given, answer_writer *answer) {
     arena owner;
     weivel_core_options options = WEIVEL_INIT(weivel_core_options);
     weivel_manifest facts;
     core_session session;
     int answered = 0;
     arena_init(&owner);
-    if (host_options(&owner, json_object_get(given, "host"), &options) &&
-        facts_manifest(&owner, json_object_get(given, "facts"), &facts) &&
+    if (host_options(&owner, weivel_json_object_get(given, "host"), &options) &&
+        facts_manifest(&owner, weivel_json_object_get(given, "facts"), &facts) &&
         session_open(&session, &options, NULL, NULL)) {
         answered = ask_supports(&session, &facts, answer);
         session_close(&session);

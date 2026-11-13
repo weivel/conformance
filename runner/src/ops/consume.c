@@ -34,17 +34,17 @@ typedef struct {
     size_t outcome_count;
 } consume_run;
 
-static int open_plugins(consume_run *run, const json_value *plugins) {
-    size_t count = json_array_length(plugins);
+static int open_plugins(consume_run *run, const weivel_json_value *plugins) {
+    size_t count = weivel_json_array_length(plugins);
     const char **names = arena_take(&run->owner, count, sizeof *names);
     weivel_manifest *manifests = arena_take(&run->owner, count, sizeof *manifests);
     size_t at;
-    if (plugins == NULL || json_kind_of(plugins) != JSON_ARRAY || count == 0 || names == NULL || manifests == NULL) {
+    if (plugins == NULL || weivel_json_kind_of(plugins) != WEIVEL_JSON_ARRAY || count == 0 || names == NULL || manifests == NULL) {
         return 0;
     }
     for (at = 0; at < count; at++) {
-        const json_value *plugin = json_array_at(plugins, at);
-        names[at] = json_as_string(json_object_get(plugin, "id"));
+        const weivel_json_value *plugin = weivel_json_array_at(plugins, at);
+        names[at] = weivel_json_as_string(weivel_json_object_get(plugin, "id"));
         if (names[at] == NULL || !facts_manifest(&run->owner, plugin, &manifests[at])) {
             return 0;
         }
@@ -151,7 +151,7 @@ static int stop(consume_run *run, weivel_handle plugin, int quarantine) {
     return status == WEIVEL_STATUS_OK;
 }
 
-static int run_step(consume_run *run, const json_value *step) {
+static int run_step(consume_run *run, const weivel_json_value *step) {
     weivel_handle plugin = cast_handle(&run->plugins, step_text(step, "plugin"));
     if (plugin == 0) {
         return 0;
@@ -165,29 +165,29 @@ static int run_step(consume_run *run, const json_value *step) {
     if (step_text(step, "watch") != NULL) {
         return watch(run, plugin, step_text(step, "watch"));
     }
-    if (json_object_get(step, "verify") != NULL) {
+    if (weivel_json_object_get(step, "verify") != NULL) {
         return verify(run, plugin);
     }
-    if (json_object_get(step, "quarantine") != NULL || json_object_get(step, "release") != NULL) {
-        return stop(run, plugin, json_object_get(step, "quarantine") != NULL);
+    if (weivel_json_object_get(step, "quarantine") != NULL || weivel_json_object_get(step, "release") != NULL) {
+        return stop(run, plugin, weivel_json_object_get(step, "quarantine") != NULL);
     }
     return 0;
 }
 
-static int run_steps(consume_run *run, const json_value *given) {
-    const json_value *steps = json_object_get(given, "steps");
-    size_t count = json_array_length(steps);
+static int run_steps(consume_run *run, const weivel_json_value *given) {
+    const weivel_json_value *steps = weivel_json_object_get(given, "steps");
+    size_t count = weivel_json_array_length(steps);
     size_t at;
-    if (steps == NULL || json_kind_of(steps) != JSON_ARRAY || count == 0) {
+    if (steps == NULL || weivel_json_kind_of(steps) != WEIVEL_JSON_ARRAY || count == 0) {
         return 0;
     }
     run->provided = arena_take(&run->owner, count, sizeof *run->provided);
     run->outcomes = arena_take(&run->owner, count, sizeof *run->outcomes);
-    if (run->provided == NULL || run->outcomes == NULL || !open_plugins(run, json_object_get(given, "plugins"))) {
+    if (run->provided == NULL || run->outcomes == NULL || !open_plugins(run, weivel_json_object_get(given, "plugins"))) {
         return 0;
     }
     for (at = 0; at < count; at++) {
-        if (!run_step(run, json_array_at(steps, at))) {
+        if (!run_step(run, weivel_json_array_at(steps, at))) {
             return 0;
         }
     }
@@ -260,7 +260,7 @@ static int write_consumption(answer_writer *answer, const consume_run *run) {
     return written;
 }
 
-int adapter_consume(const json_value *given, answer_writer *answer) {
+int adapter_consume(const weivel_json_value *given, answer_writer *answer) {
     consume_run run;
     int answered = 0;
     memset(&run, 0, sizeof run);

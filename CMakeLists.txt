@@ -13,6 +13,11 @@ if(NOT EXISTS ${PROJECT_SOURCE_DIR}/siblings/core/CMakeLists.txt)
         "(for example a directory junction or symlink named siblings/core pointing at the core repository)")
 endif()
 
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/siblings/standard/CMakeLists.txt)
+    message(FATAL_ERROR "siblings/standard is missing: link or clone the standard checkout there "
+        "(for example a directory junction or symlink named siblings/standard pointing at the standard repository)")
+endif()
+
 function(conformance_strict_warnings target)
     if(MSVC)
         target_compile_options(${target} PRIVATE /W4 /WX /utf-8)
@@ -22,6 +27,7 @@ function(conformance_strict_warnings target)
 endfunction()
 
 add_subdirectory(siblings/core core)
+add_subdirectory(siblings/standard standard)
 add_subdirectory(runner)
 
 enable_testing()
@@ -35,7 +41,6 @@ function(conformance_test name)
     set_tests_properties(${name} PROPERTIES TIMEOUT 60)
 endfunction()
 
-conformance_test(json_test conformance_json)
 conformance_test(adapters_test conformance_runner)
 conformance_test(answer_test conformance_runner)
 conformance_test(match_test conformance_runner)

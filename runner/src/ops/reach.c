@@ -49,27 +49,27 @@ typedef struct {
     size_t registration_count;
 } reach_run;
 
-static int plugin_manifest(arena *owner, const json_value *plugin, weivel_manifest *manifest) {
+static int plugin_manifest(arena *owner, const weivel_json_value *plugin, weivel_manifest *manifest) {
     weivel_manifest built = WEIVEL_INIT(weivel_manifest);
-    const json_value *import_name = json_object_get(plugin, "importName");
+    const weivel_json_value *import_name = weivel_json_object_get(plugin, "importName");
     *manifest = built;
-    manifest->identity = json_as_string(json_object_get(plugin, "id"));
-    manifest->import_name = import_name == NULL ? manifest->identity : json_as_string(import_name);
+    manifest->identity = weivel_json_as_string(weivel_json_object_get(plugin, "id"));
+    manifest->import_name = import_name == NULL ? manifest->identity : weivel_json_as_string(import_name);
     return manifest->identity != NULL && manifest->import_name != NULL &&
-           facts_service_wants(owner, json_object_get(plugin, "consumes"), &manifest->services.consumes) &&
-           facts_service_offers(owner, json_object_get(plugin, "provides"), &manifest->services.provides);
+           facts_service_wants(owner, weivel_json_object_get(plugin, "consumes"), &manifest->services.consumes) &&
+           facts_service_offers(owner, weivel_json_object_get(plugin, "provides"), &manifest->services.provides);
 }
 
-static int open_plugins(reach_run *run, const json_value *plugins) {
-    size_t count = json_array_length(plugins);
+static int open_plugins(reach_run *run, const weivel_json_value *plugins) {
+    size_t count = weivel_json_array_length(plugins);
     const char **names = arena_take(&run->owner, count, sizeof *names);
     weivel_manifest *manifests = arena_take(&run->owner, count, sizeof *manifests);
     size_t at;
-    if (plugins == NULL || json_kind_of(plugins) != JSON_ARRAY || count == 0 || names == NULL || manifests == NULL) {
+    if (plugins == NULL || weivel_json_kind_of(plugins) != WEIVEL_JSON_ARRAY || count == 0 || names == NULL || manifests == NULL) {
         return 0;
     }
     for (at = 0; at < count; at++) {
-        if (!plugin_manifest(&run->owner, json_array_at(plugins, at), &manifests[at])) {
+        if (!plugin_manifest(&run->owner, weivel_json_array_at(plugins, at), &manifests[at])) {
             return 0;
         }
         names[at] = manifests[at].identity;
@@ -208,7 +208,7 @@ static int ask(reach_run *run, reach_outcome *outcome) {
     return outcome->kind != REACH_STEP_WANT || outcome->status == WEIVEL_STATUS_OK;
 }
 
-static int read_step_kind(const json_value *step, reach_step_kind *kind, const char **id) {
+static int read_step_kind(const weivel_json_value *step, reach_step_kind *kind, const char **id) {
     static const char *const KEYS[] = {"register", "unregister", "get", "want", "watch"};
     size_t at;
     for (at = 0; at < sizeof KEYS / sizeof KEYS[0]; at++) {
@@ -219,22 +219,22 @@ static int read_step_kind(const json_value *step, reach_step_kind *kind, const c
         }
     }
     *kind = REACH_STEP_IDS;
-    return json_object_get(step, "ids") != NULL;
+    return weivel_json_object_get(step, "ids") != NULL;
 }
 
-static int is_host_step(const json_value *step) {
+static int is_host_step(const weivel_json_value *step) {
     int host = 0;
-    return json_as_bool(json_object_get(step, "host"), &host) && host;
+    return weivel_json_as_bool(weivel_json_object_get(step, "host"), &host) && host;
 }
 
-static int host_step(reach_run *run, const json_value *step, reach_step_kind kind, const char *id) {
+static int host_step(reach_run *run, const weivel_json_value *step, reach_step_kind kind, const char *id) {
     if (kind == REACH_STEP_REGISTER) {
         return register_service(run, WEIVEL_HOST, id, step_text(step, "object"));
     }
     return kind == REACH_STEP_UNREGISTER && unregister_host_service(run, id);
 }
 
-static int plugin_step(reach_run *run, const json_value *step, reach_step_kind kind, const char *id) {
+static int plugin_step(reach_run *run, const weivel_json_value *step, reach_step_kind kind, const char *id) {
     weivel_handle plugin = cast_handle(&run->plugins, step_text(step, "plugin"));
     reach_outcome *outcome = &run->outcomes[run->outcome_count];
     if (plugin == 0 || kind == REACH_STEP_UNREGISTER) {
@@ -250,7 +250,7 @@ static int plugin_step(reach_run *run, const json_value *step, reach_step_kind k
     return ask(run, outcome);
 }
 
-static int run_step(reach_run *run, const json_value *step) {
+static int run_step(reach_run *run, const weivel_json_value *step) {
     reach_step_kind kind;
     const char *id;
     if (!read_step_kind(step, &kind, &id)) {
@@ -259,13 +259,13 @@ static int run_step(reach_run *run, const json_value *step) {
     return is_host_step(step) ? host_step(run, step, kind, id) : plugin_step(run, step, kind, id);
 }
 
-static int register_host_provided(reach_run *run, const json_value *ids) {
+static int register_host_provided(reach_run *run, const weivel_json_value *ids) {
     size_t at;
-    if (ids != NULL && json_kind_of(ids) != JSON_ARRAY) {
+    if (ids != NULL && weivel_json_kind_of(ids) != WEIVEL_JSON_ARRAY) {
         return 0;
     }
-    for (at = 0; at < json_array_length(ids); at++) {
-        const char *id = json_as_string(json_array_at(ids, at));
+    for (at = 0; at < weivel_json_array_length(ids); at++) {
+        const char *id = weivel_json_as_string(weivel_json_array_at(ids, at));
         if (id == NULL || !register_service(run, WEIVEL_HOST, id, NULL)) {
             return 0;
         }
@@ -273,24 +273,24 @@ static int register_host_provided(reach_run *run, const json_value *ids) {
     return 1;
 }
 
-static int prepare(reach_run *run, const json_value *given) {
-    const json_value *steps = json_object_get(given, "steps");
-    size_t step_count = json_array_length(steps);
-    size_t registrations = step_count + json_array_length(json_object_get(given, "hostProvided"));
-    if (steps == NULL || json_kind_of(steps) != JSON_ARRAY || step_count == 0) {
+static int prepare(reach_run *run, const weivel_json_value *given) {
+    const weivel_json_value *steps = weivel_json_object_get(given, "steps");
+    size_t step_count = weivel_json_array_length(steps);
+    size_t registrations = step_count + weivel_json_array_length(weivel_json_object_get(given, "hostProvided"));
+    if (steps == NULL || weivel_json_kind_of(steps) != WEIVEL_JSON_ARRAY || step_count == 0) {
         return 0;
     }
     run->outcomes = arena_take(&run->owner, step_count, sizeof *run->outcomes);
     run->registrations = arena_take(&run->owner, registrations, sizeof *run->registrations);
     return run->outcomes != NULL && run->registrations != NULL &&
-           open_plugins(run, json_object_get(given, "plugins")) &&
-           register_host_provided(run, json_object_get(given, "hostProvided"));
+           open_plugins(run, weivel_json_object_get(given, "plugins")) &&
+           register_host_provided(run, weivel_json_object_get(given, "hostProvided"));
 }
 
-static int run_steps(reach_run *run, const json_value *steps) {
+static int run_steps(reach_run *run, const weivel_json_value *steps) {
     size_t at;
-    for (at = 0; at < json_array_length(steps); at++) {
-        if (!run_step(run, json_array_at(steps, at))) {
+    for (at = 0; at < weivel_json_array_length(steps); at++) {
+        if (!run_step(run, weivel_json_array_at(steps, at))) {
             return 0;
         }
     }
@@ -394,14 +394,14 @@ static int write_reach(answer_writer *answer, const reach_run *run) {
     return written;
 }
 
-int adapter_reach(const json_value *given, answer_writer *answer) {
+int adapter_reach(const weivel_json_value *given, answer_writer *answer) {
     reach_run run;
     int answered = 0;
     memset(&run, 0, sizeof run);
     hearing_init(&run.log);
     arena_init(&run.owner);
     if (session_open(&run.session, NULL, hearing_read, &run.log)) {
-        answered = prepare(&run, given) && run_steps(&run, json_object_get(given, "steps")) &&
+        answered = prepare(&run, given) && run_steps(&run, weivel_json_object_get(given, "steps")) &&
                    settle_waiting(&run) && !run.log.failed && !run.session.failed && write_reach(answer, &run);
         session_close(&run.session);
     }

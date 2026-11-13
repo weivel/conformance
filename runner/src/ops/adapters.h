@@ -3,16 +3,16 @@
 
 #include "ops.h"
 
-int adapter_supports(const json_value *given, answer_writer *answer);
-int adapter_boot(const json_value *given, answer_writer *answer);
-int adapter_order(const json_value *given, answer_writer *answer);
-int adapter_resolve(const json_value *given, answer_writer *answer);
-int adapter_unbound(const json_value *given, answer_writer *answer);
-int adapter_carry(const json_value *given, answer_writer *answer);
-int adapter_revoke(const json_value *given, answer_writer *answer);
-int adapter_scope(const json_value *given, answer_writer *answer);
-int adapter_want(const json_value *given, answer_writer *answer);
-int adapter_reach(const json_value *given, answer_writer *answer);
-int adapter_consume(const json_value *given, answer_writer *answer);
+int adapter_supports(const weivel_json_value *given, answer_writer *answer);
+int adapter_boot(const weivel_json_value *given, answer_writer *answer);
+int adapter_order(const weivel_json_value *given, answer_writer *answer);
+int adapter_resolve(const weivel_json_value *given, answer_writer *answer);
+int adapter_unbound(const weivel_json_value *given, answer_writer *answer);
+int adapter_carry(const weivel_json_value *given, answer_writer *answer);
+int adapter_revoke(const weivel_json_value *given, answer_writer *answer);
+int adapter_scope(const weivel_json_value *given, answer_writer *answer);
+int adapter_want(const weivel_json_value *given, answer_writer *answer);
+int adapter_reach(const weivel_json_value *given, answer_writer *answer);
+int adapter_consume(const weivel_json_value *given, answer_writer *answer);
 
 #endif

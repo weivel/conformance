@@ -14,7 +14,7 @@ typedef struct {
     core_session session;
     weivel_handle want;
     int64_t now;
-    const json_value *attributes_by_poll;
+    const weivel_json_value *attributes_by_poll;
     int serves_only_unconstrained;
     uint32_t reads;
     uint32_t reads_at_service;
@@ -31,12 +31,12 @@ typedef struct {
     int failed;
 } resolve_run;
 
-static int is_array(const json_value *value) {
-    return value != NULL && json_kind_of(value) == JSON_ARRAY;
+static int is_array(const weivel_json_value *value) {
+    return value != NULL && weivel_json_kind_of(value) == WEIVEL_JSON_ARRAY;
 }
 
-static int bound_of(const json_value *named, uint32_t *bound) {
-    const char *text = json_as_string(named);
+static int bound_of(const weivel_json_value *named, uint32_t *bound) {
+    const char *text = weivel_json_as_string(named);
     if (text != NULL && strcmp(text, "lower") == 0) {
         *bound = WEIVEL_BOUND_LOWER;
         return 1;
@@ -48,17 +48,17 @@ static int bound_of(const json_value *named, uint32_t *bound) {
     return 0;
 }
 
-static int vocabulary_entry(const json_value *object, weivel_constraint_entry *entry) {
+static int vocabulary_entry(const weivel_json_value *object, weivel_constraint_entry *entry) {
     entry->size = (uint32_t)sizeof *entry;
-    entry->constraint_name = json_as_string(json_object_get(object, "constraint"));
-    entry->attribute_name = json_as_string(json_object_get(object, "attribute"));
+    entry->constraint_name = weivel_json_as_string(weivel_json_object_get(object, "constraint"));
+    entry->attribute_name = weivel_json_as_string(weivel_json_object_get(object, "attribute"));
     return entry->constraint_name != NULL && entry->attribute_name != NULL &&
-           bound_of(json_object_get(object, "bound"), &entry->bound);
+           bound_of(weivel_json_object_get(object, "bound"), &entry->bound);
 }
 
 /** The host's vocabulary, which the vector states: the core mints no constraint of its own. */
-static int host_vocabulary(arena *owner, const json_value *array, weivel_constraint_vocabulary *vocabulary) {
-    size_t count = json_array_length(array);
+static int host_vocabulary(arena *owner, const weivel_json_value *array, weivel_constraint_vocabulary *vocabulary) {
+    size_t count = weivel_json_array_length(array);
     weivel_constraint_entry *entries = arena_take(owner, count, sizeof *entries);
     size_t at;
     vocabulary->items = entries;
@@ -67,7 +67,7 @@ static int host_vocabulary(arena *owner, const json_value *array, weivel_constra
         return 0;
     }
     for (at = 0; at < count; at++) {
-        if (!vocabulary_entry(json_array_at(array, at), &entries[at])) {
+        if (!vocabulary_entry(weivel_json_array_at(array, at), &entries[at])) {
             return 0;
         }
     }
@@ -78,10 +78,10 @@ static int host_vocabulary(arena *owner, const json_value *array, weivel_constra
  * @implNote Entry i answers poll i, and a budget that outlasts the script keeps the last entry, so the provider
  * goes on reporting its latest state rather than reverting to its advertised claim, which another vector covers.
  */
-static const json_value *scripted_attributes(const resolve_run *run) {
-    size_t polls = json_array_length(run->attributes_by_poll);
+static const weivel_json_value *scripted_attributes(const resolve_run *run) {
+    size_t polls = weivel_json_array_length(run->attributes_by_poll);
     size_t read = run->reads > polls ? polls : run->reads;
-    return read == 0 ? NULL : json_array_at(run->attributes_by_poll, read - 1);
+    return read == 0 ? NULL : weivel_json_array_at(run->attributes_by_poll, read - 1);
 }
 
 static void report_capacity(resolve_run *run, const weivel_capacity_event *asked, weivel_capacity *capacity) {
@@ -188,13 +188,13 @@ typedef struct {
     int64_t poll_millis;
 } resolve_setup;
 
-static int read_setup(arena *owner, const json_value *given, resolve_setup *setup) {
-    const json_value *requirement = json_object_get(given, "requirement");
-    const json_value *provider = json_object_get(given, "provider");
+static int read_setup(arena *owner, const weivel_json_value *given, resolve_setup *setup) {
+    const weivel_json_value *requirement = weivel_json_object_get(given, "requirement");
+    const weivel_json_value *provider = weivel_json_object_get(given, "provider");
     weivel_service_offer offer = WEIVEL_INIT(weivel_service_offer);
     weivel_service_want need = WEIVEL_INIT(weivel_service_want);
     weivel_manifest manifest = WEIVEL_INIT(weivel_manifest);
-    setup->service_id = json_as_string(json_object_get(requirement, "id"));
+    setup->service_id = weivel_json_as_string(weivel_json_object_get(requirement, "id"));
     setup->offer = offer;
     setup->need = need;
     setup->provider = manifest;
@@ -208,22 +208,22 @@ static int read_setup(arena *owner, const json_value *given, resolve_setup *setu
     setup->consumer.import_name = "consumer";
     setup->consumer.services.consumes.items = &setup->need;
     setup->consumer.services.consumes.count = 1;
-    return setup->service_id != NULL && json_as_int64(json_object_get(given, "budgetMillis"), &setup->budget_millis) &&
-           json_as_int64(json_object_get(given, "pollMillis"), &setup->poll_millis) && setup->poll_millis > 0 &&
-           facts_numbers(owner, json_object_get(provider, "advertised"), &setup->offer.attributes) &&
-           facts_numbers(owner, json_object_get(requirement, "constraints"), &setup->need.constraints) &&
-           facts_choice(json_object_get(requirement, "degradable"), &setup->need.degradable) &&
-           is_array(json_object_get(given, "wellKnownServices")) &&
-           facts_strings(owner, json_object_get(given, "wellKnownServices"), &setup->well_known_services) &&
-           host_vocabulary(owner, json_object_get(given, "vocabulary"), &setup->vocabulary);
+    return setup->service_id != NULL && weivel_json_as_int64(weivel_json_object_get(given, "budgetMillis"), &setup->budget_millis) &&
+           weivel_json_as_int64(weivel_json_object_get(given, "pollMillis"), &setup->poll_millis) && setup->poll_millis > 0 &&
+           facts_numbers(owner, weivel_json_object_get(provider, "advertised"), &setup->offer.attributes) &&
+           facts_numbers(owner, weivel_json_object_get(requirement, "constraints"), &setup->need.constraints) &&
+           facts_choice(weivel_json_object_get(requirement, "degradable"), &setup->need.degradable) &&
+           is_array(weivel_json_object_get(given, "wellKnownServices")) &&
+           facts_strings(owner, weivel_json_object_get(given, "wellKnownServices"), &setup->well_known_services) &&
+           host_vocabulary(owner, weivel_json_object_get(given, "vocabulary"), &setup->vocabulary);
 }
 
-static int read_provider_script(const json_value *given, resolve_run *run) {
-    const json_value *provider = json_object_get(given, "provider");
-    const json_value *serves_only = json_object_get(provider, "servesOnlyUnconstrained");
-    run->attributes_by_poll = json_object_get(provider, "attributesByPoll");
+static int read_provider_script(const weivel_json_value *given, resolve_run *run) {
+    const weivel_json_value *provider = weivel_json_object_get(given, "provider");
+    const weivel_json_value *serves_only = weivel_json_object_get(provider, "servesOnlyUnconstrained");
+    run->attributes_by_poll = weivel_json_object_get(provider, "attributesByPoll");
     run->serves_only_unconstrained = 0;
-    return serves_only == NULL || json_as_bool(serves_only, &run->serves_only_unconstrained);
+    return serves_only == NULL || weivel_json_as_bool(serves_only, &run->serves_only_unconstrained);
 }
 
 static int open_plugin(core_session *session, const weivel_manifest *manifest, weivel_handle *plugin) {
@@ -337,7 +337,7 @@ static int drive(resolve_run *run, const resolve_setup *setup, answer_writer *an
     return answered;
 }
 
-int adapter_resolve(const json_value *given, answer_writer *answer) {
+int adapter_resolve(const weivel_json_value *given, answer_writer *answer) {
     arena owner;
     resolve_setup setup;
     resolve_run run = {0};

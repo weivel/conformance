@@ -77,8 +77,8 @@ int session_open_pair(core_session *session, hearing *log, arena *owner, const c
     return 1;
 }
 
-const char *step_text(const json_value *step, const char *key) {
-    return json_as_string(json_object_get(step, key));
+const char *step_text(const weivel_json_value *step, const char *key) {
+    return weivel_json_as_string(weivel_json_object_get(step, key));
 }
 
 int write_reported(answer_writer *answer, const hearing *log, const cast *opened) {

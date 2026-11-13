@@ -109,30 +109,30 @@ static void write_revocation(answer_writer *answer, const revoke_run *run) {
     answer_end_object(answer);
 }
 
-static int run_steps(revoke_run *run, const json_value *steps) {
+static int run_steps(revoke_run *run, const weivel_json_value *steps) {
     size_t at;
-    if (steps == NULL || json_kind_of(steps) != JSON_ARRAY) {
+    if (steps == NULL || weivel_json_kind_of(steps) != WEIVEL_JSON_ARRAY) {
         return 0;
     }
-    for (at = 0; at < json_array_length(steps); at++) {
-        if (!run_step(run, json_as_string(json_array_at(steps, at)))) {
+    for (at = 0; at < weivel_json_array_length(steps); at++) {
+        if (!run_step(run, weivel_json_as_string(weivel_json_array_at(steps, at)))) {
             return 0;
         }
     }
     return 1;
 }
 
-int adapter_revoke(const json_value *given, answer_writer *answer) {
+int adapter_revoke(const weivel_json_value *given, answer_writer *answer) {
     revoke_run run;
     arena owner;
     int answered = 0;
     memset(&run, 0, sizeof run);
     hearing_init(&run.log);
     arena_init(&owner);
-    run.service_id = json_as_string(json_object_get(json_object_get(given, "service"), "id"));
+    run.service_id = weivel_json_as_string(weivel_json_object_get(weivel_json_object_get(given, "service"), "id"));
     if (run.service_id != NULL &&
         session_open_pair(&run.session, &run.log, &owner, run.service_id, &run.provider, &run.consumer)) {
-        answered = run_steps(&run, json_object_get(given, "steps")) && !run.log.failed && !run.session.failed;
+        answered = run_steps(&run, weivel_json_object_get(given, "steps")) && !run.log.failed && !run.session.failed;
     }
     if (run.session.core != NULL) {
         session_close(&run.session);

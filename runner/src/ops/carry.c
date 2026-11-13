@@ -28,8 +28,8 @@ static int open_and_read_back(core_session *session, const weivel_manifest *fact
  * @implNote The payload is the address of the vector's own manifest node, the host's manifest object, so an
  * equal copy handed back would answer false.
  */
-int adapter_carry(const json_value *given, answer_writer *answer) {
-    const json_value *manifest = json_object_get(given, "manifest");
+int adapter_carry(const weivel_json_value *given, answer_writer *answer) {
+    const weivel_json_value *manifest = weivel_json_object_get(given, "manifest");
     uint64_t payload = (uint64_t)(uintptr_t)manifest;
     uint64_t handed_back = 0;
     arena owner;

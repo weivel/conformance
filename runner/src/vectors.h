@@ -1,7 +1,7 @@
 #ifndef CONFORMANCE_VECTORS_H
 #define CONFORMANCE_VECTORS_H
 
-#include "json.h"
+#include "weivel/json.h"
 
 #include <stddef.h>
 
@@ -17,13 +17,13 @@ typedef struct {
     const char *id;
     const char *op;
     const char *covers;
-    const json_value *given;
-    const json_value *then;
+    const weivel_json_value *given;
+    const weivel_json_value *then;
     vector_tier tier;
     /** The directory the file lives in, led by its tier, such as `core/boot`. */
     char *directory;
     char *path;
-    json_value *document;
+    weivel_json_value *document;
 } vector;
 
 typedef struct {

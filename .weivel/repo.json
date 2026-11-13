@@ -10,6 +10,11 @@
       "id": "github:1455223370",
       "importName": "core",
       "commit": "f05183dc12e6e40943990818343b4efd5a9c635b"
+    },
+    {
+      "id": "github:1456093642",
+      "importName": "standard",
+      "commit": "7e12911b0a97010de8d9f9bbeb7f7618614f5224"
     }
   ]
 }
