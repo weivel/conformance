@@ -98,7 +98,8 @@ static int run_clock(want_run *run) {
     return 0;
 }
 
-static void write_outcome(answer_writer *answer, int settled, int timed_out, const heard_event *settlement) {
+static void write_outcome(answer_writer *answer, const want_run *run, int settled, int timed_out,
+                          const heard_event *settlement) {
     answer_begin_object(answer);
     answer_key(answer, "settled");
     answer_bool(answer, settled);
@@ -110,6 +111,8 @@ static void write_outcome(answer_writer *answer, int settled, int timed_out, con
     } else {
         answer_int(answer, settlement->at);
     }
+    answer_key(answer, "refusal");
+    write_first_refusal(answer, &run->log);
     answer_end_object(answer);
 }
 
@@ -117,18 +120,18 @@ static void write_outcome(answer_writer *answer, int settled, int timed_out, con
 static int write_settlement(answer_writer *answer, want_run *run) {
     const heard_event *settlement = hearing_settlement(&run->log, run->want);
     if (settlement == NULL) {
-        if (!session_still_kept(&run->session, run->want)) {
+        if (!session_still_live(&run->session, run->want)) {
             return 0;
         }
-        write_outcome(answer, 0, 0, NULL);
+        write_outcome(answer, run, 0, 0, NULL);
         return 1;
     }
     if (settlement->implementation != 0) {
-        write_outcome(answer, 1, 0, settlement);
+        write_outcome(answer, run, 1, 0, settlement);
         return 1;
     }
     if (settlement->code == WEIVEL_REFUSAL_TIMED_OUT) {
-        write_outcome(answer, 0, 1, settlement);
+        write_outcome(answer, run, 0, 1, settlement);
         return 1;
     }
     return 0;

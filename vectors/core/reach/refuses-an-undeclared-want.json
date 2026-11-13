@@ -55,6 +55,6 @@
         ]
       ]
     },
-    "refusal": { "code": "undeclared" }
+    "refusal": { "code": "undeclared", "subject": "calendar:events", "hasFix": true }
   }
 }

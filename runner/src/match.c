@@ -2,7 +2,8 @@
 
 #include <string.h>
 
-static const char *const ASSERTIONS[] = {"before", "contains", "equals", "absent", "present", "code"};
+static const char *const ASSERTIONS[] = {"before", "contains", "equals", "absent", "present", "code", "subject",
+                                          "hasFix"};
 
 static int is_present(const weivel_json_value *value) {
     return value != NULL && weivel_json_kind_of(value) != WEIVEL_JSON_NULL;
@@ -270,6 +271,30 @@ static size_t check_code(const char *key, const weivel_json_value *expected, con
     return 1;
 }
 
+/** A null subject holds when the refusal names nothing, so its `subject` is absent or null. */
+static size_t check_subject(const char *key, const weivel_json_value *expected, const weivel_json_value *actual,
+                            text_builder *reasons) {
+    const weivel_json_value *carried = weivel_json_object_get(actual, "subject");
+    int holds = weivel_json_kind_of(expected) == WEIVEL_JSON_NULL
+                    ? weivel_json_kind_of(actual) == WEIVEL_JSON_OBJECT && !is_present(carried)
+                    : carried != NULL && deep_equal(expected, carried);
+    if (holds) {
+        return 0;
+    }
+    say(reasons, key, "expected a refusal about", expected, actual);
+    return 1;
+}
+
+static size_t check_has_fix(const char *key, const weivel_json_value *expected, const weivel_json_value *actual,
+                            text_builder *reasons) {
+    const weivel_json_value *carried = weivel_json_object_get(actual, "hasFix");
+    if (carried != NULL && deep_equal(expected, carried)) {
+        return 0;
+    }
+    say(reasons, key, "expected hasFix", expected, actual);
+    return 1;
+}
+
 static size_t check_absent(const char *key, const weivel_json_value *argument, const weivel_json_value *actual, text_builder *reasons) {
     int required = 0;
     if (weivel_json_as_bool(argument, &required) && required && is_present(actual)) {
@@ -292,6 +317,12 @@ static size_t check_assertion(const char *key, const char *assertion, const weiv
                               const weivel_json_value *actual, text_builder *reasons) {
     if (strcmp(assertion, "code") == 0) {
         return check_code(key, argument, actual, reasons);
+    }
+    if (strcmp(assertion, "subject") == 0) {
+        return check_subject(key, argument, actual, reasons);
+    }
+    if (strcmp(assertion, "hasFix") == 0) {
+        return check_has_fix(key, argument, actual, reasons);
     }
     if (strcmp(assertion, "before") == 0) {
         return check_before(key, argument, actual, reasons);

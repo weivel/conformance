@@ -25,11 +25,17 @@ static int host_options(arena *owner, const weivel_json_value *host, weivel_core
 
 static void write_support(answer_writer *answer, const weivel_support *support) {
     const char *axis = axis_name(support->axis);
+    session_refusal refusal;
     answer_begin_object(answer);
     answer_key(answer, "supported");
     answer_bool(answer, support->supported != 0);
     answer_key(answer, "refusal");
-    session_answer_refusal(answer, support->refusal.code, support->refusal.detail, support->refusal.fix);
+    refusal.code = support->refusal.code;
+    refusal.detail = support->refusal.detail;
+    refusal.fix = support->refusal.fix;
+    refusal.subject = support->subject;
+    refusal.has_fix = support->has_fix;
+    session_answer_refusal(answer, &refusal);
     answer_key(answer, "axis");
     if (axis == NULL) {
         answer_null(answer);

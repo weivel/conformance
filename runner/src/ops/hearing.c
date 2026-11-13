@@ -17,6 +17,7 @@ void hearing_release(hearing *log) {
     free(log->events);
     free(log->first_detail);
     free(log->first_fix);
+    free(log->first_subject);
     hearing_init(log);
 }
 
@@ -50,7 +51,7 @@ static char *copy_or_null(hearing *log, const char *text) {
     return copy;
 }
 
-static void note_refusal(hearing *log, const weivel_refusal *refusal) {
+static void note_refusal(hearing *log, const weivel_refusal *refusal, const char *subject, uint32_t has_fix) {
     if (log->first_refusal != WEIVEL_REFUSAL_NONE || refusal->code == WEIVEL_REFUSAL_NONE ||
         refusal->code == WEIVEL_REFUSAL_ACTIVATION_MISMATCH) {
         return;
@@ -58,6 +59,8 @@ static void note_refusal(hearing *log, const weivel_refusal *refusal) {
     log->first_refusal = refusal->code;
     log->first_detail = copy_or_null(log, refusal->detail);
     log->first_fix = copy_or_null(log, refusal->fix);
+    log->first_subject = copy_or_null(log, subject);
+    log->first_has_fix = has_fix;
 }
 
 static void record_want(heard_event *heard, const weivel_want_event *want) {
@@ -99,11 +102,11 @@ void hearing_read(const weivel_event *event, void *context) {
     switch (event->kind) {
     case WEIVEL_EVENT_REFUSAL:
         heard->code = event->data.refusal.code;
-        note_refusal(log, &event->data.refusal);
+        note_refusal(log, &event->data.refused.refusal, event->data.refused.subject, event->data.refused.has_fix);
         break;
     case WEIVEL_EVENT_WANT_SETTLED:
         record_want(heard, &event->data.want);
-        note_refusal(log, &event->data.want.refusal);
+        note_refusal(log, &event->data.want.refusal, event->data.want.subject, event->data.want.has_fix);
         break;
     case WEIVEL_EVENT_WATCH:
         record_watch(heard, &event->data.watch);
@@ -114,7 +117,7 @@ void hearing_read(const weivel_event *event, void *context) {
         break;
     case WEIVEL_EVENT_REACH_REFUSED:
         record_reach(log, heard, &event->data.reach);
-        note_refusal(log, &event->data.reach.refusal);
+        note_refusal(log, &event->data.reach.refusal, event->data.reach.subject, event->data.reach.has_fix);
         break;
     case WEIVEL_EVENT_CAPABILITY:
         record_capability(heard, &event->data.capability);

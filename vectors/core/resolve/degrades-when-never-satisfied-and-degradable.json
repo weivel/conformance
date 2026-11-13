@@ -31,7 +31,7 @@
   "then": {
     "served": false,
     "degraded": true,
-    "report": { "present": true },
+    "report": { "subject": "minReplicas", "hasFix": false },
     "refusal": null
   }
 }

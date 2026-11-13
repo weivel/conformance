@@ -62,6 +62,6 @@
         ]
       ]
     },
-    "refusal": { "code": "undeclared" }
+    "refusal": { "code": "undeclared", "subject": "clock", "hasFix": true }
   }
 }

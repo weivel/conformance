@@ -35,6 +35,11 @@ is marking its own paper. An op whose adapter does not exist, or an adapter that
 Only `passed` is a pass. `failed`, `errored` and `awaiting a layer` fail the run, and the report keeps each in
 its own column so a reader sees what was not run.
 
+An adapter reads whether a want still waits, or a watch still hears, through `weivel_handle_state`, which changes
+nothing, and only after the last step. **It relies on waiting or watching against anything else**, a refused
+query included: the core forgets how a want or a watch ended once its handle's slot is reused, so how a want ended
+is read from its `WANT_SETTLED` event and never from the query.
+
 ## Virtual time
 
 `budgetMillis`, `pollMillis` and the other `...Millis` members of a vector are logical. An adapter hands the core
@@ -46,8 +51,12 @@ clock is a suite nobody runs.
 Every shape below is a contract. An adapter writes the keys it can and omits the rest; a key the vector does not
 assert is ignored, and a key the vector asserts and the adapter omits fails the vector.
 
-A `refusal` in an answer is `{ code, detail, fix }` or null. `code` is the core's refusal code in lowercase without
-its prefix, so `WEIVEL_REFUSAL_UNDECLARED` is `undeclared`. A vector asserts the code and never the wording.
+A `refusal` in an answer is `{ code, detail, fix, subject, hasFix }` or null. `code` is the core's refusal code in
+lowercase without its prefix, so `WEIVEL_REFUSAL_UNDECLARED` is `undeclared`. `subject` is what the refusal is about
+as the core's header says for that code (the id reached for, the need nothing meets, the constraint missed, the
+import name), null when the code names nothing, and `hasFix` is true when the fix is non-empty. Both are read off the
+core's own `subject` and `has_fix`, never out of the wording. A vector asserts the code, the subject and hasFix,
+and never the wording.
 
 ### `supports`
 
@@ -88,8 +97,10 @@ answered. The provider and the consumer are two plugins opened on one core; time
 `pollMillis`.
 Answers `{ served, atPoll, degraded, asks: [boolean], report, refusal }`, and nothing at all when the want never
 settled. `served` is true when the want settled with the provider under its constraints, not degraded; `atPoll` is
-the poll, counted from 1, whose attributes led to that service, and null otherwise. `report` is the warning the
-core logs just before a degraded settlement, null when it did not degrade.
+the poll, counted from 1, whose attributes led to that service, and null otherwise. `report` is
+`{ text, subject, hasFix }` for a degraded settlement and null otherwise: `text` is the warning the core logs just
+before it, and `subject` and `hasFix` are the settlement's own, so the constraint the want accepted unmet is asserted
+by content and never parsed out of the warning. A degraded want carries no refusal, so its `hasFix` is false.
 `asks` is one boolean per time the core asked the provider to serve, true when that ask carried the consumer's
 constraints, so the degradable fallback asking once more with them before asking unconstrained reads as
 `[true, false]` and is observable rather than inferred. It is a boolean rather than the constraint set itself
@@ -158,8 +169,11 @@ at `registerAtMillis`, or never when that is null; the adapter then advances the
 `horizonMillis`. **The adapter lets that plugin register `service.id` in whatever form it has**, declaring it
 well-known if the core asks: the vector is about waiting, and a namespacing refusal would fail it for a reason
 unrelated to invariant 8.
-Answers `{ settled, timedOut, atMillis }`, `atMillis` being the virtual time the ask settled or timed out, and
-null when neither happened by the horizon.
+Answers `{ settled, timedOut, atMillis, refusal }`, `atMillis` being the virtual time the ask settled or timed out,
+and null when neither happened by the horizon, and `refusal` the timed-out want's refusal, null otherwise.
+**A registration at the very moment of the deadline loses**: the adapter hands the core the deadline before it
+makes the registration, so the want times out and the registration settles nothing. A layer running a want on its
+own clock must keep that order; `vectors/layer/want/` holds the vector its suite witnesses.
 **An absent timeout means none, never a default.** Invariant 8: waiting is unbounded unless the consumer asks
 otherwise, because a provider that cannot exist today may exist once a node joins.
 
@@ -237,6 +251,9 @@ Steps run in order, each one of `{ plugin, provide: id }`, `{ plugin, verify: tr
   declared. A plugin whose check passes is verified. **A plugin whose check refuses is quarantined exactly as a
   host would.** A vector produces a refused activation the real way: the plugin lists a capability under
   `provides` that no step provides, and a `verify` step follows. The adapter has no flag that forces a refusal.
+  **The quarantine follows the refused check in the same step, before the next one runs**, made by the host and
+  never named by a step, so the refused plugin's own watches stop there. A layer's host must quarantine the same
+  way; `vectors/layer/consume/` holds the vector its suite witnesses.
 - `quarantine` marks the plugin broken, as a host does for a plugin that fails at run time. `release` stops the
   plugin and releases what it holds, the watches it installed included, so a released consumer hears nothing
   afterwards.
@@ -277,6 +294,8 @@ identically. Each key of `then` is compared against the same key of the answer:
 | --- | --- |
 | `null` | the key is absent or null in the answer |
 | `{"code": "x"}` | the answer's value is a refusal carrying the code `x` |
+| `{"subject": x}` | the answer's value carries the subject `x`; a null `x` holds when it names nothing |
+| `{"hasFix": b}` | the answer's value answers `hasFix` as `b`, never inferred from a `fix` |
 | `{"before": [["a", "b"]]}` | the answer is an array in which `a` precedes `b`, pairwise, because a valid topological order is not unique |
 | `{"contains": [x]}` | the answer is an array containing each element |
 | `{"equals": x}` | the answer equals `x` exactly |

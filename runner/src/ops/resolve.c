@@ -26,6 +26,8 @@ typedef struct {
     uint32_t code;
     char *detail;
     char *fix;
+    char *subject;
+    uint32_t has_fix;
     char *log_just_before;
     char *report;
     int failed;
@@ -145,6 +147,8 @@ static void read_settlement(resolve_run *run, const weivel_want_event *settled) 
     run->code = settled->refusal.code;
     run->detail = settled->refusal.detail == NULL ? NULL : text_duplicate(settled->refusal.detail);
     run->fix = settled->refusal.fix == NULL ? NULL : text_duplicate(settled->refusal.fix);
+    run->subject = settled->subject == NULL ? NULL : text_duplicate(settled->subject);
+    run->has_fix = settled->has_fix;
     if (run->degraded) {
         run->report = run->log_just_before;
         run->log_just_before = NULL;
@@ -284,6 +288,36 @@ static void write_optional_text(answer_writer *answer, const char *text) {
     }
 }
 
+/**
+ * `{ text, subject, hasFix }` for a degraded want whose warning came just before it settled, else null.
+ * @implNote The subject and hasFix are the settlement's own, so what a degraded want accepted unmet is read off the
+ * event and never out of the warning's wording.
+ */
+static void write_report(answer_writer *answer, const resolve_run *run) {
+    if (run->report == NULL) {
+        answer_null(answer);
+        return;
+    }
+    answer_begin_object(answer);
+    answer_key(answer, "text");
+    answer_string(answer, run->report);
+    answer_key(answer, "subject");
+    write_optional_text(answer, run->subject);
+    answer_key(answer, "hasFix");
+    answer_bool(answer, run->has_fix != 0);
+    answer_end_object(answer);
+}
+
+static void write_refusal(answer_writer *answer, const resolve_run *run) {
+    session_refusal refusal;
+    refusal.code = run->code;
+    refusal.detail = run->detail;
+    refusal.fix = run->fix;
+    refusal.subject = run->subject;
+    refusal.has_fix = run->has_fix;
+    session_answer_refusal(answer, &refusal);
+}
+
 static void write_resolution(answer_writer *answer, const resolve_run *run) {
     int served = run->implementation != 0 && !run->degraded;
     uint32_t at;
@@ -305,15 +339,16 @@ static void write_resolution(answer_writer *answer, const resolve_run *run) {
     }
     answer_end_array(answer);
     answer_key(answer, "report");
-    write_optional_text(answer, run->report);
+    write_report(answer, run);
     answer_key(answer, "refusal");
-    session_answer_refusal(answer, run->code, run->detail, run->fix);
+    write_refusal(answer, run);
     answer_end_object(answer);
 }
 
 static void release_run(resolve_run *run) {
     free(run->detail);
     free(run->fix);
+    free(run->subject);
     free(run->log_just_before);
     free(run->report);
 }

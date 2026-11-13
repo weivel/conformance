@@ -1,0 +1,25 @@
+{
+  "id": "want/a-registration-at-the-deadline-loses",
+  "op": "want",
+  "covers": "invariant-8",
+  "given": {
+    "service": {
+      "id": "accounts"
+    },
+    "registerAtMillis": 1000,
+    "timeoutMillis": 1000,
+    "horizonMillis": 10000
+  },
+  "then": {
+    "settled": false,
+    "timedOut": true,
+    "atMillis": {
+      "equals": 1000
+    },
+    "refusal": {
+      "code": "timed_out",
+      "subject": "accounts",
+      "hasFix": true
+    }
+  }
+}

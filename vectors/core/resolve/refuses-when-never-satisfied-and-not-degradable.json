@@ -31,6 +31,6 @@
   "then": {
     "served": false,
     "degraded": false,
-    "refusal": { "code": "unmet_constraint" }
+    "refusal": { "code": "unmet_constraint", "subject": "minReplicas", "hasFix": true }
   }
 }
