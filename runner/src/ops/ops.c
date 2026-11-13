@@ -16,8 +16,8 @@ static const op_entry OPS[] = {
     {"unbound", adapter_unbound},
     {"carry", adapter_carry},
     {"consume", adapter_consume},
-    {"identity", NULL},
-    {"validate", NULL},
+    {"identity", adapter_identity},
+    {"validate", adapter_validate},
 };
 
 const op_entry *ops_all(size_t *count) {

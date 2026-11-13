@@ -1,6 +1,7 @@
 #include "check.h"
 #include "ops/adapters.h"
 #include "ops/session.h"
+#include "ops/standard_refusal.h"
 #include "ops/want_states.h"
 
 /** The adapter's answer to `given_text`, parsed; NULL when it answered nothing or an incomplete document. */
@@ -226,6 +227,56 @@ static void reads_a_rejection_only_for_the_codes_the_contract_means(void) {
     check_text(want_state_in_reach(&served), "served", "reach want served");
 }
 
+#define BARE_ROUTING "\"manifest\":{\"importName\":\"a\",\"api\":2,\"services\":{\"provides\":[\"routing\"]}}"
+
+static void names_every_standard_refusal_code_as_the_header_spells_it(void) {
+    check_text(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_WRONG_TYPE), "wrong_type", "wrong type");
+    check_text(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_MISSING_FIELD), "missing_field", "missing field");
+    check_text(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_NOT_WELL_KNOWN), "not_well_known", "not well known");
+    check_text(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_NAME_MISMATCH), "name_mismatch", "name mismatch");
+    CHECK(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_NAME_MISMATCH + 1) == NULL);
+}
+
+static void answers_nothing_for_a_schema_other_than_the_published_one(void) {
+    CHECK(answers_nothing(adapter_validate, "{\"schema\":\"library.schema.json\"," BARE_ROUTING "}"));
+    CHECK(answers_nothing(adapter_validate, "{" BARE_ROUTING "}"));
+    CHECK(answers_nothing(adapter_validate, "{\"schema\":\"plugin.schema.json\"}"));
+}
+
+static void skips_the_well_known_rule_only_when_the_list_is_absent(void) {
+    weivel_json_value *absent = answer_of(adapter_validate, "{\"schema\":\"plugin.schema.json\"," BARE_ROUTING "}");
+    weivel_json_value *empty =
+        answer_of(adapter_validate, "{\"schema\":\"plugin.schema.json\",\"wellKnownServices\":[]," BARE_ROUTING "}");
+    CHECK(flag_at(absent, "valid") == 1);
+    CHECK(is_null_at(absent, "refusal"));
+    CHECK(flag_at(empty, "valid") == 0);
+    check_text(text_at(weivel_json_object_get(empty, "refusal"), "code"), "not_well_known", "empty list code");
+    check_text(text_at(weivel_json_object_get(empty, "refusal"), "path"), "services.provides[0]", "empty list path");
+    weivel_json_free(absent);
+    weivel_json_free(empty);
+}
+
+static void hands_the_validator_a_string_with_an_escaped_newline_intact(void) {
+    weivel_json_value *answer = answer_of(adapter_validate,
+                                          "{\"schema\":\"plugin.schema.json\",\"manifest\":{\"importName\":\"a\\n\","
+                                          "\"api\":2}}");
+    CHECK(flag_at(answer, "valid") == 0);
+    check_text(text_at(weivel_json_object_get(answer, "refusal"), "code"), "invalid_value", "escaped newline code");
+    check_text(text_at(weivel_json_object_get(answer, "refusal"), "path"), "importName", "escaped newline path");
+    weivel_json_free(answer);
+}
+
+static void answers_whether_a_value_is_an_identity(void) {
+    weivel_json_value *forge = answer_of(adapter_identity, "{\"value\":\"forge:12/a\"}");
+    weivel_json_value *bare = answer_of(adapter_identity, "{\"value\":\"a\"}");
+    CHECK(flag_at(forge, "valid") == 1);
+    CHECK(flag_at(bare, "valid") == 0);
+    CHECK(answers_nothing(adapter_identity, "{\"value\":12}"));
+    CHECK(answers_nothing(adapter_identity, "{}"));
+    weivel_json_free(forge);
+    weivel_json_free(bare);
+}
+
 int main(void) {
     names_every_refusal_code_as_the_header_spells_it();
     answers_the_api_axis_when_only_the_floor_refuses();
@@ -243,5 +294,10 @@ int main(void) {
     answers_a_want_nothing_settles_as_pending();
     answers_nothing_for_a_step_naming_no_plugin();
     reads_a_rejection_only_for_the_codes_the_contract_means();
+    names_every_standard_refusal_code_as_the_header_spells_it();
+    answers_nothing_for_a_schema_other_than_the_published_one();
+    skips_the_well_known_rule_only_when_the_list_is_absent();
+    hands_the_validator_a_string_with_an_escaped_newline_intact();
+    answers_whether_a_value_is_an_identity();
     return check_summary("adapters_test");
 }

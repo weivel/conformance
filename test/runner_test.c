@@ -102,10 +102,11 @@ static void errors_an_answer_that_is_not_an_object(void) {
     CHECK(judged_as("{\"supported\":true}", TIER_CORE, answers_text_that_is_not_an_object) == VERDICT_ERRORED);
 }
 
-static void awaits_a_standard_vector_without_running_it(void) {
+static void runs_a_standard_vector_through_its_adapter(void) {
     calls_made = 0;
-    CHECK(judged_as("{\"supported\":true}", TIER_STANDARD, counts_its_calls) == VERDICT_AWAITING_STANDARD);
-    CHECK(calls_made == 0);
+    CHECK(judged_as("{\"supported\":true}", TIER_STANDARD, counts_its_calls) == VERDICT_PASSED);
+    CHECK(calls_made == 1);
+    CHECK(judged_as("{\"supported\":true}", TIER_STANDARD, NULL) == VERDICT_ERRORED);
 }
 
 static void awaits_a_layer_vector_without_running_it(void) {
@@ -134,7 +135,6 @@ static void exits_zero_only_when_every_vector_passed(void) {
     static const verdict_status ALL_PASSED[] = {VERDICT_PASSED, VERDICT_PASSED};
     static const verdict_status ONE_FAILED[] = {VERDICT_PASSED, VERDICT_FAILED};
     static const verdict_status ONE_ERRORED[] = {VERDICT_PASSED, VERDICT_ERRORED};
-    static const verdict_status ONE_AWAITING_STANDARD[] = {VERDICT_PASSED, VERDICT_AWAITING_STANDARD};
     static const verdict_status ONE_AWAITING_LAYER[] = {VERDICT_PASSED, VERDICT_AWAITING_LAYER};
     text_builder out;
     text_init(&out);
@@ -143,8 +143,6 @@ static void exits_zero_only_when_every_vector_passed(void) {
     CHECK(exit_code_for(ONE_FAILED, 2, &out) != 0);
     text_release(&out);
     CHECK(exit_code_for(ONE_ERRORED, 2, &out) != 0);
-    text_release(&out);
-    CHECK(exit_code_for(ONE_AWAITING_STANDARD, 2, &out) != 0);
     text_release(&out);
     CHECK(exit_code_for(ONE_AWAITING_LAYER, 2, &out) != 0);
     text_release(&out);
@@ -159,15 +157,13 @@ static void an_empty_run_is_not_a_pass(void) {
 }
 
 static void counts_awaiting_vectors_apart_from_passes(void) {
-    static const verdict_status MIXED[] = {VERDICT_PASSED, VERDICT_AWAITING_STANDARD, VERDICT_AWAITING_STANDARD,
-                                           VERDICT_AWAITING_LAYER};
+    static const verdict_status MIXED[] = {VERDICT_PASSED, VERDICT_AWAITING_LAYER, VERDICT_AWAITING_LAYER};
     text_builder out;
     char row[256];
     text_init(&out);
-    exit_code_for(MIXED, 4, &out);
-    CHECK(strstr(text_view(&out), "2 standard vectors are awaiting the standard") != NULL);
-    CHECK(strstr(text_view(&out), "1 layer vectors are awaiting a layer suite") != NULL);
-    snprintf(row, sizeof row, "%-12s%22lu%22lu%22lu%22lu%22lu", "supports", 1ul, 0ul, 0ul, 2ul, 1ul);
+    exit_code_for(MIXED, 3, &out);
+    CHECK(strstr(text_view(&out), "2 layer vectors are awaiting a layer suite") != NULL);
+    snprintf(row, sizeof row, "%-12s%22lu%22lu%22lu%22lu", "supports", 1ul, 0ul, 0ul, 2ul);
     CHECK(strstr(text_view(&out), row) != NULL);
     text_release(&out);
 }
@@ -190,7 +186,7 @@ int main(void) {
     errors_an_incomplete_answer();
     errors_an_answer_the_writer_marks_broken_even_when_it_parses();
     errors_an_answer_that_is_not_an_object();
-    awaits_a_standard_vector_without_running_it();
+    runs_a_standard_vector_through_its_adapter();
     awaits_a_layer_vector_without_running_it();
     exits_zero_only_when_every_vector_passed();
     an_empty_run_is_not_a_pass();

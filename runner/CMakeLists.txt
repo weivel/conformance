@@ -7,6 +7,8 @@ add_library(conformance_runner STATIC
     src/ops/consume.c
     src/ops/facts.c
     src/ops/hearing.c
+    src/ops/identity.c
+    src/ops/json_text.c
     src/ops/ops.c
     src/ops/plan.c
     src/ops/reach.c
@@ -14,8 +16,10 @@ add_library(conformance_runner STATIC
     src/ops/revoke.c
     src/ops/scope.c
     src/ops/session.c
+    src/ops/standard_refusal.c
     src/ops/supports.c
     src/ops/unbound.c
+    src/ops/validate.c
     src/ops/want.c
     src/ops/want_states.c
     src/report.c

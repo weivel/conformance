@@ -178,7 +178,7 @@ static void refuses_absent_false(void) {
     check_refused("absent-false", "absent: false asserts nothing");
 }
 
-static void awaits_every_vector_of_a_root_below_its_tier(const char *subdirectory, vector_tier tier,
+static void judges_every_vector_of_a_root_below_its_tier(const char *subdirectory, vector_tier tier,
                                                           verdict_status expected) {
     corpus loaded;
     char error[ERROR_CAPACITY];
@@ -199,9 +199,45 @@ static void awaits_every_vector_of_a_root_below_its_tier(const char *subdirector
 }
 
 static void a_root_inside_a_tier_is_still_that_tier(void) {
-    awaits_every_vector_of_a_root_below_its_tier("standard/identity", TIER_STANDARD, VERDICT_AWAITING_STANDARD);
-    awaits_every_vector_of_a_root_below_its_tier("layer/consume", TIER_LAYER, VERDICT_AWAITING_LAYER);
-    awaits_every_vector_of_a_root_below_its_tier("standard", TIER_STANDARD, VERDICT_AWAITING_STANDARD);
+    judges_every_vector_of_a_root_below_its_tier("standard/identity", TIER_STANDARD, VERDICT_PASSED);
+    judges_every_vector_of_a_root_below_its_tier("layer/consume", TIER_LAYER, VERDICT_AWAITING_LAYER);
+    judges_every_vector_of_a_root_below_its_tier("layer", TIER_LAYER, VERDICT_AWAITING_LAYER);
+    judges_every_vector_of_a_root_below_its_tier("standard", TIER_STANDARD, VERDICT_PASSED);
+}
+
+static size_t passed_in(const corpus *loaded, const verdict *verdicts, const char *directory) {
+    size_t at;
+    size_t passed = 0;
+    for (at = 0; at < loaded->count; at++) {
+        if (strcmp(loaded->items[at].directory, directory) == 0 && verdicts[at].status == VERDICT_PASSED) {
+            passed++;
+        }
+    }
+    return passed;
+}
+
+static void runs_every_pinned_standard_vector_and_passes_it(void) {
+    corpus loaded;
+    char error[ERROR_CAPACITY];
+    verdict *verdicts;
+    size_t at;
+    CHECK(corpus_load(KIT_VECTORS_DIR, &loaded, error, sizeof error));
+    verdicts = run_corpus(&loaded);
+    CHECK(verdicts != NULL);
+    for (at = 0; verdicts != NULL && at < sizeof PINNED / sizeof PINNED[0]; at++) {
+        size_t passed;
+        if (strncmp(PINNED[at].directory, "standard/", 9) != 0) {
+            continue;
+        }
+        passed = passed_in(&loaded, verdicts, PINNED[at].directory);
+        if (passed != PINNED[at].count) {
+            fprintf(stderr, "%s: expected %lu vectors run and passed, found %lu\n", PINNED[at].directory,
+                    (unsigned long)PINNED[at].count, (unsigned long)passed);
+            check_failures++;
+        }
+    }
+    verdicts_free(verdicts, loaded.count);
+    corpus_free(&loaded);
 }
 
 static void admits_every_invariant_the_model_states_and_no_other(void) {
@@ -272,6 +308,7 @@ int main(void) {
     refuses_present_false();
     refuses_absent_false();
     a_root_inside_a_tier_is_still_that_tier();
+    runs_every_pinned_standard_vector_and_passes_it();
     admits_every_invariant_the_model_states_and_no_other();
     reads_the_tier_from_the_directory();
     reads_the_tier_from_the_walked_root_when_it_is_a_tier_name();
