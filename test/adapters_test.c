@@ -282,6 +282,40 @@ static void reads_a_waiting_want_without_ending_it(void) {
     session_close(&session);
 }
 
+static void read_one(hearing *log, uint32_t kind, uint32_t code, const char *subject, uint32_t has_fix) {
+    weivel_event event = WEIVEL_INIT(weivel_event);
+    event.kind = kind;
+    if (kind == WEIVEL_EVENT_WANT_SETTLED) {
+        event.data.want.refusal.code = code;
+        event.data.want.refusal.detail = "what happened";
+        event.data.want.refusal.fix = has_fix ? "what would fix it" : "";
+        event.data.want.subject = subject;
+        event.data.want.has_fix = has_fix;
+    } else {
+        event.data.refused.refusal.code = code;
+        event.data.refused.refusal.detail = "what happened";
+        event.data.refused.refusal.fix = has_fix ? "what would fix it" : "";
+        event.data.refused.subject = subject;
+        event.data.refused.has_fix = has_fix;
+    }
+    hearing_read(&event, log);
+}
+
+static void keeps_the_subject_of_the_first_refusal_whatever_carries_it(void) {
+    hearing log;
+    hearing_init(&log);
+    read_one(&log, WEIVEL_EVENT_REFUSAL, WEIVEL_REFUSAL_SERVICE_TAKEN, "calendar:events", 1);
+    read_one(&log, WEIVEL_EVENT_REFUSAL, WEIVEL_REFUSAL_OUTSIDE_NAMESPACE, "other", 0);
+    check_text(log.first_subject, "calendar:events", "refusal event subject");
+    CHECK(log.first_has_fix == 1);
+    hearing_release(&log);
+    hearing_init(&log);
+    read_one(&log, WEIVEL_EVENT_WANT_SETTLED, WEIVEL_REFUSAL_TIMED_OUT, "store", 0);
+    check_text(log.first_subject, "store", "want settlement subject");
+    CHECK(log.first_has_fix == 0);
+    hearing_release(&log);
+}
+
 static void answers_nothing_for_a_step_naming_no_plugin(void) {
     CHECK(answers_nothing(adapter_reach, "{\"plugins\":[{\"id\":\"notes\",\"consumes\":[\"clock\"]}],"
                                          "\"steps\":[{\"plugin\":\"stranger\",\"get\":\"clock\"}]}"));
@@ -415,6 +449,7 @@ int main(void) {
     hands_back_the_payload_it_was_given();
     answers_a_want_nothing_settles_as_pending();
     reads_a_waiting_want_without_ending_it();
+    keeps_the_subject_of_the_first_refusal_whatever_carries_it();
     answers_nothing_for_a_step_naming_no_plugin();
     reads_a_rejection_only_for_the_codes_the_contract_means();
     names_every_standard_refusal_code_as_the_header_spells_it();

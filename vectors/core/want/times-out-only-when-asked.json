@@ -15,6 +15,7 @@
     "timedOut": true,
     "atMillis": {
       "equals": 1000
-    }
+    },
+    "refusal": { "code": "timed_out", "subject": "accounts", "hasFix": true }
   }
 }
