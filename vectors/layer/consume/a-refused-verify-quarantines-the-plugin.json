@@ -90,6 +90,12 @@
     "reported": {
       "equals": []
     },
-    "refusal": null
+    "refusal": null,
+    "quarantined": {
+      "equals": [
+        "flaky"
+      ]
+    },
+    "quarantineReason": { "code": "activation_mismatch", "subject": "flaky", "hasFix": true }
   }
 }

@@ -82,7 +82,11 @@ static int provide(consume_run *run, weivel_handle plugin, const char *id) {
     return 1;
 }
 
-/** A plugin whose activation check refuses is quarantined, as a host does with an activation it will not run. */
+/**
+ * A plugin whose activation check refuses is quarantined, as a host does with an activation it will not run.
+ * @implNote The quarantine is given no reason, so the plugin's ledger row shows the refusal the check answered, as
+ * weivel_quarantine_plugin documents, and `quarantineReason` reads the core's own record of it.
+ */
 static int verify(consume_run *run, weivel_handle plugin) {
     weivel_status status = weivel_verify_activation(run->session.core, plugin, NULL);
     session_drain(&run->session);
@@ -232,6 +236,56 @@ static void write_providers(answer_writer *answer, const consume_outcome *outcom
     answer_end_array(answer);
 }
 
+/** The plugin's ledger row, or 0 when the core answered none; a row answered must be released. */
+static int row_of(const consume_run *run, uint32_t at, weivel_ledger_row *row) {
+    weivel_ledger_row empty = WEIVEL_INIT(weivel_ledger_row);
+    *row = empty;
+    return weivel_ledger_entry(run->session.core, run->plugins.handles[at], row, NULL) == WEIVEL_STATUS_OK;
+}
+
+/**
+ * Writes `quarantined`, the plugins whose ledger row reads quarantined after the last step in the order the vector
+ * names them, and `quarantineReason`, the first one's reason as its row shows it, null when none is quarantined.
+ */
+static int write_quarantined(answer_writer *answer, const consume_run *run) {
+    weivel_ledger_row row;
+    session_refusal reason = {WEIVEL_REFUSAL_NONE, NULL, NULL, NULL, 0};
+    uint32_t at;
+    int reason_written = 0;
+    answer_key(answer, "quarantined");
+    answer_begin_array(answer);
+    for (at = 0; at < run->plugins.count; at++) {
+        if (!row_of(run, at, &row)) {
+            return 0;
+        }
+        if (row.status == WEIVEL_PLUGIN_STATUS_QUARANTINED) {
+            answer_string(answer, run->plugins.names[at]);
+        }
+        weivel_ledger_row_release(&row);
+    }
+    answer_end_array(answer);
+    answer_key(answer, "quarantineReason");
+    for (at = 0; at < run->plugins.count && !reason_written; at++) {
+        if (!row_of(run, at, &row)) {
+            return 0;
+        }
+        if (row.status == WEIVEL_PLUGIN_STATUS_QUARANTINED) {
+            reason.code = row.refusal.code;
+            reason.detail = row.refusal.detail;
+            reason.fix = row.refusal.fix;
+            reason.subject = row.subject;
+            reason.has_fix = row.has_fix;
+            session_answer_refusal(answer, &reason);
+            reason_written = 1;
+        }
+        weivel_ledger_row_release(&row);
+    }
+    if (!reason_written) {
+        answer_null(answer);
+    }
+    return 1;
+}
+
 static int write_consumption(answer_writer *answer, const consume_run *run) {
     size_t at;
     int written = 1;
@@ -256,6 +310,7 @@ static int write_consumption(answer_writer *answer, const consume_run *run) {
     written = written && write_reported(answer, &run->log, &run->plugins);
     answer_key(answer, "refusal");
     write_first_refusal(answer, &run->log);
+    written = written && write_quarantined(answer, run);
     answer_end_object(answer);
     return written;
 }

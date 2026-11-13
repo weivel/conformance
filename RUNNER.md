@@ -261,7 +261,7 @@ Steps run in order, each one of `{ plugin, provide: id }`, `{ plugin, verify: tr
 - `watch` installs a watch as the plugin at that step, recording each `[providerId, event]` the core reports for
   it, `event` being `"provide"` or `"withdraw"`.
 
-Answers `{ outcomes, heard, reported: [[plugin, id]], refusal }`:
+Answers `{ outcomes, heard, reported: [[plugin, id]], refusal, quarantined: [plugin], quarantineReason }`:
 
 - `outcomes` holds one entry per `all` step, in step order: the provider ids of the implementations the core
   handed back, **in the order handed back**, which is the order the plugins' activations were verified (the
@@ -275,6 +275,11 @@ Answers `{ outcomes, heard, reported: [[plugin, id]], refusal }`:
 - `refusal` is the first refusal of the run, null when there was none. An activation check that refuses is
   quarantine, not a refusal of the run, so a vector whose activation is refused and which asserts `refusal: null`
   is unambiguous.
+- `quarantined` lists the plugins whose ledger row reads quarantined after the last step, in the order the vector
+  names them, and `quarantineReason` is the first one's reason as its row shows it, a refusal as above, null when
+  none is quarantined. The adapter quarantines a refused activation with no reason of its own, so the row shows the
+  refusal the check answered, whose subject is the plugin's import name; the reason is read off the core's ledger,
+  never off the step the adapter ran.
 
 Invariant 14: an implementation joins `all` when its plugin's activation is verified, not when it is provided, and
 leaves when the plugin is quarantined or released, so a consumer is never handed a provider the host is about to
@@ -294,7 +299,7 @@ identically. Each key of `then` is compared against the same key of the answer:
 | --- | --- |
 | `null` | the key is absent or null in the answer |
 | `{"code": "x"}` | the answer's value is a refusal carrying the code `x` |
-| `{"subject": x}` | the answer's value carries the subject `x`; a null `x` holds when it names nothing |
+| `{"subject": x}` | the answer's value carries the subject `x`; a null `x` holds only when `subject` is answered and null |
 | `{"hasFix": b}` | the answer's value answers `hasFix` as `b`, never inferred from a `fix` |
 | `{"before": [["a", "b"]]}` | the answer is an array in which `a` precedes `b`, pairwise, because a valid topological order is not unique |
 | `{"contains": [x]}` | the answer is an array containing each element |
