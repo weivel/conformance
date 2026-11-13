@@ -153,7 +153,9 @@ static int keep_ids(reach_run *run, const weivel_service_list *list, reach_outco
         memcpy(copy, list->ids.items[at], length);
         outcome->ids[at] = copy;
     }
-    qsort((void *)outcome->ids, outcome->id_count, sizeof *outcome->ids, compare_texts);
+    if (outcome->id_count > 1) {
+        qsort((void *)outcome->ids, outcome->id_count, sizeof *outcome->ids, compare_texts);
+    }
     return 1;
 }
 
