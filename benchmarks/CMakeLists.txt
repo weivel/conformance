@@ -25,3 +25,28 @@ endforeach()
 benchmark_test(benchmark_gate_holds_the_committed_budget 0 gate ${CMAKE_CURRENT_SOURCE_DIR}/budget.txt
     -DRELEASE_ONLY=ON)
 set_tests_properties(benchmark_gate_holds_the_committed_budget PROPERTIES LABELS release-benchmark)
+
+file(GLOB language_budgets CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.txt)
+list(REMOVE_ITEM language_budgets ${CMAKE_CURRENT_SOURCE_DIR}/budget.txt ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt)
+foreach(language_budget IN LISTS language_budgets)
+    get_filename_component(language ${language_budget} NAME_WE)
+    add_test(NAME language_budget_of_${language}_is_well_formed
+        COMMAND ${CMAKE_COMMAND} -DBUDGET=${language_budget} -DEXPECTED=valid
+            -P ${PROJECT_SOURCE_DIR}/test/language_budget_test.cmake)
+endforeach()
+set(language_budget_fixtures ${PROJECT_SOURCE_DIR}/test/fixtures/language-budget)
+foreach(case
+        missing-a-bound:noise-margin..is.missing
+        unknown-platform:names.no.known.platform
+        repeated:ratio-margin..is.given.twice
+        not-a-number:carries.no.positive.number
+        zero:carries.no.positive.number
+        unknown-bound:names.no.known.bound
+        extra-field:is.neither)
+    string(REPLACE ":" ";" parts ${case})
+    list(GET parts 0 fixture)
+    list(GET parts 1 reason)
+    add_test(NAME language_budget_refuses_${fixture}
+        COMMAND ${CMAKE_COMMAND} -DBUDGET=${language_budget_fixtures}/${fixture}.txt -DEXPECTED=invalid
+            -DMUST_MATCH=${reason} -P ${PROJECT_SOURCE_DIR}/test/language_budget_test.cmake)
+endforeach()

@@ -310,6 +310,39 @@ identically. Each key of `then` is compared against the same key of the answer:
 
 A key absent from `then` asserts nothing, and a `then` with no key at all, or `present: false` or `absent: false`, is refused when the corpus loads.
 
+## Benchmark budgets
+
+Every timing bound lives here, so no implementation sets its own. `benchmarks/budget.txt` is the core's: one line,
+`median_nanoseconds <number>`, the median a Release build of the core's control call may take, held by
+`weivel-benchmark-control-call gate`.
+
+A language that reaches the core through a foreign function interface reads its bounds from
+`benchmarks/<language>.txt` of the kit commit it pins. Each line is fields separated by one space:
+
+- `<gate> <platform> <number>`: `control-call` is weivel's control call over a bare call through the same binding,
+  `library-call` a C library function reached through weivel over the same function reached directly. The platform is
+  the runner's system, `linux`, `windows` or `macos`, whatever the language itself calls it. The number is the highest
+  per-round median ratio CI measured there, and the bound is that number times `ratio-margin`. A platform with no line
+  has no bound, and a gate run there fails.
+- `ratio-margin <number>`: how far over its highest measured ratio a run may go.
+- `quiet-noise <number>`: how far from 1 the ratio of two paths of identical cost is on a quiet run.
+- `worst-noise <number>`: the noisiest such deviation measured; a run whose two identical direct paths differ by more
+  is not judged.
+- `noise-margin <number>`: how many times its own noise, or the quiet noise when it was quieter, a same-language pair
+  may differ by.
+
+Each gate on each platform and each of the four bounds appears exactly once, every number positive;
+`language_budget_of_<language>_is_well_formed` holds each file to that.
+
+**The same-language gate in every language is the identity check**: the service a consumer resolves is the
+provider's own object, pointer equality in C and reference identity elsewhere. The noise bounds only judge the
+timing a language reports beside it. The ratio gates over a bare foreign call apply only to a language that crosses
+one, so a C layer has no file here and gates its control call against the core's own `budget.txt`.
+
+`typescript.txt` carries `weivel/typescript`'s bounds as they stood on 2026-11-13, unchanged but for the platform
+names (`win32` is `windows`, `darwin` is `macos`): the control call measured with the core's timer armed in Test run
+43451359295, the library call in Test run 43444931168, and the noise in Test runs 43438389364 and 43441441323.
+
 ## The drift checks
 
 Five programs in `checks/`. Four take a repository root and the fifth a built core. They exit 0 when clean, 1 with
