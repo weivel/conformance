@@ -1,0 +1,9 @@
+control-call linux 8.0425
+control-call windows 8.2643
+control-call macos 6.5947
+library-call linux 35.3079
+library-call windows 33.6923
+ratio-margin 1.4
+quiet-noise 0.0772
+worst-noise 0.5678
+noise-margin 2.5

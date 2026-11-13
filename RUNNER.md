@@ -370,7 +370,8 @@ weivel-core-gate --sources <rules-file> <core-root>
   nothing deeper is skipped by name. A file is binary when a NUL byte occurs in its first 8 KB, and each skipped file is printed.
   The list always comes from the pinned kit commit, never from the tree under test, so a repository cannot shorten the
   list it is checked with; a file whose trimmed, non-empty lines are the list word for word is that list's copy and
-  is not read, which is how the kit's own `checks/names.txt` passes.
+  is not read, which is how the kit's own `checks/names.txt` passes. That skip holds in every role, and outside the
+  kit a full copy of the list is itself the drift this rule forbids: a word list kept in the tree under test.
   A `package-lock.json` at any depth is read as JSON through the standard's reader, not as text, and only where it can
   name a dependency or its origin: the top-level `name`, every key of `packages`, each entry's `name`, `version` and
   `resolved`, and the keys and specs of its `dependencies`, `devDependencies`, `optionalDependencies`,
@@ -384,9 +385,11 @@ weivel-core-gate --sources <rules-file> <core-root>
   does not list, or lists without a `source-root`, is refused rather than read as `src`, so a new language is added to
   the list before its repository is checked.
 - Layers: every layer vector's id, its path under `vectors/layer` without `.json`
-  (`consume/a-throwing-listener-does-not-silence-the-others`), must appear in some file under the language's `test-root`,
-  standing on its own: a longer id or a file path that contains it does not count. A missing id is an offender. A
-  language the list does not name, or names without a `test-root`, is refused, never read as the whole repository,
+  (`consume/a-throwing-listener-does-not-silence-the-others`), must appear in some source file of the language, one
+  with an `extension` the list gives it, under its `test-root`, standing on its own: a longer id, a file path that
+  contains it, or a vector copied under the tests as a `.json` fixture does not count. A missing id is an offender. A
+  language the list does not name, or names without a `test-root` or an `extension`, is refused, never read as the
+  whole repository,
   because sources and fixtures outside the tests would then satisfy it. It runs for a language implementation, never
   for `core`, `standard` or `kit`, and only proves each vector is named; the language's own coverage test, which reads
   its describe names, stays the strong check.

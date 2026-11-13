@@ -78,17 +78,38 @@ static int names_id(const char *text, size_t size, const char *id) {
     return 0;
 }
 
-static int mark_named_ids(const char *test_directory, vector_ids *vectors, char *error, size_t error_size) {
+static int is_source_file(const char *relative, const language_rules *rules) {
+    size_t at;
+    for (at = 0; at < rules->extensions.count; at++) {
+        if (ends_with(relative, rules->extensions.items[at])) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/**
+ * Marks every id a source file of the language under the test root names.
+ *
+ * @implNote Only the language's own source files count: a vector copied under the tests as a fixture carries its id
+ * and would otherwise pass for a test that witnesses it.
+ */
+static int mark_named_ids(const char *test_directory, const language_rules *rules, vector_ids *vectors, char *error,
+                          size_t error_size) {
     text_list files;
     size_t file;
     if (!tree_list_files(test_directory, &files, error, error_size)) {
         return 0;
     }
     for (file = 0; file < files.count; file++) {
-        char *path = tree_join(test_directory, files.items[file]);
+        char *path;
         char *data = NULL;
         size_t size = 0;
         size_t id;
+        if (!is_source_file(files.items[file], rules)) {
+            continue;
+        }
+        path = tree_join(test_directory, files.items[file]);
         if (path == NULL || !tree_read_file(path, &data, &size)) {
             snprintf(error, error_size, "%s cannot be read", files.items[file]);
             free(path);
@@ -105,26 +126,25 @@ static int mark_named_ids(const char *test_directory, vector_ids *vectors, char 
     return 1;
 }
 
-static char *resolve_test_root(const char *languages_path, const char *language, char *error, size_t error_size) {
-    language_rules rules;
-    char *test_root = NULL;
-    if (!language_rules_load(languages_path, language, &rules, error, error_size)) {
-        return NULL;
+static int load_language(const char *languages_path, const char *language, language_rules *rules, char *error,
+                         size_t error_size) {
+    if (!language_rules_load(languages_path, language, rules, error, error_size)) {
+        return 0;
     }
-    if (!rules.known) {
+    if (!rules->known) {
         snprintf(error, error_size, "%s names no language '%s', so its tests have nowhere to be found", languages_path,
                  language);
-    } else if (rules.test_root == NULL) {
+    } else if (rules->test_root == NULL) {
         snprintf(error, error_size, "%s gives %s no test-root, so its tests have nowhere to be found", languages_path,
                  language);
+    } else if (rules->extensions.count == 0) {
+        snprintf(error, error_size, "%s gives %s no extension, so none of its tests can be read", languages_path,
+                 language);
     } else {
-        test_root = malloc(strlen(rules.test_root) + 1);
-        if (test_root != NULL) {
-            memcpy(test_root, rules.test_root, strlen(rules.test_root) + 1);
-        }
+        return 1;
     }
-    language_rules_free(&rules);
-    return test_root;
+    language_rules_free(rules);
+    return 0;
 }
 
 static int report_unnamed(const vector_ids *vectors, const char *test_root) {
@@ -142,7 +162,7 @@ static int report_unnamed(const vector_ids *vectors, const char *test_root) {
     return offenders;
 }
 
-static int check(const char *root, const char *vector_directory, const char *test_root, char *error,
+static int check(const char *root, const char *vector_directory, const language_rules *rules, char *error,
                  size_t error_size) {
     vector_ids vectors;
     char *test_directory;
@@ -150,11 +170,11 @@ static int check(const char *root, const char *vector_directory, const char *tes
     if (!load_vector_ids(vector_directory, &vectors, error, error_size)) {
         return -1;
     }
-    test_directory = tree_join(root, test_root);
+    test_directory = tree_join(root, rules->test_root);
     if (test_directory == NULL) {
         snprintf(error, error_size, "out of memory");
-    } else if (mark_named_ids(test_directory, &vectors, error, error_size)) {
-        offenders = report_unnamed(&vectors, test_root);
+    } else if (mark_named_ids(test_directory, rules, &vectors, error, error_size)) {
+        offenders = report_unnamed(&vectors, rules->test_root);
     }
     free(test_directory);
     vector_ids_free(&vectors);
@@ -165,7 +185,7 @@ int main(int argument_count, char **arguments) {
     char error[512] = "";
     char *root;
     char *vector_directory;
-    char *test_root;
+    language_rules rules;
     int offenders = -1;
     if (argument_count != 5) {
         fprintf(stderr, "usage: weivel-layers <root> <layer-vector-directory> <language> <languages-file>\n");
@@ -173,15 +193,16 @@ int main(int argument_count, char **arguments) {
     }
     root = tree_normalize_root(arguments[1]);
     vector_directory = tree_normalize_root(arguments[2]);
-    test_root = resolve_test_root(arguments[4], arguments[3], error, sizeof error);
-    if (root != NULL && vector_directory != NULL && test_root != NULL) {
-        offenders = check(root, vector_directory, test_root, error, sizeof error);
+    if (load_language(arguments[4], arguments[3], &rules, error, sizeof error)) {
+        if (root != NULL && vector_directory != NULL) {
+            offenders = check(root, vector_directory, &rules, error, sizeof error);
+        }
+        language_rules_free(&rules);
     }
     if (offenders < 0) {
         fprintf(stderr, "weivel-layers: %s\n", error[0] != '\0' ? error : "out of memory");
     }
     free(root);
     free(vector_directory);
-    free(test_root);
     return offenders < 0 ? 2 : offenders > 0 ? 1 : 0;
 }
