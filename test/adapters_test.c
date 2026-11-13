@@ -238,11 +238,6 @@ static void answers_a_want_nothing_settles_as_pending(void) {
     weivel_json_free(answer);
 }
 
-static void ignore_event(const weivel_event *event, void *context) {
-    (void)event;
-    (void)context;
-}
-
 /** Reading that a want waits must leave it waiting, so a provider arriving afterwards still settles it. */
 static void reads_a_waiting_want_without_ending_it(void) {
     core_session session;
@@ -254,7 +249,8 @@ static void reads_a_waiting_want_without_ending_it(void) {
     weivel_handle plugins[2] = {0, 0};
     weivel_handle want = 0;
     weivel_handle registration = 0;
-    uint32_t condition = 0;
+    hearing log;
+    const heard_event *settlement;
     size_t at;
     offer.id = store;
     need.id = store;
@@ -266,7 +262,8 @@ static void reads_a_waiting_want_without_ending_it(void) {
     manifests[1].services.consumes.count = 1;
     options.well_known_services.items = &store;
     options.well_known_services.count = 1;
-    CHECK(session_open(&session, &options, ignore_event, NULL));
+    hearing_init(&log);
+    CHECK(session_open(&session, &options, hearing_read, &log));
     for (at = 0; at < 2; at++) {
         CHECK(weivel_register_manifest(session.core, &manifests[at], &plugins[at], NULL) == WEIVEL_STATUS_OK);
         CHECK(weivel_open_plugin(session.core, plugins[at], NULL, NULL) == WEIVEL_STATUS_OK);
@@ -275,11 +272,13 @@ static void reads_a_waiting_want_without_ending_it(void) {
     CHECK(session_still_live(&session, want));
     CHECK(session_still_live(&session, want));
     CHECK(weivel_register_service(session.core, plugins[0], store, &registration, NULL) == WEIVEL_STATUS_OK);
-    CHECK(weivel_handle_state(session.core, want, &condition, NULL) == WEIVEL_STATUS_OK);
-    CHECK(condition == WEIVEL_HANDLE_SETTLED);
+    session_drain(&session);
+    settlement = hearing_settlement(&log, want);
+    CHECK(settlement != NULL && settlement->implementation == registration);
     CHECK(!session_still_live(&session, want));
     CHECK(!session_still_live(&session, registration));
     session_close(&session);
+    hearing_release(&log);
 }
 
 static void read_one(hearing *log, uint32_t kind, uint32_t code, const char *subject, uint32_t has_fix) {

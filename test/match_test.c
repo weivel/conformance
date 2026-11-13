@@ -68,7 +68,7 @@ static void subject_holds_when_the_refusal_names_it(void) {
     fails("{\"refusal\":{\"subject\":\"a:b\"}}", "{\"refusal\":{\"detail\":\"a:b\"}}", "subject in the wording");
     fails("{\"refusal\":{\"subject\":\"a:b\"}}", "{\"refusal\":null}", "no refusal");
     holds("{\"refusal\":{\"subject\":null}}", "{\"refusal\":{\"subject\":null}}", "no subject");
-    holds("{\"refusal\":{\"subject\":null}}", "{\"refusal\":{\"code\":\"stale_handle\"}}", "subject absent");
+    fails("{\"refusal\":{\"subject\":null}}", "{\"refusal\":{\"code\":\"stale_handle\"}}", "subject not answered");
     fails("{\"refusal\":{\"subject\":null}}", "{\"refusal\":{\"subject\":\"a\"}}", "a subject where none is");
 }
 

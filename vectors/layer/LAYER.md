@@ -28,8 +28,9 @@ making, and then witnesses:
 
 - the refused plugin's own watch stops at its quarantine, so it hears the provider joining and not the provider
   leaving afterwards, while the other consumer hears both, exactly as `heard` states;
-- the refused plugin's state reads quarantined, its reason the activation mismatch, whose subject is the plugin's
-  import name (`flaky`);
+- the plugins the layer's ledger shows quarantined after the last step are exactly `quarantined` (`flaky` alone),
+  and the first one's reason, as its ledger row shows it, carries what `quarantineReason` states: the code
+  `activation_mismatch`, the subject `flaky` (the plugin's import name) and a fix;
 - the refused check is not a refusal of the run: nothing is added to `reported`, and the first refusal is none.
 
 ## `want/a-registration-at-the-deadline-loses`
