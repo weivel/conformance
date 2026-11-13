@@ -28,4 +28,5 @@ jobs:
         "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined"
         "-DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address,undefined"
       cmake_build: '--build build --config Debug'
+      # The core gate tests read the built core, whose sanitizer imports it rightly refuses (see RUNNER.md).
       cmake_test: 'ctest --test-dir build --output-on-failure -C Debug -E "^core_(gate_|reads_nothing_of_the_world$)"'
