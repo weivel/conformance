@@ -359,3 +359,8 @@ weivel-core-gate --sources <rules-file> <core-root>
 - Core gate, `--sources`: an import table cannot see an intrinsic, an inline system call or inline assembly, so the
   same rules file also lists `forbid-source` names (`<reason> <word|call|prefix|text> <name>`) found anywhere under
   the core's `src` and `include`, and `source-in-mutex-only` lock names refused outside the `mutex-source` file.
+- Under sanitizers: the job built with address and undefined behaviour sanitizers leaves out every test that reads
+  the built core (`core_gate_*` and `core_reads_nothing_of_the_world`). Instrumentation makes the core import
+  `__asan_*` and `__ubsan_*`, which the gate rightly refuses, and those tests say nothing about the runner. A
+  repository copying the job copies the exclusion, and a new test that reads a built binary is added to it, or it
+  fails under instrumentation.
