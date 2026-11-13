@@ -18,8 +18,8 @@ whose family is not its op.
 A vector's directory says which suite judges it.
 
 - `vectors/core/<op>/` is judged by the runner, through an adapter that drives the core in-process.
-- `vectors/standard/<op>/` belongs to the weivel standard, the replaceable layer above the core. The runner loads
-  and counts these and does not run them yet; the report lists them as awaiting the standard.
+- `vectors/standard/<op>/` is judged by the runner against the weivel standard, the replaceable layer above the
+  core, through an adapter that drives the standard's library (`siblings/standard`) in-process.
 - `vectors/layer/<op>/` is witnessed by each language's own layer suite, because the core never calls a host
   language. `vectors/layer/LAYER.md` says what each suite must witness. The runner loads and counts these and
   does not run them; the report lists them as awaiting a layer.
@@ -27,12 +27,12 @@ A vector's directory says which suite judges it.
 ## Adapters
 
 An adapter is a C function, one per op, registered in `runner/src/ops/ops.c` and declared by `runner/src/ops/ops.h`.
-It is given the vector's `given` as a read-only JSON node, drives the core in-process, and writes its answer with
-the `answer_*` functions as one JSON object. It never reads a vector's `then`: an adapter that does is marking its
-own paper. An op whose adapter does not exist, or an adapter that answers nothing, makes its vectors `errored`, and
-an absence is never a pass.
+It is given the vector's `given` as a read-only JSON node, drives the core or the standard in-process, and writes
+its answer with the `answer_*` functions as one JSON object. It never reads a vector's `then`: an adapter that does
+is marking its own paper. An op whose adapter does not exist, or an adapter that answers nothing, makes its vectors
+`errored`, and an absence is never a pass.
 
-Only `passed` is a pass. `failed`, `errored` and both `awaiting` columns fail the run, and the report keeps each in
+Only `passed` is a pass. `failed`, `errored` and `awaiting a layer` fail the run, and the report keeps each in
 its own column so a reader sees what was not run.
 
 ## Virtual time
@@ -113,15 +113,16 @@ manifest names itself with `importName`; a repository's identity is supplied fro
 **An adapter validates against the published schema and never against a restatement of it**, then applies the
 model's `VALIDATION.md` rules. `wellKnownServices` is the host's list for rule V2; absent means V2 is not applied,
 and an empty list refuses every bare id.
-Answers `{ valid, paths: [field], refusal }`.
+Answers `{ valid, paths: [field], refusal }`, where `refusal` is the first wrong field as `{ code, detail, fix, path }`
+or null, and `code` is the standard's refusal code in lowercase without its prefix, so
+`WEIVEL_STANDARD_REFUSAL_NOT_WELL_KNOWN` is `not_well_known`. The standard publishes one schema, so an adapter answers
+nothing for a vector whose `schema` names any file but `plugin.schema.json`.
 **`paths` names every field that is wrong, each once**: a `then` applies whatever else is wrong, as draft-07
 applies it, and a repeated item is reported at the index of its second occurrence (`capabilities.provides[1]`),
 the convention V1 states, rather than at the array.
 An unknown field **validates** and is ignored: no object in the schema closes `additionalProperties`,
 deliberately, so a manifest written against a later version still loads today. A vector rejecting it would invert
 that decision.
-Some `validate` vectors still carry the wording assertions the matcher no longer reads; the standard's adapter
-rewrites them when it lands.
 
 ### `identity`
 

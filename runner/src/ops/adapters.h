@@ -14,5 +14,7 @@ int adapter_scope(const weivel_json_value *given, answer_writer *answer);
 int adapter_want(const weivel_json_value *given, answer_writer *answer);
 int adapter_reach(const weivel_json_value *given, answer_writer *answer);
 int adapter_consume(const weivel_json_value *given, answer_writer *answer);
+int adapter_identity(const weivel_json_value *given, answer_writer *answer);
+int adapter_validate(const weivel_json_value *given, answer_writer *answer);
 
 #endif

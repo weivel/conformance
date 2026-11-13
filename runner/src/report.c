@@ -3,7 +3,7 @@
 #include <string.h>
 
 static const verdict_status COLUMNS[VERDICT_STATUS_COUNT] = {
-    VERDICT_PASSED, VERDICT_FAILED, VERDICT_ERRORED, VERDICT_AWAITING_STANDARD, VERDICT_AWAITING_LAYER};
+    VERDICT_PASSED, VERDICT_FAILED, VERDICT_ERRORED, VERDICT_AWAITING_LAYER};
 
 static void write_heading(text_builder *out) {
     size_t at;
@@ -79,15 +79,10 @@ static void write_unjudged(text_builder *out, const verdict *verdicts, size_t co
 }
 
 static void write_awaiting(text_builder *out, const verdict *verdicts, size_t count) {
-    size_t standard = count_status(verdicts, count, NULL, VERDICT_AWAITING_STANDARD);
     size_t layer = count_status(verdicts, count, NULL, VERDICT_AWAITING_LAYER);
-    if (standard > 0) {
-        text_append_format(out, "\n%lu standard vectors are awaiting the standard and have not been run\n",
-                           (unsigned long)standard);
-    }
     if (layer > 0) {
-        text_append_format(out, "%s%lu layer vectors are awaiting a layer suite and have not been run\n",
-                           standard > 0 ? "" : "\n", (unsigned long)layer);
+        text_append_format(out, "\n%lu layer vectors are awaiting a layer suite and have not been run\n",
+                           (unsigned long)layer);
     }
 }
 

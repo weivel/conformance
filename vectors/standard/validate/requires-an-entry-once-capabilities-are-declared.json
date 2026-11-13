@@ -22,7 +22,7 @@
       ]
     },
     "refusal": {
-      "hasFix": true
+      "code": "missing_field"
     }
   }
 }

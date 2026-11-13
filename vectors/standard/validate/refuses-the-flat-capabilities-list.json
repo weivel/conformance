@@ -21,11 +21,7 @@
       ]
     },
     "refusal": {
-      "mentions": [
-        "capabilities",
-        "provides"
-      ],
-      "hasFix": true
+      "code": "wrong_type"
     }
   }
 }

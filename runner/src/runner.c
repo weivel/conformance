@@ -13,8 +13,6 @@ const char *verdict_label(verdict_status status) {
         return "failed";
     case VERDICT_ERRORED:
         return "errored";
-    case VERDICT_AWAITING_STANDARD:
-        return "awaiting the standard";
     case VERDICT_AWAITING_LAYER:
         return "awaiting a layer";
     }
@@ -69,9 +67,7 @@ static void judge_with_adapter(const vector *candidate, op_adapter adapter, verd
 void judge_vector(const vector *candidate, op_adapter adapter, verdict *judged) {
     judged->vector = candidate;
     judged->reasons = NULL;
-    if (candidate->tier == TIER_STANDARD) {
-        conclude(judged, VERDICT_AWAITING_STANDARD, "");
-    } else if (candidate->tier == TIER_LAYER) {
+    if (candidate->tier == TIER_LAYER) {
         conclude(judged, VERDICT_AWAITING_LAYER, "");
     } else if (adapter == NULL) {
         conclude(judged, VERDICT_ERRORED, "no adapter answers this op yet\n");

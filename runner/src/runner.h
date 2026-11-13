@@ -8,11 +8,10 @@ typedef enum {
     VERDICT_PASSED,
     VERDICT_FAILED,
     VERDICT_ERRORED,
-    VERDICT_AWAITING_STANDARD,
     VERDICT_AWAITING_LAYER
 } verdict_status;
 
-#define VERDICT_STATUS_COUNT 5
+#define VERDICT_STATUS_COUNT 4
 
 typedef struct {
     const vector *vector;
@@ -24,8 +23,9 @@ typedef struct {
 /**
  * Judges one vector with the adapter given for its op.
  * @implNote Only `passed` is a pass. A vector the adapter did not answer, or answered in a document the runner
- * cannot read, is `errored`, never skipped: an absence must not be mistakable for a pass. A standard or layer
- * vector is `awaiting` its own suite and is not run here, and is never counted as passed.
+ * cannot read, is `errored`, never skipped: an absence must not be mistakable for a pass. A core or standard vector
+ * is run through its adapter; a layer vector is `awaiting` a layer suite, is not run here, and is never counted as
+ * passed.
  */
 void judge_vector(const vector *candidate, op_adapter adapter, verdict *judged);
 
