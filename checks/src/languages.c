@@ -39,6 +39,9 @@ static int apply_line(language_rules *rules, const char *kind, const char *value
     if (strcmp(kind, "test-root") == 0) {
         return replace_text(&rules->test_root, value);
     }
+    if (strcmp(kind, "header-root") == 0) {
+        return replace_text(&rules->header_root, value);
+    }
     list = list_for_kind(rules, kind);
     return list != NULL && text_list_add(list, value);
 }
@@ -61,8 +64,15 @@ static int split_line(char *line, char **language, char **kind, char **value) {
     return (*value)[0] != '\0';
 }
 
-int language_rules_load(const char *path, const char *language, language_rules *rules, char *error,
-                        size_t error_size) {
+typedef enum { LINES_OF_THE_LANGUAGE, LINES_OF_THE_OTHERS } line_choice;
+
+static int is_chosen(const char *line_language, const char *language, line_choice choice) {
+    int same = language != NULL && strcmp(line_language, language) == 0;
+    return choice == LINES_OF_THE_LANGUAGE ? language == NULL || same : !same;
+}
+
+static int load_chosen_lines(const char *path, const char *language, line_choice choice, language_rules *rules,
+                             char *error, size_t error_size) {
     text_list lines;
     size_t at;
     memset(rules, 0, sizeof *rules);
@@ -82,7 +92,7 @@ int language_rules_load(const char *path, const char *language, language_rules *
             language_rules_free(rules);
             return 0;
         }
-        if (language != NULL && strcmp(line_language, language) != 0) {
+        if (!is_chosen(line_language, language, choice)) {
             continue;
         }
         if (!apply_line(rules, kind, value)) {
@@ -97,6 +107,16 @@ int language_rules_load(const char *path, const char *language, language_rules *
     return 1;
 }
 
+int language_rules_load(const char *path, const char *language, language_rules *rules, char *error,
+                        size_t error_size) {
+    return load_chosen_lines(path, language, LINES_OF_THE_LANGUAGE, rules, error, error_size);
+}
+
+int language_rules_load_others(const char *path, const char *language, language_rules *rules, char *error,
+                               size_t error_size) {
+    return load_chosen_lines(path, language, LINES_OF_THE_OTHERS, rules, error, error_size);
+}
+
 void language_rules_free(language_rules *rules) {
     text_list_free(&rules->extensions);
     text_list_free(&rules->names);
@@ -104,5 +124,6 @@ void language_rules_free(language_rules *rules) {
     text_list_free(&rules->prefixes);
     free(rules->source_root);
     free(rules->test_root);
+    free(rules->header_root);
     memset(rules, 0, sizeof *rules);
 }

@@ -95,31 +95,22 @@ static int report_offenders(const module_list *modules, const text_list *directo
     return offenders;
 }
 
-static char *copy_text(const char *text) {
-    char *copy = malloc(strlen(text) + 1);
-    if (copy != NULL) {
-        memcpy(copy, text, strlen(text) + 1);
+static int load_layout(const char *languages_path, const char *language, language_rules *rules, char *error,
+                       size_t error_size) {
+    if (!language_rules_load(languages_path, language, rules, error, error_size)) {
+        return 0;
     }
-    return copy;
-}
-
-static char *resolve_source_root(const char *languages_path, const char *language, char *error, size_t error_size) {
-    language_rules rules;
-    char *source_root = NULL;
-    if (!language_rules_load(languages_path, language, &rules, error, error_size)) {
-        return NULL;
-    }
-    if (!rules.known) {
+    if (!rules->known) {
         snprintf(error, error_size, "%s names no language '%s', so its module layout is unknown", languages_path,
                  language);
-    } else if (rules.source_root == NULL) {
+    } else if (rules->source_root == NULL) {
         snprintf(error, error_size, "%s gives %s no source-root, so its modules have nowhere to be found",
                  languages_path, language);
     } else {
-        source_root = copy_text(rules.source_root);
+        return 1;
     }
-    language_rules_free(&rules);
-    return source_root;
+    language_rules_free(rules);
+    return 0;
 }
 
 static int is_loose_file(const char *relative) {
@@ -145,8 +136,48 @@ static int report_loose_files(const char *source_directory, const char *language
     return offenders;
 }
 
-static int check_root(const char *root, const module_list *modules, const char *language, const char *source_root,
-                      char *error, size_t error_size) {
+/** The module a published header belongs to: the directory it sits in, or its own name without the extension. */
+static int names_a_module(const module_list *modules, const char *relative) {
+    const char *slash = strchr(relative, '/');
+    const char *end = slash != NULL ? slash : strrchr(relative, '.');
+    size_t length = end != NULL ? (size_t)(end - relative) : strlen(relative);
+    size_t at;
+    for (at = 0; at < modules->count; at++) {
+        if (strlen(modules->items[at].name) == length && strncmp(modules->items[at].name, relative, length) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int report_stray_headers(const char *root, const module_list *modules, const char *language,
+                                const char *header_root, char *error, size_t error_size) {
+    char *directory = tree_join(root, header_root);
+    text_list files;
+    size_t at;
+    int offenders = 0;
+    if (directory == NULL) {
+        snprintf(error, error_size, "out of memory");
+        return -1;
+    }
+    if (!tree_list_files(directory, &files, error, error_size)) {
+        free(directory);
+        return -1;
+    }
+    for (at = 0; at < files.count; at++) {
+        if (!names_a_module(modules, files.items[at])) {
+            fprintf(stderr, "%s: '%s' under %s belongs to no module on the list\n", language, files.items[at],
+                    header_root);
+            offenders++;
+        }
+    }
+    text_list_free(&files);
+    free(directory);
+    return offenders;
+}
+
+static int count_source_offenders(const char *root, const module_list *modules, const char *language,
+                                  const char *source_root, char *error, size_t error_size) {
     char *directory = tree_join(root, source_root);
     text_list directories;
     int offenders;
@@ -162,11 +193,21 @@ static int check_root(const char *root, const module_list *modules, const char *
     if (offenders >= 0) {
         offenders += report_offenders(modules, &directories, language, source_root, directory);
     }
+    text_list_free(&directories);
+    free(directory);
+    return offenders;
+}
+
+static int check_root(const char *root, const module_list *modules, const char *language,
+                      const language_rules *rules, char *error, size_t error_size) {
+    int offenders = count_source_offenders(root, modules, language, rules->source_root, error, error_size);
+    if (offenders >= 0 && rules->header_root != NULL) {
+        int stray = report_stray_headers(root, modules, language, rules->header_root, error, error_size);
+        offenders = stray < 0 ? -1 : offenders + stray;
+    }
     if (offenders == 0) {
         printf("weivel-parity: %s carries every required module and no other\n", language);
     }
-    text_list_free(&directories);
-    free(directory);
     return offenders;
 }
 
@@ -193,9 +234,9 @@ int main(int argument_count, char **arguments) {
     char error[512] = "";
     text_list lines;
     module_list modules;
+    language_rules rules;
     char *root;
-    char *source_root;
-    int offenders;
+    int offenders = -1;
     if (argument_count != 5) {
         fprintf(stderr, "usage: weivel-parity <root> <modules-file> <language> <languages-file>\n");
         return 2;
@@ -203,19 +244,17 @@ int main(int argument_count, char **arguments) {
     if (!load_modules(arguments[2], &lines, &modules)) {
         return 2;
     }
-    source_root = resolve_source_root(arguments[4], arguments[3], error, sizeof error);
     root = tree_normalize_root(arguments[1]);
-    if (source_root == NULL || root == NULL) {
-        fprintf(stderr, "weivel-parity: %s\n", error[0] != '\0' ? error : "out of memory");
-        offenders = -2;
-    } else {
-        offenders = check_root(root, &modules, arguments[3], source_root, error, sizeof error);
-        if (offenders < 0) {
-            fprintf(stderr, "weivel-parity: %s\n", error);
+    if (load_layout(arguments[4], arguments[3], &rules, error, sizeof error)) {
+        if (root != NULL) {
+            offenders = check_root(root, &modules, arguments[3], &rules, error, sizeof error);
         }
+        language_rules_free(&rules);
+    }
+    if (offenders < 0) {
+        fprintf(stderr, "weivel-parity: %s\n", error[0] != '\0' ? error : "out of memory");
     }
     free(modules.items);
-    free(source_root);
     free(root);
     text_list_free(&lines);
     return offenders < 0 ? 2 : offenders > 0 ? 1 : 0;

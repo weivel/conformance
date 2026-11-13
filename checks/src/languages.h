@@ -12,17 +12,26 @@ typedef struct {
     text_list prefixes;
     char *source_root;
     char *test_root;
+    char *header_root;
     int known;
 } language_rules;
 
 /**
- * Reads the lines of `path` that begin with `language`, or every line when `language` is NULL. Each line is `<language> <kind> <value>`, where kind is
- * `extension`, `name`, `pattern` (one `*` in a file name), `prefix` (a path prefix), `source-root` or `test-root`.
+ * Reads the lines of `path` that begin with `language`, or every line when `language` is NULL. Each line is
+ * `<language> <kind> <value>`, where kind is `extension`, `name`, `pattern` (one `*` in a file name), `prefix` (a path
+ * prefix), `source-root`, `test-root` or `header-root` (where a language publishes one interface file per module).
  * Returns 1, or 0 with `error` filled for an unreadable file or a malformed line. `known` is 0 when no line named
  * the language.
  */
 int language_rules_load(const char *path, const char *language, language_rules *rules, char *error,
                         size_t error_size);
+
+/**
+ * Reads the lines of `path` that begin with any language but `language`, as language_rules_load reads them. `known`
+ * is 0 when no other language has a line.
+ */
+int language_rules_load_others(const char *path, const char *language, language_rules *rules, char *error,
+                               size_t error_size);
 
 void language_rules_free(language_rules *rules);
 
