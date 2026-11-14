@@ -20,7 +20,8 @@ the throwing watch so that it throws on each call after recording what it was ha
 
 ## `consume/a-refused-verify-quarantines-the-plugin`
 
-A plugin whose activation check refuses is quarantined by the host in the same step, before anything else runs.
+A plugin whose activation check refuses is quarantined by the host before any event of the check is dispatched and
+before the host starts another plugin.
 The plugin never asks for it and no `quarantine` step names it: a layer whose host only reports the refused
 check leaves a plugin running that the core will not verify.
 
@@ -56,6 +57,13 @@ controls, registers the provider at `registerAtMillis`, and then witnesses:
 
 - the want ends timed out at the deadline, exactly as `timedOut` and `atMillis` state, and is never served;
 - the want's refusal is `timed_out`, its subject the service id it waited for (`accounts`), with a fix.
+
+The suite's scheduler runs the task due on the way, so two things hand the core the deadline before the
+registration: the timer firing at it, and the wrapper's check before the registration. Either alone keeps the order,
+so the vector fails only a layer in which both are broken. The timer alone is witnessed by
+`want/a-timed-want-arms-the-timer-at-its-deadline` and the check alone by
+`want/a-registration-past-an-unfired-deadline-loses`; that each holds when the two fall due at the same moment is
+held by review.
 
 ## `want/a-timed-want-arms-the-timer-at-its-deadline`
 
@@ -144,6 +152,9 @@ After the last step, once the layer has nothing left to run, the suite reads:
   log or error sink, `loud` otherwise;
 - `loud`: how many errors the layer threw to the suite or wrote to its log or error sink from the `destroy` step on.
 
+In a language whose calls answer a status rather than throw, a call throws to the suite when it answers anything but
+an answer to a well-made call: success, the core's refusal, nothing to answer, or that the host is destroyed.
+
 ## `lifecycle/an-awaited-want-does-not-hold-back-a-later-plugin`
 
 The host starts each plugin's activation in plan order and never awaits one plugin's `activate` before starting the
@@ -170,6 +181,12 @@ The suite builds the vector's `given` through its layer and witnesses:
 - once the release returns, `agenda`'s get of `calendar:events` is missed, because the registration ended with its
   plugin;
 - `calendar` is forgotten, `agenda` stays active, and no want is left pending.
+
+The vector witnesses the deactivate before the core release and the rejection reaching the plugin, but not that the
+plugin's entries end and the forget is made only once the release's events have been dispatched: a layer that ends
+them and forgets as soon as the core release returns still passes, and the vector fails only a layer that ends the
+entries before the core release. That order, and every release made inside a dispatch, is held by review and the
+language's own tests.
 
 ## `lifecycle/destroy-releases-a-plugin-whose-activate-is-in-flight`
 
