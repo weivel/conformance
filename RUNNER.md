@@ -320,8 +320,9 @@ Every timing bound lives here, so no implementation sets its own. `benchmarks/bu
 A language implementation reads its bounds from `benchmarks/<language>.txt` of the kit commit it pins. Each line is
 fields separated by one space:
 
-- `<gate> <platform> <number>`: `control-call` is weivel's control call over a bare call through the same binding,
-  `library-call` a C library function reached through weivel over the same function reached directly. A C layer
+- `<gate> <platform> <number>`: `control-call` is weivel's control call over the same core function called through
+  the bare binding, `library-call` a C library function reached through weivel over the same function reached
+  directly, with the same arguments and its answer released the same way. A C layer
   crosses no foreign interface, so its bare call is the same control call made through the core's function table
   without the layer's wrapper, and `control-call` bounds what the wrapper adds. The platform is
   the runner's system, `linux`, `windows` or `macos`, whatever the language itself calls it. The number is the highest
@@ -346,10 +347,13 @@ provider's own object, pointer equality in C and reference identity elsewhere. T
 timing a language reports beside it. A C layer also gates its control call through its wrapper against the core's
 own `budget.txt`, and its `c.txt` bounds what it adds over the core's table and over a C library's own function.
 
-`typescript.txt` carries `weivel/typescript`'s bounds as they stood on 2026-11-13, unchanged but for the platform
-names (`win32` is `windows`, `darwin` is `macos`) and for each noise bound written once per platform, the same number
-on each since it was set from all platforms at once: the control call measured with the core's timer armed in Test run
-43451359295, the library call in Test run 43444931168, and the noise in Test runs 43438389364 and 43441441323.
+`typescript.txt` carries `weivel/typescript`'s ratio bounds as its Test workflow measured them on 2026-11-14 in Test
+runs 43592067436, 43592102705, 43592105961, 43592109026, 43592111939 and 43592115298: the control call,
+weivel_get_service through the wrapper with the core's timer armed, over the same weivel_get_service on the same core
+through the very koffi function the wrapper calls, and the echo library's call through the host's library service over
+`echo_echo` with the same input through a bare koffi binding, its answer released as the host releases it. The commit
+that sets them lists the samples. Its noise bounds are as they stood on 2026-11-13, written once per platform, the same
+number on each since they were set from all platforms at once, in Test runs 43438389364 and 43441441323.
 
 `c.txt` carries `weivel/c`'s bounds as its Release `benchmarks` job measured them on 2026-11-14, ten repetitions a run
 in Test runs 43573264428, 43573863406, 43574266777, 43574269766, 43574787768, 43574795017 and 43574798533: the
