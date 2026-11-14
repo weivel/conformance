@@ -328,14 +328,18 @@ fields separated by one space:
   per-round median ratio CI measured there, and the bound is that number times `ratio-margin`. A platform with no line
   has no bound, and a gate run there fails.
 - `ratio-margin <number>`: how far over its highest measured ratio a run may go.
-- `quiet-noise <number>`: how far from 1 the ratio of two paths of identical cost is on a quiet run.
-- `worst-noise <number>`: the noisiest such deviation measured; a run whose two identical direct paths differ by more
-  is not judged.
-- `noise-margin <number>`: how many times its own noise, or the quiet noise when it was quieter, a same-language pair
-  may differ by.
+- `quiet-noise <platform> <number>`: how far from 1 the ratio of two paths of identical cost is on a quiet run there.
+- `worst-noise <platform> <number>`: the noisiest such deviation measured there, times a stated margin; a run whose
+  two identical direct paths differ by more is refused as too noisy to judge, which fails the gate. The noise is per
+  platform because the runners differ by more than a margin can carry: in C, macOS's two identical paths differ by
+  about twelve times what Linux's and Windows' do at the median and over twenty times at the worst, so one bound either
+  refuses a quarter of macOS runs or barely judges Linux and Windows.
+- `noise-margin <number>`: how many times its own noise, or its platform's quiet noise when it was quieter, a
+  same-language pair may differ by.
 
-Each gate on each platform and each of the four bounds appears exactly once, every number positive;
-`language_budget_of_<language>_is_well_formed` holds each file to that.
+Each gate and each noise bound on each platform and each of the two margins appears exactly once, every number
+positive; `language_budget_of_<language>_is_well_formed` holds each file to that. A platform with no noise line has no
+noise bound, and the same-language gate run there fails.
 
 **The same-language gate in every language is the identity check**: the service a consumer resolves is the
 provider's own object, pointer equality in C and reference identity elsewhere. The noise bounds only judge the
@@ -343,15 +347,19 @@ timing a language reports beside it. A C layer also gates its control call throu
 own `budget.txt`, and its `c.txt` bounds what it adds over the core's table and over a C library's own function.
 
 `typescript.txt` carries `weivel/typescript`'s bounds as they stood on 2026-11-13, unchanged but for the platform
-names (`win32` is `windows`, `darwin` is `macos`): the control call measured with the core's timer armed in Test run
+names (`win32` is `windows`, `darwin` is `macos`) and for each noise bound written once per platform, the same number
+on each since it was set from all platforms at once: the control call measured with the core's timer armed in Test run
 43451359295, the library call in Test run 43444931168, and the noise in Test runs 43438389364 and 43441441323.
 
 `c.txt` carries `weivel/c`'s bounds as its Release `benchmarks` job measured them on 2026-11-14, ten repetitions a run
 in Test runs 43573264428, 43573863406, 43574266777, 43574269766, 43574787768, 43574795017 and 43574798533: the
 control call through the wrapper over the same call through the bare table, and the echo library's call through the
-host's library service over the same function called directly. The noise is of million-call batches in the last three
-runs, where the two direct paths and the call through what the consumer resolved run the very same instructions; the
-commit that adds the file lists every sample and how each bound follows from them.
+host's library service over the same function called directly. The noise is of million-call batches, where the two
+direct paths and the call through what the consumer resolved run the very same instructions, in the last three of
+those runs and in Test runs 43575892921, 43577159522, 43578132489, 43579040223, 43579429710, 43579838546,
+43580238459, 43580495133, 43580741472, 43581113400 and 43581462702, re-measured once the macOS runner refused runs as
+too noisy against one bound for every platform. The commit that adds the file lists the ratio samples, and the commit
+that makes the noise bounds per platform lists every noise sample and how each noise bound follows from them.
 
 ## The drift checks
 

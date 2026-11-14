@@ -5,5 +5,9 @@ library-call linux 35.3079
 library-call windows 33.6923
 library-call macos 27.8254
 ratio-margin 1.4
-quiet-noise 0.0772
-worst-noise 0.5678
+quiet-noise linux 0.0772
+quiet-noise windows 0.0772
+quiet-noise macos 0.0772
+worst-noise linux 0.5678
+worst-noise windows 0.5678
+worst-noise macos 0.5678
