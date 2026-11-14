@@ -286,12 +286,90 @@ static int report_files_outside_the_root(const char *root, const char *language,
     return offenders;
 }
 
+/**
+ * Counts the directories directly inside the level of the source root that ends at `level_end` other than the
+ * root's next step, which starts at `step` and runs `step_length` bytes, and sets `step_present`. Answers -1 with
+ * `error` filled when the level cannot be read.
+ */
+static int report_one_level(const char *root, const char *language, const language_rules *rules, size_t level_end,
+                            const char *step, size_t step_length, int *step_present, char *error, size_t error_size) {
+    size_t base_length = strlen(rules->source_base);
+    const char *walked = rules->source_root + base_length + 1;
+    int walked_length = level_end > base_length ? (int)(level_end - base_length - 1) : 0;
+    char *level = malloc(level_end + 1);
+    char *directory;
+    text_list names;
+    size_t at;
+    int offenders = 0;
+    if (level == NULL) {
+        snprintf(error, error_size, "out of memory");
+        return -1;
+    }
+    memcpy(level, rules->source_root, level_end);
+    level[level_end] = '\0';
+    directory = tree_join(root, level);
+    free(level);
+    if (directory == NULL) {
+        snprintf(error, error_size, "out of memory");
+        return -1;
+    }
+    if (!tree_list_directories(directory, &names, error, error_size)) {
+        free(directory);
+        return -1;
+    }
+    free(directory);
+    *step_present = 0;
+    for (at = 0; at < names.count; at++) {
+        if (strlen(names.items[at]) == step_length && strncmp(names.items[at], step, step_length) == 0) {
+            *step_present = 1;
+        } else {
+            fprintf(stderr, "%s: '%.*s%s%s' under %s is a directory outside the source root %s\n", language,
+                    walked_length, walked, walked_length > 0 ? "/" : "", names.items[at], rules->source_base,
+                    rules->source_root);
+            offenders++;
+        }
+    }
+    text_list_free(&names);
+    return offenders;
+}
+
+/**
+ * Counts the directories met on the way from the source base down to the source root that are not the root's next
+ * step, or answers -1 with `error` filled when one cannot be read.
+ *
+ * @implNote The file walk cannot see a directory that holds no file, so each level is judged by its directory names
+ * as well; the walk stops at a step that is absent, since a missing root is reported by the module check.
+ */
+static int report_directories_beside_the_root(const char *root, const char *language, const language_rules *rules,
+                                              char *error, size_t error_size) {
+    const char *source_root = rules->source_root;
+    size_t level_end = strlen(rules->source_base);
+    int offenders = 0;
+    int step_present = 1;
+    while (step_present && source_root[level_end] == '/' && strcspn(source_root + level_end + 1, "/") > 0) {
+        const char *step = source_root + level_end + 1;
+        size_t step_length = strcspn(step, "/");
+        int found = report_one_level(root, language, rules, level_end, step, step_length, &step_present, error,
+                                     error_size);
+        if (found < 0) {
+            return -1;
+        }
+        offenders += found;
+        level_end += 1 + step_length;
+    }
+    return offenders;
+}
+
 static int check_root(const char *root, const module_list *modules, const char *language,
                       const language_rules *rules, char *error, size_t error_size) {
     int offenders = count_source_offenders(root, modules, language, rules->source_root, error, error_size);
     if (offenders >= 0 && rules->source_base != NULL) {
         int outside = report_files_outside_the_root(root, language, rules, error, error_size);
         offenders = outside < 0 ? -1 : offenders + outside;
+    }
+    if (offenders >= 0 && rules->source_base != NULL) {
+        int beside = report_directories_beside_the_root(root, language, rules, error, error_size);
+        offenders = beside < 0 ? -1 : offenders + beside;
     }
     if (offenders >= 0 && rules->header_root != NULL) {
         int stray = report_stray_headers(root, modules, language, rules, error, error_size);

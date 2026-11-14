@@ -293,6 +293,19 @@ elseif(SCENARIO STREQUAL "parity_refuses_a_source_base_that_does_not_hold_the_ro
     plant("same.txt" "java extension .java\njava source-root src/main/java/com/weivel\njava source-base src/main/java/com/weivel\n")
     expect(2 "source-base src/main/java/com/weivel, which does not hold its source-root"
         "every required module" ${PARITY} ${root} ${MODULES} java ${root}/same.txt)
+    plant("slash.txt" "java extension .java\njava source-root src/main/java/\njava source-base src/main/java\n")
+    expect(2 "source-base src/main/java, which does not hold its source-root src/main/java/"
+        "every required module" ${PARITY} ${root} ${MODULES} java ${root}/slash.txt)
+elseif(SCENARIO STREQUAL "parity_rejects_an_empty_directory_beside_the_package_root")
+    plant_java_layer()
+    file(MAKE_DIRECTORY "${root}/src/main/java/org")
+    expect(1 "'org' under src/main/java is a directory outside the source root src/main/java/com/weivel"
+        "every required module|'com'" ${PARITY} ${root} ${MODULES} java ${LANGUAGES})
+elseif(SCENARIO STREQUAL "parity_rejects_an_empty_directory_beside_a_package_on_the_way")
+    plant_java_layer()
+    file(MAKE_DIRECTORY "${root}/src/main/java/com/other")
+    expect(1 "'com/other' under src/main/java is a directory outside the source root src/main/java/com/weivel"
+        "every required module|'com/weivel'" ${PARITY} ${root} ${MODULES} java ${LANGUAGES})
 elseif(SCENARIO STREQUAL "parity_reads_no_java_file_beside_its_source_base")
     plant_java_layer()
     plant("src/plugins/java/Loose.java" "class Loose {}")
