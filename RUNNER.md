@@ -317,11 +317,13 @@ Every timing bound lives here, so no implementation sets its own. `benchmarks/bu
 `median_nanoseconds <number>`, the median a Release build of the core's control call may take, held by
 `weivel-benchmark-control-call gate`.
 
-A language that reaches the core through a foreign function interface reads its bounds from
-`benchmarks/<language>.txt` of the kit commit it pins. Each line is fields separated by one space:
+A language implementation reads its bounds from `benchmarks/<language>.txt` of the kit commit it pins. Each line is
+fields separated by one space:
 
 - `<gate> <platform> <number>`: `control-call` is weivel's control call over a bare call through the same binding,
-  `library-call` a C library function reached through weivel over the same function reached directly. The platform is
+  `library-call` a C library function reached through weivel over the same function reached directly. A C layer
+  crosses no foreign interface, so its bare call is the same control call made through the core's function table
+  without the layer's wrapper, and `control-call` bounds what the wrapper adds. The platform is
   the runner's system, `linux`, `windows` or `macos`, whatever the language itself calls it. The number is the highest
   per-round median ratio CI measured there, and the bound is that number times `ratio-margin`. A platform with no line
   has no bound, and a gate run there fails.
@@ -337,12 +339,19 @@ Each gate on each platform and each of the four bounds appears exactly once, eve
 
 **The same-language gate in every language is the identity check**: the service a consumer resolves is the
 provider's own object, pointer equality in C and reference identity elsewhere. The noise bounds only judge the
-timing a language reports beside it. The ratio gates over a bare foreign call apply only to a language that crosses
-one, so a C layer has no file here and gates its control call against the core's own `budget.txt`.
+timing a language reports beside it. A C layer also gates its control call through its wrapper against the core's
+own `budget.txt`, and its `c.txt` bounds what it adds over the core's table and over a C library's own function.
 
 `typescript.txt` carries `weivel/typescript`'s bounds as they stood on 2026-11-13, unchanged but for the platform
 names (`win32` is `windows`, `darwin` is `macos`): the control call measured with the core's timer armed in Test run
 43451359295, the library call in Test run 43444931168, and the noise in Test runs 43438389364 and 43441441323.
+
+`c.txt` carries `weivel/c`'s bounds as its Release `benchmarks` job measured them on 2026-11-14, ten repetitions a run
+in Test runs 43573264428, 43573863406, 43574266777, 43574269766, 43574787768, 43574795017 and 43574798533: the
+control call through the wrapper over the same call through the bare table, and the echo library's call through the
+host's library service over the same function called directly. The noise is of million-call batches in the last three
+runs, where the two direct paths and the call through what the consumer resolved run the very same instructions; the
+commit that adds the file lists every sample and how each bound follows from them.
 
 ## The drift checks
 
