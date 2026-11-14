@@ -419,21 +419,23 @@ weivel-core-gate --sources <rules-file> <core-root>
   sit below a package root names the directory its sources lie in with a `source-base`, as Java does with
   `src/main/java` around its source root `src/main/java/com/weivel`: every file under the base, at any depth and in a
   directory of any name, must lie under the source root, and any other (`src/main/java/Main.java`,
-  `src/main/java/org/weivel/core/Core.java`) is an offender, so moving the source root below the base refuses
-  everything that was refused before. A base that does not hold the source root strictly, one equal to it or beside
-  it under a longer name (`src/main/java` around `src/main/javax/...`), is refused with 2. Parity reads nothing of
-  Java outside the source base: its tests under `src/test/java` and the plugins its tests load from a jar, under
-  `src/plugins/java`, are no modules, and purity still allows them as Java sources. A language that publishes
-  its interface apart from its sources names where with a `header-root`, as C does with `include/weivel/c`.
-  Every file under the header root is read, at any
-  depth and in a directory of any name: nothing is skipped there, `build` and `siblings` included. Each must carry one
-  of the language's `extension`s after a name (`.c` or `.h` for C, so `core.json`, `core.md` and a file named `.h` are
-  offenders) and belong to a listed module, by its own name without the extension (`core.h`) or by the first
-  directory it sits under (`host/entry.h`); anything else is an offender. A header root that is missing or holds no
-  file is refused with 2, because nothing was checked, and so is a language given a `header-root` and no `extension`.
-  The header root refuses strays and asks no header of any module: a module with no header there, or with several,
-  passes. Parity reads nothing else under `include/`, so a file beside the header root, such as the one header that
-  includes the rest, is not read by it.
+  `src/main/java/org/weivel/core/Core.java`) is an offender. Each directory on the way down from the base to the
+  source root must hold no directory but the root's next step, so an empty `src/main/java/org` or
+  `src/main/java/com/other`, which no file walk sees, is an offender too. Moving the source root below the base
+  therefore refuses everything that was refused before. A base that does not hold the source root strictly, one equal
+  to it (the root `src/main/java/` under the base `src/main/java` too) or beside it under a longer name
+  (`src/main/java` around `src/main/javax/...`), is refused with 2. Parity reads nothing of Java outside the source
+  base: its tests under `src/test/java` and the plugins its tests load from a jar, under `src/plugins/java`, are no
+  modules, and purity still allows them as Java sources. A language that publishes its interface apart from its
+  sources names where with a `header-root`, as C does with `include/weivel/c`. Every file under the header root is
+  read, at any depth and in a directory of any name: nothing is skipped there, `build` and `siblings` included. Each
+  must carry one of the language's `extension`s after a name (`.c` or `.h` for C, so `core.json`, `core.md` and a file
+  named `.h` are offenders) and belong to a listed module, by its own name without the extension (`core.h`) or by the
+  first directory it sits under (`host/entry.h`); anything else is an offender. A header root that is missing or holds
+  no file is refused with 2, because nothing was checked, and so is a language given a `header-root` and no
+  `extension`. The header root refuses strays and asks no header of any module: a module with no header there, or with
+  several, passes. Parity reads nothing else under `include/`, so a file beside the header root, such as the one
+  header that includes the rest, is not read by it.
 - Layers: every layer vector's id, its path under `vectors/layer` without `.json`
   (`consume/a-throwing-listener-does-not-silence-the-others`), must appear in some source file of the language, one
   with an `extension` the list gives it, under its `test-root`, standing on its own: a longer id, a file path that
