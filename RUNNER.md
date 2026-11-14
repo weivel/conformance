@@ -385,8 +385,9 @@ weivel-core-gate --sources <rules-file> <core-root>
   other language in the list (`package.json`, `tsconfig.json`, `build.gradle`) wherever it sits. The C language
   implementation is the role `c` and the language `c`: one word, read by purity as the role and by parity and layers
   as the language. Any other role is a language named in `checks/languages.txt`, whose lines read
-  `<language> <kind> <value>` with kind `extension`, `name`, `pattern`, `prefix`, `source-root`, `test-root` or
-  `header-root`; it allows its own files and prose, and a generated `.js` under a Java repository is an offender.
+  `<language> <kind> <value>` with kind `extension`, `name`, `pattern`, `prefix`, `source-root`, `source-base`,
+  `test-root` or `header-root`; it allows its own files and prose, and a generated `.js` under a Java repository is an
+  offender.
   A `pattern` holds one `*`, standing for any characters. A pattern that begins with it names files by their ending,
   as an `extension` does, and like one needs a name before that ending: `*.cmake` does not allow a file named
   `.cmake`. A star further in may stand for nothing, so `tsconfig*.json` allows `tsconfig.json`.
@@ -414,7 +415,15 @@ weivel-core-gate --sources <rules-file> <core-root>
   directory directly inside the module that carries a name skipped at a repository root (`build`, `build-*`,
   `siblings`, `node_modules`, `.git` and the hosting-service directory), so a module holding only build output holds
   no file. A language `checks/languages.txt` does not list, or lists without a `source-root`, is refused rather than
-  read as `src`, so a new language is added to the list before its repository is checked. A language that publishes
+  read as `src`, so a new language is added to the list before its repository is checked. A language whose modules
+  sit below a package root names the directory its sources lie in with a `source-base`, as Java does with
+  `src/main/java` around its source root `src/main/java/com/weivel`: every file under the base, at any depth and in a
+  directory of any name, must lie under the source root, and any other (`src/main/java/Main.java`,
+  `src/main/java/org/weivel/core/Core.java`) is an offender, so moving the source root below the base refuses
+  everything that was refused before. A base that does not hold the source root strictly, one equal to it or beside
+  it under a longer name (`src/main/java` around `src/main/javax/...`), is refused with 2. Parity reads nothing of
+  Java outside the source base: its tests under `src/test/java` and the plugins its tests load from a jar, under
+  `src/plugins/java`, are no modules, and purity still allows them as Java sources. A language that publishes
   its interface apart from its sources names where with a `header-root`, as C does with `include/weivel/c`.
   Every file under the header root is read, at any
   depth and in a directory of any name: nothing is skipped there, `build` and `siblings` included. Each must carry one
