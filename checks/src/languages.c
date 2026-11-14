@@ -36,6 +36,9 @@ static int apply_line(language_rules *rules, const char *kind, const char *value
     if (strcmp(kind, "source-root") == 0) {
         return replace_text(&rules->source_root, value);
     }
+    if (strcmp(kind, "source-base") == 0) {
+        return replace_text(&rules->source_base, value);
+    }
     if (strcmp(kind, "test-root") == 0) {
         return replace_text(&rules->test_root, value);
     }
@@ -123,6 +126,7 @@ void language_rules_free(language_rules *rules) {
     text_list_free(&rules->patterns);
     text_list_free(&rules->prefixes);
     free(rules->source_root);
+    free(rules->source_base);
     free(rules->test_root);
     free(rules->header_root);
     memset(rules, 0, sizeof *rules);

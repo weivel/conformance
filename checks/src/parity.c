@@ -101,6 +101,12 @@ static int report_offenders(const module_list *modules, const text_list *directo
     return offenders;
 }
 
+/** Whether `base` holds `root` strictly: `root` lies below it, never equal to it or beside it under a longer name. */
+static int holds_path(const char *base, const char *root) {
+    size_t length = strlen(base);
+    return strncmp(root, base, length) == 0 && root[length] == '/' && root[length + 1] != '\0';
+}
+
 static int load_layout(const char *languages_path, const char *language, language_rules *rules, char *error,
                        size_t error_size) {
     if (!language_rules_load(languages_path, language, rules, error, error_size)) {
@@ -112,6 +118,9 @@ static int load_layout(const char *languages_path, const char *language, languag
     } else if (rules->source_root == NULL) {
         snprintf(error, error_size, "%s gives %s no source-root, so its modules have nowhere to be found",
                  languages_path, language);
+    } else if (rules->source_base != NULL && !holds_path(rules->source_base, rules->source_root)) {
+        snprintf(error, error_size, "%s gives %s the source-base %s, which does not hold its source-root %s",
+                 languages_path, language, rules->source_base, rules->source_root);
     } else if (rules->header_root != NULL && rules->extensions.count == 0) {
         snprintf(error, error_size, "%s gives %s a header-root and no extension, so none of its headers can be told",
                  languages_path, language);
@@ -246,9 +255,44 @@ static int count_source_offenders(const char *root, const module_list *modules, 
     return offenders;
 }
 
+/**
+ * Counts the files under the source base that lie outside the source root, or answers -1 with `error` filled when the
+ * source base cannot be read. Nothing under the base is skipped by name, since every file there is judged.
+ */
+static int report_files_outside_the_root(const char *root, const char *language, const language_rules *rules,
+                                         char *error, size_t error_size) {
+    char *directory = tree_join(root, rules->source_base);
+    const char *inner_root = rules->source_root + strlen(rules->source_base) + 1;
+    text_list files;
+    size_t at;
+    int offenders = 0;
+    if (directory == NULL) {
+        snprintf(error, error_size, "out of memory");
+        return -1;
+    }
+    if (!tree_list_every_file(directory, &files, error, error_size)) {
+        free(directory);
+        return -1;
+    }
+    free(directory);
+    for (at = 0; at < files.count; at++) {
+        if (!holds_path(inner_root, files.items[at])) {
+            fprintf(stderr, "%s: '%s' under %s lies outside the source root %s\n", language, files.items[at],
+                    rules->source_base, rules->source_root);
+            offenders++;
+        }
+    }
+    text_list_free(&files);
+    return offenders;
+}
+
 static int check_root(const char *root, const module_list *modules, const char *language,
                       const language_rules *rules, char *error, size_t error_size) {
     int offenders = count_source_offenders(root, modules, language, rules->source_root, error, error_size);
+    if (offenders >= 0 && rules->source_base != NULL) {
+        int outside = report_files_outside_the_root(root, language, rules, error, error_size);
+        offenders = outside < 0 ? -1 : offenders + outside;
+    }
     if (offenders >= 0 && rules->header_root != NULL) {
         int stray = report_stray_headers(root, modules, language, rules, error, error_size);
         offenders = stray < 0 ? -1 : offenders + stray;

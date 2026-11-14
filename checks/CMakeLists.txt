@@ -46,7 +46,12 @@ set(checks_test_scenarios
     parity_rejects_a_missing_module
     parity_rejects_a_module_not_on_the_list
     parity_accepts_every_module_with_or_without_the_optional_one
-    parity_finds_java_modules_under_its_source_root
+    parity_finds_java_modules_under_its_package_root
+    parity_rejects_a_java_file_outside_its_package_root
+    parity_refuses_a_source_base_that_does_not_hold_the_root
+    parity_reads_no_java_file_beside_its_source_base
+    purity_accepts_a_java_layer_with_its_test_plugins
+    layers_reads_java_tests_and_no_test_plugin
     parity_rejects_an_empty_module_directory
     parity_refuses_an_empty_directory
     parity_refuses_an_empty_module_list
