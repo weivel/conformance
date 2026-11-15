@@ -14,6 +14,8 @@ suite defines its own exam, and the first thing it does when the suite disagrees
 - `vectors/standard/<op>/*.json`: vectors the runner judges against the weivel standard, the replaceable layer above
   the core.
 - `vectors/layer/<op>/*.json`: vectors only a language layer can witness, described in `vectors/layer/LAYER.md`.
+  `library` is asked in both tiers: the standard's reader judges a declaration, and a layer loads one as host
+  services.
 - `RUNNER.md`: the runner and adapter contract, each op's given and answer, and what `then` can assert. Read this
   before writing an adapter.
 - `runner/src/`: the loader, matcher, report, and the adapters under `ops/`.

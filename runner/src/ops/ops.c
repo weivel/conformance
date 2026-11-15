@@ -18,6 +18,7 @@ static const op_entry OPS[] = {
     {"consume", adapter_consume},
     {"identity", adapter_identity},
     {"validate", adapter_validate},
+    {"library", adapter_library},
     {"lifecycle", NULL},
 };
 

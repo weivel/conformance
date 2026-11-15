@@ -1,0 +1,42 @@
+{
+  "id": "library/reads-a-definition-kind",
+  "op": "library",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "release": "echo_release",
+      "services": [
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "then": {
+    "read": true,
+    "services": {
+      "equals": [
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "refusal": null
+  }
+}

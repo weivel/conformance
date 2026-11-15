@@ -16,8 +16,8 @@ static const pinned_count PINNED[] = {
     {"core/resolve", 6},    {"core/revoke", 2},        {"core/scope", 2},
     {"core/want", 3},       {"core/reach", 16},        {"core/unbound", 3},
     {"core/carry", 1},      {"core/consume", 16},      {"standard/identity", 14},
-    {"standard/validate", 30}, {"layer/consume", 2},    {"layer/want", 4},
-    {"layer/lifecycle", 6},
+    {"standard/validate", 30}, {"standard/library", 5}, {"layer/consume", 2},
+    {"layer/want", 4},      {"layer/lifecycle", 6},
 };
 
 static const char *const SECTIONS[] = {"12.1",         "12.2",         "12.3",         "12.4",
@@ -106,7 +106,8 @@ static void covers_every_section_the_kit_pins(void) {
 static void asks_about_every_op_the_kit_knows(void) {
     static const char *const OPS[] = {"supports", "boot",    "order",    "resolve", "revoke",
                                       "scope",    "want",    "reach",    "unbound", "carry",
-                                      "consume",  "identity", "validate", "lifecycle"};
+                                      "consume",  "identity", "validate", "library",
+                                      "lifecycle"};
     corpus loaded;
     char error[ERROR_CAPACITY];
     size_t at;

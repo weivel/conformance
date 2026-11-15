@@ -16,5 +16,9 @@ int adapter_reach(const weivel_json_value *given, answer_writer *answer);
 int adapter_consume(const weivel_json_value *given, answer_writer *answer);
 int adapter_identity(const weivel_json_value *given, answer_writer *answer);
 int adapter_validate(const weivel_json_value *given, answer_writer *answer);
+int adapter_library(const weivel_json_value *given, answer_writer *answer);
+
+/** The kind as a vector writes it, `bytes` or `definition`; NULL for a kind the standard does not name. */
+const char *library_kind_name(uint32_t kind);
 
 #endif

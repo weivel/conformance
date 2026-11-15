@@ -9,6 +9,7 @@ add_library(conformance_runner STATIC
     src/ops/hearing.c
     src/ops/identity.c
     src/ops/json_text.c
+    src/ops/library.c
     src/ops/ops.c
     src/ops/plan.c
     src/ops/reach.c
