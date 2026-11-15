@@ -1,0 +1,38 @@
+{
+  "id": "library/an-owner-hears-the-release-its-own-release-queued",
+  "op": "library",
+  "covers": "12.5",
+  "given": {
+    "owners": [
+      {
+        "id": "calendar",
+        "provides": [
+          "calendar:feed"
+        ]
+      }
+    ],
+    "holders": [],
+    "steps": [
+      {
+        "owner": "calendar",
+        "registerAwaitingReleases": "calendar:feed"
+      },
+      {
+        "releaseHolder": "calendar"
+      }
+    ]
+  },
+  "then": {
+    "holdingsReleased": {
+      "equals": [
+        [
+          "calendar",
+          "calendar:feed"
+        ]
+      ]
+    },
+    "reported": {
+      "equals": []
+    }
+  }
+}
