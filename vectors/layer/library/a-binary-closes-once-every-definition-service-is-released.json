@@ -1,0 +1,99 @@
+{
+  "id": "library/a-binary-closes-once-every-definition-service-is-released",
+  "op": "library",
+  "covers": "12.5",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "services": [
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "echo-other",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_other_service_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda",
+      "calendar"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "echo"
+      },
+      {
+        "holder": "agenda",
+        "get": "echo-other"
+      },
+      {
+        "holder": "calendar",
+        "get": "echo-other"
+      },
+      {
+        "holder": "agenda",
+        "countUnloads": true
+      },
+      {
+        "unload": true
+      },
+      {
+        "readUnloads": true
+      },
+      {
+        "holder": "agenda",
+        "releaseHolding": "echo"
+      },
+      {
+        "holder": "agenda",
+        "releaseHolding": "echo-other"
+      },
+      {
+        "readUnloads": true
+      },
+      {
+        "holder": "calendar",
+        "releaseHolding": "echo-other"
+      },
+      {
+        "readUnloads": true
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true,
+        true
+      ]
+    },
+    "unloads": {
+      "equals": [
+        0,
+        0,
+        1
+      ]
+    }
+  }
+}

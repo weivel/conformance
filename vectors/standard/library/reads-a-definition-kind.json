@@ -23,6 +23,7 @@
   },
   "then": {
     "read": true,
+    "release": "echo_release",
     "services": {
       "equals": [
         {
