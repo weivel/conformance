@@ -327,7 +327,9 @@ fields separated by one space:
   without the layer's wrapper, and `control-call` bounds what the wrapper adds. The platform is
   the runner's system, `linux`, `windows` or `macos`, whatever the language itself calls it. The number is the highest
   per-round median ratio CI measured there, and the bound is that number times `ratio-margin`. A platform with no line
-  has no bound, and a gate run there fails.
+  has no bound, and a gate run there fails. A language that reaches C through more than one backend names the backend
+  after the gate and a hyphen, `control-call-ffm`, and bounds each backend's gates on every platform; its noise lines
+  stay per platform, since the same-language pair crosses no backend.
 - `ratio-margin <number>`: how far over its highest measured ratio a run may go.
 - `quiet-noise <platform> <number>`: how far from 1 the ratio of two paths of identical cost is on a quiet run there.
 - `worst-noise <platform> <number>`: the noisiest such deviation measured there, times a stated margin; a run whose
@@ -364,6 +366,17 @@ those runs and in Test runs 43575892921, 43577159522, 43578132489, 43579040223, 
 43580238459, 43580495133, 43580741472, 43581113400 and 43581462702, re-measured once the macOS runner refused runs as
 too noisy against one bound for every platform. The commit that adds the file lists the ratio samples, and the commit
 that makes the noise bounds per platform lists every noise sample and how each noise bound follows from them.
+
+`java.txt` carries `weivel/java`'s bounds as its Test workflow's `benchmarks` job measured them on 2026-11-15, ten
+repetitions a run on each of its two backends, in Test runs 43665043985, 43665044351, 43665047536, 43665050907,
+43665054380, 43665057974, 43665060963 and 43665064420. A ratio gate names its backend: `-ffm` is the foreign function
+API on Java 22 and later, `-jna` is JNA on Java 8 to 21. The control call is weivel_get_service through the wrapper,
+with the core's timer armed as a host arms it, over the same function of the core's table on the same core, plugin and
+id called bare; the library call is the echo library's `echo_echo` through the host's library service with a heap
+array, over the same function called bare with the same bytes copied in and its answer copied out and released as the
+host does. The noise is of million-call batches on the provider's own object, each batch on a path object made for it,
+pooled over both backends since the pair crosses none. The commit that adds the file lists every sample, how each
+bound follows from them, and what the outliers were.
 
 ## The drift checks
 
