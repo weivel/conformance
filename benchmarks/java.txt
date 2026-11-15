@@ -1,0 +1,20 @@
+control-call-ffm linux 1.5036
+control-call-ffm windows 1.5516
+control-call-ffm macos 2.0597
+control-call-jna linux 1.2168
+control-call-jna windows 1.2510
+control-call-jna macos 1.4543
+library-call-ffm linux 1.6805
+library-call-ffm windows 1.3774
+library-call-ffm macos 1.5392
+library-call-jna linux 1.0623
+library-call-jna windows 1.0554
+library-call-jna macos 1.0901
+ratio-margin 1.5
+quiet-noise linux 0.000382
+quiet-noise windows 0.000319
+quiet-noise macos 0.001871
+worst-noise linux 0.003806
+worst-noise windows 0.002942
+worst-noise macos 0.042674
+noise-margin 65.67

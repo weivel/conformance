@@ -46,7 +46,11 @@ foreach(case
         missing-a-platform:library-call.macos..is.missing
         missing-a-noise-platform:worst-noise.macos..is.missing
         noise-without-platform:worst-noise.0.5678..names.no.known.margin
-        unknown-gate:names.no.ratio.gate)
+        unknown-gate:names.no.ratio.gate
+        missing-a-backend-platform:control-call-jna.macos..is.missing
+        missing-a-backend-gate:library-call-jna.linux..is.missing
+        unknown-backend-spelling:names.no.ratio.gate
+        mixed-backends:names.ratio.gates.both.with.and.without.a.backend)
     string(REPLACE ":" ";" parts ${case})
     list(GET parts 0 fixture)
     list(GET parts 1 reason)
@@ -54,3 +58,6 @@ foreach(case
         COMMAND ${CMAKE_COMMAND} -DBUDGET=${language_budget_fixtures}/${fixture}.txt -DEXPECTED=invalid
             -DMUST_MATCH=${reason} -P ${PROJECT_SOURCE_DIR}/test/language_budget_test.cmake)
 endforeach()
+add_test(NAME language_budget_accepts_a_gate_per_backend
+    COMMAND ${CMAKE_COMMAND} -DBUDGET=${language_budget_fixtures}/backends.txt -DEXPECTED=valid
+        -P ${PROJECT_SOURCE_DIR}/test/language_budget_test.cmake)
