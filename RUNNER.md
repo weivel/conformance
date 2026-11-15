@@ -337,10 +337,12 @@ fields separated by one space:
   platform because the runners differ by more than a margin can carry: in C, macOS's two identical paths differ by
   about twelve times what Linux's and Windows' do at the median and over twenty times at the worst, so one bound either
   refuses a quarter of macOS runs or barely judges Linux and Windows.
-- `noise-margin <number>`: how many times its own noise, or its platform's quiet noise when it was quieter, a
-  same-language pair may differ by.
+- `noise-margin <platform> <number>`: how many times its own noise, or its platform's quiet noise when it was
+  quieter, a same-language pair there may differ by. It is per platform for the reason the noise is: one margin is
+  set by the noisiest platform's largest sample, and in Java's samples macOS's would let a quiet Linux pair differ by
+  half again what Linux's own samples ever needed.
 
-Each gate and each noise bound on each platform and each of the two margins appears exactly once, every number
+Each gate, each noise bound and each noise margin on each platform, and the ratio margin, appears exactly once, every number
 positive; `language_budget_of_<language>_is_well_formed` holds each file to that. A platform with no noise line has no
 noise bound, and the same-language gate run there fails.
 

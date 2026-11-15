@@ -16,4 +16,6 @@ quiet-noise macos 0.001
 worst-noise linux 0.05
 worst-noise windows 0.05
 worst-noise macos 0.05
-noise-margin 10
+noise-margin linux 10
+noise-margin windows 10
+noise-margin macos 10

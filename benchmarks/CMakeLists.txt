@@ -36,7 +36,7 @@ foreach(language_budget IN LISTS language_budgets)
 endforeach()
 set(language_budget_fixtures ${PROJECT_SOURCE_DIR}/test/fixtures/language-budget)
 foreach(case
-        missing-a-bound:noise-margin..is.missing
+        missing-a-bound:noise-margin.macos..is.missing
         unknown-platform:names.no.known.platform
         repeated:ratio-margin..is.given.twice
         not-a-number:carries.no.positive.number
@@ -50,7 +50,8 @@ foreach(case
         missing-a-backend-platform:control-call-jna.macos..is.missing
         missing-a-backend-gate:library-call-jna.linux..is.missing
         unknown-backend-spelling:names.no.ratio.gate
-        mixed-backends:names.ratio.gates.both.with.and.without.a.backend)
+        mixed-backends:names.ratio.gates.both.with.and.without.a.backend
+        scalar-noise-margin:noise-margin.11.68..names.no.known.margin)
     string(REPLACE ":" ";" parts ${case})
     list(GET parts 0 fixture)
     list(GET parts 1 reason)
