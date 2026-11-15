@@ -67,6 +67,10 @@
     "trace": {
       "before": [
         [
+          "registered flaky flaky:feed",
+          "provided flaky screens"
+        ],
+        [
           "provided flaky screens",
           "activate agenda"
         ],

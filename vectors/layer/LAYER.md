@@ -220,6 +220,9 @@ provides `screens` and returns, having declared `extras` too and never provided 
 by the capability edge, gets `flaky:feed`, and witnesses:
 
 - the plan starts `flaky` before `agenda`, as `plans` states;
+- `flaky` registered `flaky:feed` before it provided `screens`, as the first `trace` pair states. The miss below
+  proves the quarantine only once the registration is known to have been made: a layer whose register fails
+  without a word would miss it too, and pass without quarantining anything in time;
 - `agenda`'s get, made in its own `activate`, misses `flaky:feed`, because the quarantine ended the registration
   before `agenda` was started, as the `trace` pairs state; a layer that quarantines later lets it be served;
 - `agenda` alone ends active, `flaky` being quarantined.
