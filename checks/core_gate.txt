@@ -238,6 +238,7 @@ forbid network gethostbyname
 forbid network WSAStartup
 forbid-name json *json*
 mutex-source src/mutex.c
+public-header calls-out include/weivel/core.h
 forbid-source file-access word fopen
 forbid-source file-access word fopen64
 forbid-source file-access word fopen_s

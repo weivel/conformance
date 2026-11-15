@@ -8,7 +8,7 @@ foreach(check purity names parity layers core_gate)
     target_link_libraries(weivel-${program} PRIVATE checks_tree)
     conformance_strict_warnings(weivel-${program})
 endforeach()
-target_sources(weivel-core-gate PRIVATE src/core_rules.c src/core_sources.c)
+target_sources(weivel-core-gate PRIVATE src/core_rules.c src/core_sources.c src/core_header.c)
 target_sources(weivel-names PRIVATE src/lockfile.c)
 target_link_libraries(weivel-names PRIVATE weivel_standard)
 
@@ -199,13 +199,17 @@ set(core_gate_scenarios
     refuses_an_object_without_a_symbol_table:nothing
     source_scan_refuses_each_pattern:nothing
     source_scan_accepts_lookalikes_and_the_mutex_file:nothing
-    source_scan_refuses_an_empty_tree:nothing)
+    source_scan_refuses_an_empty_tree:nothing
+    source_scan_refuses_a_function_pointer_in_the_public_header:nothing
+    source_scan_accepts_a_public_header_without_function_pointers:nothing
+    source_scan_refuses_a_tree_without_its_public_header:nothing)
 set(core_gate_scenarios_on_windows_only
     clears_a_startup_clock_only_through_the_objects refuses_an_object_without_a_symbol_table)
 set(core_gate_scenarios_alike_everywhere
     refuses_a_tool_that_reads_nothing refuses_a_tool_it_cannot_run reads_a_library_whose_path_holds_a_space_and_a_quote
     source_scan_refuses_each_pattern source_scan_accepts_lookalikes_and_the_mutex_file
-    source_scan_refuses_an_empty_tree)
+    source_scan_refuses_an_empty_tree source_scan_refuses_a_function_pointer_in_the_public_header
+    source_scan_accepts_a_public_header_without_function_pointers source_scan_refuses_a_tree_without_its_public_header)
 
 set(core_gate_plants "")
 foreach(entry IN LISTS core_gate_scenarios)

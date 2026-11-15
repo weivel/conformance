@@ -482,7 +482,13 @@ weivel-core-gate --sources <rules-file> <core-root>
   link-time code generation, is refused.
 - Core gate, `--sources`: an import table cannot see an intrinsic, an inline system call or inline assembly, so the
   same rules file also lists `forbid-source` names (`<reason> <word|call|prefix|text> <name>`) found anywhere under
-  the core's `src` and `include`, and `source-in-mutex-only` lock names refused outside the `mutex-source` file.
+  the core's `src` and `include`, and `source-in-mutex-only` lock names refused outside the `mutex-source` file. The
+  core never calls out, so its public interface may hand it nothing it could call: each `public-header` line
+  (`<reason> <path>`, `include/weivel/core.h`) names a header whose every function pointer type is an offender, a
+  pointer declarator (`(*name)(`, `(* const name)(`, `(*)(`, `(CALL *name)(`) and a typedef of a function type
+  (`typedef int name(int);`) alike, read with comments and literals blanked and macro text included. A cast such as
+  `(uint32_t *)(x)` names nothing after its star and is not one. A named header that is missing is refused with 2, and
+  so is a rules file with no `public-header` line, since the interface would then go unread.
 - Under sanitizers: the job built with address and undefined behaviour sanitizers leaves out every test that reads
   the built core (`core_gate_*` and `core_reads_nothing_of_the_world`). Instrumentation makes the core import
   `__asan_*` and `__ubsan_*`, which the gate rightly refuses, and those tests say nothing about the runner. A

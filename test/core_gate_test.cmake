@@ -129,6 +129,7 @@ elseif(SCENARIO STREQUAL "source_scan_refuses_each_pattern")
         list(APPEND expected "src/plant_${index}\\.c:1: '${name}'")
         math(EXPR index "${index} + 1")
     endforeach()
+    file(WRITE "${root}/include/weivel/core.h" "int weivel_api(void);\n")
     execute_process(COMMAND ${GATE} --sources ${RULES} ${root} RESULT_VARIABLE code OUTPUT_VARIABLE out
         ERROR_VARIABLE err)
     if(NOT code EQUAL 1)
@@ -150,8 +151,64 @@ elseif(SCENARIO STREQUAL "source_scan_accepts_lookalikes_and_the_mutex_file")
         "int timeout(int openness) { return runtime_clock + reopen_count + fopened + asmx + datetime(1) + clocks (2) }\n")
     file(WRITE "${root}/src/mutex.c" "AcquireSRWLockExclusive(&lock)\npthread_mutex_lock(&lock)\n")
     file(WRITE "${root}/include/api.h" "int weivel_api(void)\n")
+    file(WRITE "${root}/include/weivel/core.h" "int weivel_api(void);\n")
     file(WRITE "${root}/test/plant.c" "x = getenv(name)\n")
-    expect(0 "3 sources read.*the core's sources read nothing of the world" "" ${GATE} --sources ${RULES} ${root})
+    expect(0 "4 sources read.*the core's sources read nothing of the world" "" ${GATE} --sources ${RULES} ${root})
+elseif(SCENARIO STREQUAL "source_scan_refuses_a_function_pointer_in_the_public_header")
+    set(root "${WORK}/${SCENARIO}")
+    file(REMOVE_RECURSE "${root}")
+    file(WRITE "${root}/src/core.c" "static int (*internal)(int);\n")
+    file(WRITE "${root}/include/weivel/core.h"
+        "typedef void (*weivel_listener)(int value);\n"
+        "typedef struct weivel_hooks { void (*on_event)(void *context); } weivel_hooks;\n"
+        "int weivel_each(int (WEIVEL_CALL *visit)(int));\n"
+        "typedef int weivel_visit(int);\n"
+        "void weivel_take(void (* const callback)(void));\n"
+        "int weivel_sort(int (*)(const void *, const void *));\n"
+        "typedef weivel_status\n    weivel_hook(\n    weivel_core *core);\n")
+    set(expected "")
+    foreach(line 1 2 3 4 5 6 7)
+        list(APPEND expected "include/weivel/core\\.h:${line}: declares a function pointer type")
+    endforeach()
+    execute_process(COMMAND ${GATE} --sources ${RULES} ${root} RESULT_VARIABLE code OUTPUT_VARIABLE out
+        ERROR_VARIABLE err)
+    if(NOT code EQUAL 1)
+        message(FATAL_ERROR "${SCENARIO}: exit ${code}, expected 1\n${out}${err}")
+    endif()
+    foreach(pattern IN LISTS expected)
+        if(NOT "${out}${err}" MATCHES "${pattern}")
+            message(FATAL_ERROR "${SCENARIO}: no line matches '${pattern}'\n${out}${err}")
+        endif()
+    endforeach()
+    if("${out}${err}" MATCHES "src/core\\.c|core\\.h:8:")
+        message(FATAL_ERROR "${SCENARIO}: a file or line outside the public header's declarations was refused\n${out}${err}")
+    endif()
+    message("${out}${err}")
+elseif(SCENARIO STREQUAL "source_scan_accepts_a_public_header_without_function_pointers")
+    set(root "${WORK}/${SCENARIO}")
+    file(REMOVE_RECURSE "${root}")
+    file(WRITE "${root}/src/core.c" "int weivel_api(void) { return 0; }\n")
+    file(WRITE "${root}/include/weivel/core.h"
+        "/* (*not)(code), and typedef void hook(int); */\n"
+        "// typedef void (*commented)(int);\n"
+        "#define WEIVEL_CAST(x) ((uint32_t *)(x))\n"
+        "#define WEIVEL_INIT(type) ((type){sizeof(type)})\n"
+        "weivel_status weivel_open(weivel_core *core, uint32_t *pending_events);\n"
+        "typedef struct weivel_reason { uint32_t size; const char *detail; } weivel_reason;\n"
+        "typedef enum weivel_flags { WEIVEL_FLAG = (1 << 2) } weivel_flags;\n"
+        "typedef uint64_t weivel_handle;\n"
+        "typedef int weivel_bytes[4];\n"
+        "static const char weivel_text[] = \"(*s)(\";\n"
+        "int weivel_array(int (values)[4]);\n")
+    expect(0 "2 sources read.*the core's sources read nothing of the world" "function pointer"
+        ${GATE} --sources ${RULES} ${root})
+elseif(SCENARIO STREQUAL "source_scan_refuses_a_tree_without_its_public_header")
+    set(root "${WORK}/${SCENARIO}")
+    file(REMOVE_RECURSE "${root}")
+    file(WRITE "${root}/src/core.c" "int weivel_api(void) { return 0; }\n")
+    file(WRITE "${root}/include/weivel/other.h" "int weivel_api(void);\n")
+    expect(2 "no include/weivel/core\\.h under .*so its declarations were not checked" "read nothing of the world"
+        ${GATE} --sources ${RULES} ${root})
 elseif(SCENARIO STREQUAL "source_scan_refuses_an_empty_tree")
     set(root "${WORK}/${SCENARIO}")
     file(REMOVE_RECURSE "${root}")
