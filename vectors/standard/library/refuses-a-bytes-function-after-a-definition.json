@@ -1,0 +1,36 @@
+{
+  "id": "library/refuses-a-bytes-function-after-a-definition",
+  "op": "library",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "release": "echo_release",
+      "services": [
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            },
+            {
+              "name": "echo",
+              "symbol": "echo_echo",
+              "kind": "bytes"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "then": {
+    "read": false,
+    "path": "services[0].functions[1]",
+    "refusal": {
+      "code": "conflicting_field"
+    }
+  }
+}

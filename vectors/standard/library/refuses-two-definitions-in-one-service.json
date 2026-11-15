@@ -1,0 +1,35 @@
+{
+  "id": "library/refuses-two-definitions-in-one-service",
+  "op": "library",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "services": [
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            },
+            {
+              "name": "definition",
+              "symbol": "echo_other_service_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "then": {
+    "read": false,
+    "path": "services[0].functions[1]",
+    "refusal": {
+      "code": "conflicting_field"
+    }
+  }
+}
