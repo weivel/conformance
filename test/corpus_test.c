@@ -17,7 +17,7 @@ static const pinned_count PINNED[] = {
     {"core/want", 3},       {"core/reach", 16},        {"core/unbound", 3},
     {"core/carry", 1},      {"core/consume", 16},      {"standard/identity", 14},
     {"standard/validate", 30}, {"layer/consume", 2},    {"layer/want", 4},
-    {"layer/lifecycle", 3},
+    {"layer/lifecycle", 6},
 };
 
 static const char *const SECTIONS[] = {"12.1",         "12.2",         "12.3",         "12.4",

@@ -1,0 +1,85 @@
+{
+  "id": "lifecycle/an-activate-refused-at-once-is-quarantined-before-the-next-starts",
+  "op": "lifecycle",
+  "covers": "invariant-14",
+  "given": {
+    "edgeSource": "capabilities",
+    "plugins": [
+      {
+        "id": "flaky",
+        "provides": [
+          "flaky:feed"
+        ],
+        "consumes": [],
+        "capabilities": {
+          "provides": [
+            "screens",
+            "extras"
+          ],
+          "consumes": []
+        },
+        "activate": [
+          {
+            "register": "flaky:feed"
+          },
+          {
+            "provide": "screens"
+          }
+        ]
+      },
+      {
+        "id": "agenda",
+        "provides": [],
+        "consumes": [
+          "flaky:feed"
+        ],
+        "capabilities": {
+          "provides": [],
+          "consumes": [
+            "screens"
+          ]
+        },
+        "activate": [
+          {
+            "get": "flaky:feed"
+          }
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "activate": [
+          "flaky",
+          "agenda"
+        ]
+      }
+    ]
+  },
+  "then": {
+    "plans": {
+      "equals": [
+        [
+          "flaky",
+          "agenda"
+        ]
+      ]
+    },
+    "trace": {
+      "before": [
+        [
+          "provided flaky screens",
+          "activate agenda"
+        ],
+        [
+          "activate agenda",
+          "missed agenda flaky:feed"
+        ]
+      ]
+    },
+    "active": {
+      "equals": [
+        "agenda"
+      ]
+    }
+  }
+}
