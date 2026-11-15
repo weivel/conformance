@@ -346,11 +346,14 @@ fields separated by one space:
   directly, with the same arguments and its answer released the same way. A host that registers definitions adds a
   definition row to `library-call`: an operation of the echo library's definition called through the definition a
   consumer resolved, over the same operation called through the pointer the definition's symbol answered. The two
-  are the same pointer, so the ratio is 1 by construction and bounds only the measurement's noise, provided both
-  paths read the operation's function pointer out of the struct the same way, both once before the timed loop or both
-  on every call, since one load more per call on one side is a cost and not noise: the row is judged
-  by its platform's noise bounds and `noise-margin`, as the same-language pair is, carries no line of its own, and its
-  gate is the identity `library/a-definition-is-the-providers-own-pointer` witnesses. A C layer
+  are the same pointer, so the ratio is 1 by construction and bounds only the measurement's noise, provided that:
+  each path is handed the one address itself, never a place of its own that holds it, since a load from a path's own
+  place can alias the operation's stores on that path alone; and both paths read the operation's function pointer out
+  of the struct the same way, both once before the timed loop or both on every call, since one load more per call on
+  one side is a cost and not noise. A language may sample this row in more and shorter rounds than its same-language
+  pair, stating its sampling in its `CONTENT.md`. The row is judged by its platform's noise bounds and `noise-margin`,
+  as the same-language pair is, carries no line of its own, and its gate is the identity
+  `library/a-definition-is-the-providers-own-pointer` witnesses. A C layer
   crosses no foreign interface, so its bare call is the same control call made through the core's function table
   without the layer's wrapper, and `control-call` bounds what the wrapper adds. The platform is
   the runner's system, `linux`, `windows` or `macos`, whatever the language itself calls it. The number is the highest
