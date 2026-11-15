@@ -8,7 +8,14 @@ foreach(check purity names parity layers core_gate)
     target_link_libraries(weivel-${program} PRIVATE checks_tree)
     conformance_strict_warnings(weivel-${program})
 endforeach()
-target_sources(weivel-core-gate PRIVATE src/core_rules.c src/core_sources.c)
+target_sources(weivel-core-gate PRIVATE src/core_rules.c src/core_sources.c src/core_header.c src/header_tokens.c)
+if(MSVC)
+    set(core_gate_msvc_style 1)
+else()
+    set(core_gate_msvc_style 0)
+endif()
+target_compile_definitions(weivel-core-gate PRIVATE
+    CORE_GATE_C_COMPILER="${CMAKE_C_COMPILER}" CORE_GATE_MSVC_STYLE=${core_gate_msvc_style})
 target_sources(weivel-names PRIVATE src/lockfile.c)
 target_link_libraries(weivel-names PRIVATE weivel_standard)
 
@@ -52,6 +59,14 @@ set(checks_test_scenarios
     parity_reads_no_java_file_beside_its_source_base
     parity_rejects_an_empty_directory_beside_the_package_root
     parity_rejects_an_empty_directory_beside_a_package_on_the_way
+    parity_reads_the_modules_the_language_pins
+    parity_refuses_a_repository_without_its_pinned_core
+    parity_counts_a_module_present_only_under_the_second_java_root
+    parity_rejects_a_java22_file_outside_its_package_root
+    parity_rejects_a_stray_module_and_directory_under_the_second_java_root
+    parity_refuses_source_roots_and_bases_that_do_not_pair
+    parity_names_a_missing_source_root_and_its_line
+    parity_rejects_a_java_source_outside_every_source_base
     purity_accepts_a_java_layer_with_its_test_plugins
     layers_reads_java_tests_and_no_test_plugin
     parity_rejects_an_empty_module_directory
@@ -193,13 +208,19 @@ set(core_gate_scenarios
     refuses_an_object_without_a_symbol_table:nothing
     source_scan_refuses_each_pattern:nothing
     source_scan_accepts_lookalikes_and_the_mutex_file:nothing
-    source_scan_refuses_an_empty_tree:nothing)
+    source_scan_refuses_an_empty_tree:nothing
+    source_scan_refuses_a_function_pointer_in_the_public_header:nothing
+    source_scan_accepts_a_public_header_without_function_pointers:nothing
+    source_scan_refuses_a_tree_without_its_public_header:nothing
+    source_scan_refuses_a_header_its_preprocessor_rejects:nothing)
 set(core_gate_scenarios_on_windows_only
     clears_a_startup_clock_only_through_the_objects refuses_an_object_without_a_symbol_table)
 set(core_gate_scenarios_alike_everywhere
     refuses_a_tool_that_reads_nothing refuses_a_tool_it_cannot_run reads_a_library_whose_path_holds_a_space_and_a_quote
     source_scan_refuses_each_pattern source_scan_accepts_lookalikes_and_the_mutex_file
-    source_scan_refuses_an_empty_tree)
+    source_scan_refuses_an_empty_tree source_scan_refuses_a_function_pointer_in_the_public_header
+    source_scan_accepts_a_public_header_without_function_pointers source_scan_refuses_a_tree_without_its_public_header
+    source_scan_refuses_a_header_its_preprocessor_rejects)
 
 set(core_gate_plants "")
 foreach(entry IN LISTS core_gate_scenarios)

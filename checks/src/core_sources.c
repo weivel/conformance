@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "core_header.h"
 #include "tree.h"
 
 static int is_identifier_character(char character) {
@@ -133,6 +134,9 @@ int core_sources_scan(const rule_set *rules, const char *root) {
     text_list_free(&files);
     if (sources_read == 0) {
         fprintf(stderr, "no sources under %s/src or %s/include, so nothing was checked\n", root, root);
+        return 2;
+    }
+    if (!core_header_scan(rules, root, &offenders)) {
         return 2;
     }
     printf("%zu sources read under %s\n", sources_read, root);

@@ -1,0 +1,78 @@
+{
+  "id": "lifecycle/an-activate-that-settles-at-once-is-verified-before-the-next-starts",
+  "op": "lifecycle",
+  "covers": "invariant-14",
+  "given": {
+    "edgeSource": "capabilities",
+    "plugins": [
+      {
+        "id": "calendar",
+        "provides": [],
+        "consumes": [],
+        "capabilities": {
+          "provides": [
+            "screens"
+          ],
+          "consumes": []
+        },
+        "activate": [
+          {
+            "provide": "screens"
+          }
+        ]
+      },
+      {
+        "id": "agenda",
+        "provides": [],
+        "consumes": [],
+        "capabilities": {
+          "provides": [],
+          "consumes": [
+            "screens"
+          ]
+        },
+        "activate": [
+          {
+            "all": "screens"
+          }
+        ]
+      }
+    ],
+    "steps": [
+      {
+        "activate": [
+          "calendar",
+          "agenda"
+        ]
+      }
+    ]
+  },
+  "then": {
+    "plans": {
+      "equals": [
+        [
+          "calendar",
+          "agenda"
+        ]
+      ]
+    },
+    "trace": {
+      "before": [
+        [
+          "provided calendar screens",
+          "activate agenda"
+        ],
+        [
+          "activate agenda",
+          "listed agenda screens calendar"
+        ]
+      ]
+    },
+    "active": {
+      "equals": [
+        "agenda",
+        "calendar"
+      ]
+    }
+  }
+}

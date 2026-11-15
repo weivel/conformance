@@ -387,7 +387,7 @@ symbols) or are misused.
 ```
 weivel-purity <root> <role> <languages-file>
 weivel-names <root> <words-file>
-weivel-parity <root> <modules-file> <language> <languages-file>
+weivel-parity <root> <language> <languages-file>
 weivel-layers <root> <layer-vector-directory> <language> <languages-file>
 weivel-core-gate <rules-file> <msvc|gnu|apple> <tool> <shared-library> [<static-library>...]
 weivel-core-gate --sources <rules-file> <core-root>
@@ -421,10 +421,15 @@ weivel-core-gate --sources <rules-file> <core-root>
   `funding`, `license`, `integrity` and every other member name no dependency and are not read, so npm's own metadata
   does not trip the list. A lockfile that is not a JSON object is an offender, never passed unread.
 - Parity: `MODULES` in the core lists the modules a language implements, one per line, with ` optional` after the
-  ones a repository may omit. A language repository carries one top-level directory per module, named exactly as
-  listed, under its `source-root`. A missing required module, a directory not on the list, a module directory that
-  holds no file and a loose file directly under the source root are all offenders. Every directory directly under the
-  source root is judged, whatever its name. A module holds a file when one sits in it at any depth, except under a
+  ones a repository may omit. Parity reads it from the core the repository under test pins, at `siblings/core/MODULES`
+  under its root, where its dependency checkout puts that core, and never from the kit's own core: a language pinned to
+  an older core is judged by the list it adopted. A repository without that file is refused with 2. A language
+  repository carries one top-level directory per module, named exactly as listed, under its `source-root`. A language
+  may name several source roots, and then a module present under any one of them is present. A missing required
+  module, a directory not on the list, a module directory that holds no file and a loose file directly under a source
+  root are all offenders. Every directory directly under each source root is judged, whatever its name. A declared
+  source root missing on disk is refused with 2, the message naming the root, the line that declared it
+  (`java source-root src/main/java22/com/weivel`) and the list it came from. A module holds a file when one sits in it at any depth, except under a
   directory directly inside the module that carries a name skipped at a repository root (`build`, `build-*`,
   `siblings`, `node_modules`, `.git` and the hosting-service directory), so a module holding only build output holds
   no file. A language `checks/languages.txt` does not list, or lists without a `source-root`, is refused rather than
@@ -435,10 +440,17 @@ weivel-core-gate --sources <rules-file> <core-root>
   `src/main/java/org/weivel/core/Core.java`) is an offender. Each directory on the way down from the base to the
   source root must hold no directory but the root's next step, so an empty `src/main/java/org` or
   `src/main/java/com/other`, which no file walk sees, is an offender too. Moving the source root below the base
-  therefore refuses everything that was refused before. A base that does not hold the source root strictly, one equal
+  therefore refuses everything that was refused before. A base that does not hold a source root strictly, one equal
   to it (the root `src/main/java/` under the base `src/main/java` too) or beside it under a longer name
-  (`src/main/java` around `src/main/javax/...`), is refused with 2. Parity reads nothing of Java outside the source
-  base: its tests under `src/test/java` and the plugins its tests load from a jar, under `src/plugins/java`, are no
+  (`src/main/java` around `src/main/javax/...`), is refused with 2, and so are a base holding several source roots and,
+  where a language names any base, a source root no base or several bases hold; each such refusal names the base and
+  the roots, or the root and the bases, it fails to pair. Java names two trees this way, the
+  second `src/main/java22` around `src/main/java22/com/weivel`, where its sources for Java 22 and later lie: each is
+  judged by every rule above, so a file outside the package root there is an offender and a module present only there
+  is present. Under the directory holding a source base (`src/main`), a file carrying one of the language's
+  `extension`s that lies under no base is an offender, so an undeclared `src/main/java23/...` tree or a loose
+  `src/main/D.java` cannot hide beside the declared ones; any other file there, `src/main/resources/notes.txt`, is
+  not read. Parity reads nothing of Java outside the directories holding its source bases: its tests under `src/test/java` and the plugins its tests load from a jar, under `src/plugins/java`, are no
   modules, and purity still allows them as Java sources. A language that publishes its interface apart from its
   sources names where with a `header-root`, as C does with `include/weivel/c`. Every file under the header root is
   read, at any depth and in a directory of any name: nothing is skipped there, `build` and `siblings` included. Each
@@ -476,7 +488,28 @@ weivel-core-gate --sources <rules-file> <core-root>
   link-time code generation, is refused.
 - Core gate, `--sources`: an import table cannot see an intrinsic, an inline system call or inline assembly, so the
   same rules file also lists `forbid-source` names (`<reason> <word|call|prefix|text> <name>`) found anywhere under
-  the core's `src` and `include`, and `source-in-mutex-only` lock names refused outside the `mutex-source` file.
+  the core's `src` and `include`, and `source-in-mutex-only` lock names refused outside the `mutex-source` file. The
+  core never calls out, so its public interface may hand it nothing it could call: each `public-header` line
+  (`<reason> <path>`, `include/weivel/core.h`) names a header whose every function pointer type is an offender.
+  The header is read after the C compiler the kit was built with has preprocessed it (`cl /E` under MSVC, `cc -E`
+  elsewhere), so its own macros are expanded and its comments gone. Its `#include` lines are blanked first, so no
+  system header is read and none is needed, and a macro only a system header defines stays unexpanded. Of what the
+  header's own lines become, the gate tokenizes the code and drops string and character literals, then refuses:
+  - a parenthesized pointer declarator followed by a parameter list: any number of stars, with any of `const`,
+    `volatile`, `restrict`, `__restrict`, `_Atomic` and the MSVC pointer qualifiers among them, any `__attribute__`,
+    `__declspec` or `_Alignas` group anywhere in it, any number of words before the stars, and after them a name, an
+    array of them or a function returning one: `(*name)(`, `(**name)(`, `(* volatile name)(`, `(*name[4])(`,
+    `(*name(void))(`, `(API CALL *name)(`;
+  - the same with nothing after the stars when every word before them is a calling convention (`__cdecl`,
+    `__stdcall`, `__fastcall`, `__vectorcall` and the like) or there is none: `(*)(`, `(__cdecl *)(`;
+  - a parameter of function type, a name inside parentheses with a type before it and a parameter list after it:
+    `void f(void callback(int))`;
+  - a typedef of a function type, at the line of its `typedef`: `typedef int name(int);`.
+  A cast such as `(uint32_t *)(x)` has a type word and no name around its star and is not one, and the operand of
+  `sizeof`, `_Alignof`, `typeof` or `__builtin_*` and the inside of an attribute are never read as declarators, so
+  `typedef int x __attribute__((aligned(8)));` and `typedef char pad[sizeof(int)];` pass. Each offending line is
+  reported once, by its line in the header. A named header that is missing, or that its preprocessor refuses, is
+  refused with 2, and so is a rules file with no `public-header` line, since the interface would then go unread.
 - Under sanitizers: the job built with address and undefined behaviour sanitizers leaves out every test that reads
   the built core (`core_gate_*` and `core_reads_nothing_of_the_world`). Instrumentation makes the core import
   `__asan_*` and `__ubsan_*`, which the gate rightly refuses, and those tests say nothing about the runner. A

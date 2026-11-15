@@ -787,6 +787,10 @@ static int source_rules_are_usable(const char *path, const rule_set *rules) {
         fprintf(stderr, "%s: no mutex-source line, so a lock call cannot be placed\n", path);
         return 0;
     }
+    if (rules_count(rules, RULE_PUBLIC_HEADER) == 0) {
+        fprintf(stderr, "%s: no public-header line, so the core's interface would go unread\n", path);
+        return 0;
+    }
     return 1;
 }
 

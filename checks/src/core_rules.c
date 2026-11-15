@@ -8,7 +8,7 @@
 #include "tree.h"
 
 static const char *const RULE_KIND_NAMES[] = {"allow-everywhere", "allow-in-mutex", "allow-from-compiler",
-    "allow-from-startup", "startup-export", "forbid", "forbid-name", "forbid-source", "source-in-mutex-only"};
+    "allow-from-startup", "startup-export", "forbid", "forbid-name", "forbid-source", "source-in-mutex-only", "public-header"};
 static const char *const RULE_FORM_NAMES[] = {"symbol", "word", "call", "prefix", "text"};
 
 #define COUNT_OF(array) (sizeof(array) / sizeof((array)[0]))

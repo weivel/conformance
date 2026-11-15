@@ -1,0 +1,90 @@
+{
+  "id": "lifecycle/events-of-an-activate-wait-for-every-activate-of-the-plan",
+  "op": "lifecycle",
+  "covers": "invariant-12",
+  "given": {
+    "edgeSource": "capabilities",
+    "plugins": [
+      {
+        "id": "agenda",
+        "provides": [],
+        "consumes": [
+          "calendar:events"
+        ],
+        "activate": [
+          {
+            "watch": "calendar:events"
+          }
+        ]
+      },
+      {
+        "id": "calendar",
+        "provides": [
+          "calendar:events"
+        ],
+        "consumes": [],
+        "activate": [
+          {
+            "register": "calendar:events"
+          }
+        ]
+      },
+      {
+        "id": "notes",
+        "provides": [],
+        "consumes": [],
+        "activate": []
+      }
+    ],
+    "steps": [
+      {
+        "activate": [
+          "agenda",
+          "calendar",
+          "notes"
+        ]
+      }
+    ]
+  },
+  "then": {
+    "plans": {
+      "equals": [
+        [
+          "agenda",
+          "calendar",
+          "notes"
+        ]
+      ]
+    },
+    "trace": {
+      "before": [
+        [
+          "activate agenda",
+          "activate calendar"
+        ],
+        [
+          "activate calendar",
+          "registered calendar calendar:events"
+        ],
+        [
+          "registered calendar calendar:events",
+          "activate notes"
+        ],
+        [
+          "activate notes",
+          "heard agenda calendar:events"
+        ]
+      ]
+    },
+    "active": {
+      "equals": [
+        "agenda",
+        "calendar",
+        "notes"
+      ]
+    },
+    "pending": {
+      "equals": []
+    }
+  }
+}
