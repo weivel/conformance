@@ -371,13 +371,24 @@ static int add_every(text_list *present, const text_list *directories) {
     return 1;
 }
 
+/** Ends a message its buffer could not hold whole with "...", so a reader sees it was cut. */
+static void mark_clipped(char *message, size_t size) {
+    if (size >= 4) {
+        memcpy(message + size - 4, "...", 4);
+    }
+}
+
 /** Rewrites the error of a source root that cannot be read to name the root and the line that declared it. */
 static void name_the_missing_root(const source_layout *layout, const char *language, const char *source_root,
                                   char *error, size_t error_size) {
     char cause[512];
     snprintf(cause, sizeof cause, "%s", error);
-    snprintf(error, error_size, "the source-root %s, declared by the line '%s source-root %s' of %s, is missing: %s",
-             source_root, language, source_root, layout->languages_path, cause);
+    int written = snprintf(error, error_size,
+                           "the source-root %s, declared by the line '%s source-root %s' of %s, is missing: %s",
+                           source_root, language, source_root, layout->languages_path, cause);
+    if (written >= 0 && (size_t)written >= error_size) {
+        mark_clipped(error, error_size);
+    }
 }
 
 /**

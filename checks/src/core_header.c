@@ -259,7 +259,9 @@ static int scan_header(const rule *header_rule, const char *root, size_t *offend
     tokens.items = read.items;
     tokens.count = read.count;
     ok = find_declarator_hits(&tokens, &hits) && find_typedef_hits(&tokens, &hits);
-    qsort(hits.lines, hits.count, sizeof *hits.lines, compare_lines);
+    if (hits.count > 0) {
+        qsort(hits.lines, hits.count, sizeof *hits.lines, compare_lines);
+    }
     for (at = 0; at < hits.count; at++) {
         fprintf(stderr, "%s:%zu: declares a function pointer type, and the core never calls out (%s)\n",
                 header_rule->pattern, hits.lines[at], header_rule->reason);
