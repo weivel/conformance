@@ -130,10 +130,14 @@ never opens a binary. Its library is the core's test library, `echo`, built besi
   `2 * sizeof(void *) - 1`, one byte below the floor of the platform it was built for;
 - `echo_echo` is a bytes function that answers a copy of its input, freed by `echo_release`.
 
-Its `given` is `{ declaration, holders, steps }`. `declaration` is the library's declaration, handed to the host as
-the standard reads it or as the suite builds it, with the path of the built echo library beside it. `holders` names
-plugins the suite opens on the host before the first step, each consuming every service id the declaration lists, so
-the reach fence never decides a step. The steps run in order, and each runs only once the layer has nothing left to
+Its `given` is `{ declaration, owners, holders, steps }`, `declaration` and `owners` each optional.
+`declaration` is the library's declaration, handed to the host as the standard reads it or as the suite builds it,
+with the path of the built echo library beside it. `owners` is `[{ id, provides: [id] }]`, plugins the suite opens on
+the host before the first step that each register their own services, `provides` going into the manifest under
+`services` exactly as written. `holders` names plugins the suite opens on the host before the first step, after the
+owners, through the capabilities edge source, each consuming every service id the declaration lists and every id an
+owner provides, so neither the activation plan (the library is not loaded yet) nor the reach fence decides a step.
+The steps run in order, and each runs only once the layer has nothing left to
 run from the one before, as an `activate` step does in a `lifecycle` vector, so every event a step queued has been
 dispatched when the next one starts:
 
@@ -150,8 +154,13 @@ dispatched when the next one starts:
 - `{ unload: true }` unloads the library through the host's public unload call;
 - `{ holder, releaseHolding: id }` lets go of that holder's revoked holding, in the language's own way of saying a
   holder no longer uses an object, so the layer ends it with `weivel_release_holding`;
-- `{ releaseHolder: plugin }` releases that plugin through the host, and `{ quarantine: plugin }` quarantines it, each
-  ending whatever the plugin still holds without a `releaseHolding`;
+- `{ owner, registerAwaitingReleases: id }` registers that service as that owner, through its context, as a
+  registration that awaits releases (`weivel_register_service_awaiting_releases`), with a listener that records each
+  `WEIVEL_EVENT_HOLDINGS_RELEASED` the layer hands the owner for it;
+- `{ releaseHolder: plugin }` releases that holder or owner through the host, and `{ quarantine: plugin }`
+  quarantines it, each ending whatever the plugin still holds without a `releaseHolding`;
+- `{ forgetHolder: plugin }` forgets that plugin, released before, through the host, so the core revokes and ends
+  whatever it came to hold through late calls;
 - `{ readUnloads: true }` reads the counter.
 
 A vector that reads the counter is judged only while nothing in the process but the layer holds the echo binary
@@ -171,7 +180,10 @@ After the last step, once the layer has nothing left to run, the suite reads:
 - `echoed`: the text each `echo` step answered;
 - `revoked`: each `[holder, id]` revocation the layer handed a holder, sorted;
 - `unloads`: the counter at each `readUnloads` step;
-- `reported`: what the layer told its error sink or log, which a caller's mistake never reaches.
+- `holdingsReleased`: each `[owner, id]` release event an owner's listener heard, in the order heard;
+- `reported`: every line the layer handed its error sink or its log from the vector's first step on, the core's own
+  log events among them, since the layer writes those to the host's log; what the suite's setup of the holders
+  produced does not count. A caller's mistake reaches neither.
 
 ## `library/a-definition-is-the-providers-own-pointer`
 
@@ -301,6 +313,42 @@ that copies a bytes answer once and releases it before the call answers, as a co
 after the call: it witnesses instead that the binary closes at the last definition release, and the ordering itself is
 held by the language's own tests. A call still running in the binary cannot be held across a step, so that half of
 the rule is held by review and the language's own tests.
+
+## `library/an-owner-hears-the-release-its-own-release-queued`
+
+An owner released while nothing holds its awaiting registration has the release event queued by its own release call,
+as the unregistration it makes, and so hears it, as it hears every event its release queued.
+
+The suite builds the vector's `given` through its layer: `calendar` registers `calendar:feed` awaiting releases and
+nothing gets it, then the host releases `calendar`. It witnesses:
+
+- `calendar`'s listener hears the event for `calendar:feed` once, as `holdingsReleased` states: a layer that drops
+  every event for an owner released since, rather than only those queued after its release, fails here;
+- nothing reaches the layer's error sink or log, as `reported` states.
+
+## `library/a-release-event-after-its-owner-was-quarantined-reaches-no-one`
+
+An owner quarantined while a consumer still holds its awaiting registration hears nothing of a release that comes
+later: the event is queued after the events its quarantine queued, so the layer drops it.
+
+The suite builds the vector's `given` through its layer: `calendar` registers `calendar:feed` awaiting releases,
+`agenda` gets it, the host quarantines `calendar`, and `agenda` then releases its revoked holding. It witnesses:
+
+- `agenda` is told of the revocation the quarantine made, as `revoked` states;
+- the release event its later release queued reaches no listener of `calendar`'s, as `holdingsReleased` states, and
+  the layer drops it without a word to its error sink or log, as `reported` states.
+
+## `library/a-forgotten-holder-ends-its-late-holding`
+
+A released holder is still a plugin until it is forgotten, so its late get is let through and starts a holding of a
+live definition. Forgetting it revokes and ends that holding, so nothing is left to keep the binary open.
+
+The suite builds the vector's `given` through its layer: `agenda` gets the definition and hands the binary its
+counter, is released, gets the definition again as a late call, and is forgotten. It witnesses:
+
+- both gets are served, the second as a late call, as `got` states;
+- `unloads` exactly: 0 after the forget, while the library is still loaded, and 1 straight after the unload, so a
+  layer whose forget leaves the late holding standing keeps the binary open past the unload and fails here.
 
 ## The `lifecycle` op
 

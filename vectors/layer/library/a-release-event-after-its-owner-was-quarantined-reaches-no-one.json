@@ -1,0 +1,56 @@
+{
+  "id": "library/a-release-event-after-its-owner-was-quarantined-reaches-no-one",
+  "op": "library",
+  "covers": "12.5",
+  "given": {
+    "owners": [
+      {
+        "id": "calendar",
+        "provides": [
+          "calendar:feed"
+        ]
+      }
+    ],
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "owner": "calendar",
+        "registerAwaitingReleases": "calendar:feed"
+      },
+      {
+        "holder": "agenda",
+        "get": "calendar:feed"
+      },
+      {
+        "quarantine": "calendar"
+      },
+      {
+        "holder": "agenda",
+        "releaseHolding": "calendar:feed"
+      }
+    ]
+  },
+  "then": {
+    "got": {
+      "equals": [
+        true
+      ]
+    },
+    "revoked": {
+      "equals": [
+        [
+          "agenda",
+          "calendar:feed"
+        ]
+      ]
+    },
+    "holdingsReleased": {
+      "equals": []
+    },
+    "reported": {
+      "equals": []
+    }
+  }
+}
