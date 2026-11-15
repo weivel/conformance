@@ -147,6 +147,26 @@ matches `^(local:[^/\s]+|[a-z][a-z0-9-]*(@[a-z0-9.-]+)?:[0-9]+)(/(?!\.{1,2}(/|(?
 path segments. A bare name, a non-numeric or empty id, an uppercase forge and a `.` or `..` segment are all
 invalid; a segment that only starts with or contains dots, such as `.hidden` or `a..b`, is valid.
 
+### `library`
+
+Given `{ declaration }`, a C library's declaration. The adapter re-serialises it, as `validate` does its manifest, and
+hands it to the standard's reader. Answers `{ read, release, services, path, refusal }`:
+
+- `read` is true when the reader accepted the declaration. `release` and `services` are answered only then:
+  `release` is the declared release symbol, null when the declaration names none, and `services` lists
+  `[{ id, functions: [{ name, symbol, kind }] }]` in the declaration's order, `kind` being `"bytes"` or
+  `"definition"`, read off the standard's constants by value, or the number for one the kit does not name.
+- `path` is the refused field as the reader names it (`services[0].functions[1]`, `release`), null when read, and
+  `refusal` is the standard's refusal as for `validate`, or null.
+
+A definition is its service's only function, and only a library declaring a bytes function needs a release: the
+reader refuses a definition beside another function at the function that brings the two together, as
+`conflicting_field`, and a declaration with a bytes function and no release at `release`, as `missing_field`. A third
+kind is refused at its `kind`, so naming a second kind opened no others.
+
+The same op under `vectors/layer/library/` loads a declaration through a language's host, and is witnessed as
+`vectors/layer/LAYER.md` says.
+
 ### `unbound`
 
 Given `{ manifest }`, a manifest whose `services.consumes` holds ids in the string form or the object form
@@ -322,7 +342,12 @@ fields separated by one space:
 
 - `<gate> <platform> <number>`: `control-call` is weivel's control call over the same core function called through
   the bare binding, `library-call` a C library function reached through weivel over the same function reached
-  directly, with the same arguments and its answer released the same way. A C layer
+  directly, with the same arguments and its answer released the same way. A host that registers definitions adds a
+  definition row to `library-call`: an operation of the echo library's definition called through the definition a
+  consumer resolved, over the same operation called through the pointer the definition's symbol answered. The two
+  are the same pointer, so the ratio is 1 by construction and bounds only the measurement's noise: the row is judged
+  by its platform's noise bounds and `noise-margin`, as the same-language pair is, carries no line of its own, and its
+  gate is the identity `library/a-definition-is-the-providers-own-pointer` witnesses. A C layer
   crosses no foreign interface, so its bare call is the same control call made through the core's function table
   without the layer's wrapper, and `control-call` bounds what the wrapper adds. The platform is
   the runner's system, `linux`, `windows` or `macos`, whatever the language itself calls it. The number is the highest

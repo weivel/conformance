@@ -5,6 +5,7 @@
 #include "ops/want_states.h"
 
 #include <weivel/core.h>
+#include <weivel/library.h>
 
 /** The adapter's answer to `given_text`, parsed; NULL when it answered nothing or an incomplete document. */
 static weivel_json_value *answer_of(op_adapter adapter, const char *given_text) {
@@ -429,6 +430,51 @@ static void answers_whether_a_value_is_an_identity(void) {
     weivel_json_free(bare);
 }
 
+static const weivel_json_value *first_function_of(const weivel_json_value *answer, size_t service) {
+    const weivel_json_value *functions =
+        weivel_json_object_get(weivel_json_array_at(weivel_json_object_get(answer, "services"), service), "functions");
+    return weivel_json_array_at(functions, 0);
+}
+
+static void answers_each_function_kind_by_the_name_a_vector_writes(void) {
+    check_text(library_kind_name(WEIVEL_STANDARD_FUNCTION_BYTES), "bytes", "bytes kind");
+    check_text(library_kind_name(WEIVEL_STANDARD_FUNCTION_DEFINITION), "definition", "definition kind");
+    CHECK(library_kind_name(1) == NULL);
+    CHECK(library_kind_name(WEIVEL_STANDARD_FUNCTION_DEFINITION + 1) == NULL);
+}
+
+static void answers_a_read_declaration_service_by_service(void) {
+    weivel_json_value *answer = answer_of(
+        adapter_library,
+        "{\"declaration\":{\"importName\":\"echo\",\"version\":\"1\",\"services\":["
+        "{\"id\":\"echo\",\"functions\":[{\"name\":\"definition\",\"symbol\":\"echo_service_definition\","
+        "\"kind\":\"definition\"}]}]}}");
+    CHECK(flag_at(answer, "read") == 1);
+    CHECK(is_null_at(answer, "release"));
+    CHECK(is_null_at(answer, "path"));
+    CHECK(is_null_at(answer, "refusal"));
+    check_text(text_at(first_function_of(answer, 0), "kind"), "definition", "read kind");
+    check_text(text_at(first_function_of(answer, 0), "symbol"), "echo_service_definition", "read symbol");
+    weivel_json_free(answer);
+}
+
+static void answers_a_refused_declaration_by_its_path(void) {
+    weivel_json_value *answer =
+        answer_of(adapter_library, "{\"declaration\":{\"importName\":\"echo\",\"version\":\"1\",\"services\":["
+                                   "{\"id\":\"echo\",\"functions\":[{\"name\":\"echo\",\"symbol\":\"echo_echo\","
+                                   "\"kind\":\"bytes\"}]}]}}");
+    CHECK(flag_at(answer, "read") == 0);
+    CHECK(weivel_json_object_get(answer, "services") == NULL);
+    check_text(text_at(answer, "path"), "release", "refused path");
+    check_text(text_at(refusal_of(answer), "code"), "missing_field", "refused code");
+    weivel_json_free(answer);
+}
+
+static void answers_nothing_for_a_library_without_a_declaration(void) {
+    CHECK(answers_nothing(adapter_library, "{}"));
+    CHECK(answers_nothing(adapter_library, "{\"declaration\":{\"version\":1.5}}"));
+}
+
 int main(void) {
     names_every_refusal_code_as_the_header_spells_it();
     answers_the_api_axis_when_only_the_floor_refuses();
@@ -458,5 +504,9 @@ int main(void) {
     skips_the_well_known_rule_only_when_the_list_is_absent();
     hands_the_validator_a_string_with_an_escaped_newline_intact();
     answers_whether_a_value_is_an_identity();
+    answers_each_function_kind_by_the_name_a_vector_writes();
+    answers_a_read_declaration_service_by_service();
+    answers_a_refused_declaration_by_its_path();
+    answers_nothing_for_a_library_without_a_declaration();
     return check_summary("adapters_test");
 }

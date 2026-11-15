@@ -1,0 +1,48 @@
+{
+  "id": "library/a-definition-is-the-providers-own-pointer",
+  "op": "library",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "services": [
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "echo"
+      },
+      {
+        "holder": "agenda",
+        "echo": "ping"
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "sameObject": true,
+    "echoed": {
+      "equals": [
+        "ping"
+      ]
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "library/a-library-of-definitions-alone-needs-no-release",
+  "op": "library",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "services": [
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "echo-twice",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_twice_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "then": {
+    "read": true,
+    "release": {
+      "absent": true
+    },
+    "services": {
+      "equals": [
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "echo-twice",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_twice_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "refusal": null
+  }
+}
