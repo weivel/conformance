@@ -1,0 +1,97 @@
+{
+  "id": "library/a-held-bytes-answer-keeps-the-binary-open-past-the-last-holding",
+  "op": "library",
+  "covers": "12.5",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "release": "echo_release",
+      "services": [
+        {
+          "id": "echo-bytes",
+          "functions": [
+            {
+              "name": "echo",
+              "symbol": "echo_echo",
+              "kind": "bytes"
+            }
+          ]
+        },
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "echo-bytes"
+      },
+      {
+        "holder": "agenda",
+        "get": "echo"
+      },
+      {
+        "holder": "agenda",
+        "countUnloads": true
+      },
+      {
+        "holder": "agenda",
+        "call": "echo-bytes",
+        "function": "echo",
+        "text": "kept",
+        "keep": true
+      },
+      {
+        "unload": true
+      },
+      {
+        "readUnloads": true
+      },
+      {
+        "holder": "agenda",
+        "releaseHolding": "echo"
+      },
+      {
+        "readUnloads": true
+      },
+      {
+        "holder": "agenda",
+        "drop": "echo-bytes"
+      },
+      {
+        "readUnloads": true
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "unloads": {
+      "equals": [
+        0,
+        0,
+        1
+      ]
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "library/a-binary-with-no-holding-closes-at-the-unload",
+  "op": "library",
+  "covers": "12.5",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "services": [
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "echo"
+      },
+      {
+        "holder": "agenda",
+        "countUnloads": true
+      },
+      {
+        "releaseHolder": "agenda"
+      },
+      {
+        "readUnloads": true
+      },
+      {
+        "unload": true
+      },
+      {
+        "readUnloads": true
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true
+      ]
+    },
+    "unloads": {
+      "equals": [
+        0,
+        1
+      ]
+    }
+  }
+}
