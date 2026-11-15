@@ -18,6 +18,8 @@ set(expected
     "java prefix gradle/wrapper/"
     "java source-root src/main/java/com/weivel"
     "java source-base src/main/java"
+    "java source-root src/main/java22/com/weivel"
+    "java source-base src/main/java22"
     "java test-root src/test/java"
     "typescript extension .ts"
     "typescript name package.json"

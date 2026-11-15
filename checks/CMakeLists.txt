@@ -52,6 +52,12 @@ set(checks_test_scenarios
     parity_reads_no_java_file_beside_its_source_base
     parity_rejects_an_empty_directory_beside_the_package_root
     parity_rejects_an_empty_directory_beside_a_package_on_the_way
+    parity_reads_the_modules_the_language_pins
+    parity_refuses_a_repository_without_its_pinned_core
+    parity_counts_a_module_present_only_under_the_second_java_root
+    parity_rejects_a_java22_file_outside_its_package_root
+    parity_rejects_a_stray_module_and_directory_under_the_second_java_root
+    parity_refuses_source_roots_and_bases_that_do_not_pair
     purity_accepts_a_java_layer_with_its_test_plugins
     layers_reads_java_tests_and_no_test_plugin
     parity_rejects_an_empty_module_directory

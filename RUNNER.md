@@ -387,7 +387,7 @@ symbols) or are misused.
 ```
 weivel-purity <root> <role> <languages-file>
 weivel-names <root> <words-file>
-weivel-parity <root> <modules-file> <language> <languages-file>
+weivel-parity <root> <language> <languages-file>
 weivel-layers <root> <layer-vector-directory> <language> <languages-file>
 weivel-core-gate <rules-file> <msvc|gnu|apple> <tool> <shared-library> [<static-library>...]
 weivel-core-gate --sources <rules-file> <core-root>
@@ -421,10 +421,13 @@ weivel-core-gate --sources <rules-file> <core-root>
   `funding`, `license`, `integrity` and every other member name no dependency and are not read, so npm's own metadata
   does not trip the list. A lockfile that is not a JSON object is an offender, never passed unread.
 - Parity: `MODULES` in the core lists the modules a language implements, one per line, with ` optional` after the
-  ones a repository may omit. A language repository carries one top-level directory per module, named exactly as
-  listed, under its `source-root`. A missing required module, a directory not on the list, a module directory that
-  holds no file and a loose file directly under the source root are all offenders. Every directory directly under the
-  source root is judged, whatever its name. A module holds a file when one sits in it at any depth, except under a
+  ones a repository may omit. Parity reads it from the core the repository under test pins, at `siblings/core/MODULES`
+  under its root, where its dependency checkout puts that core, and never from the kit's own core: a language pinned to
+  an older core is judged by the list it adopted. A repository without that file is refused with 2. A language
+  repository carries one top-level directory per module, named exactly as listed, under its `source-root`. A language
+  may name several source roots, and then a module present under any one of them is present. A missing required
+  module, a directory not on the list, a module directory that holds no file and a loose file directly under a source
+  root are all offenders. Every directory directly under each source root is judged, whatever its name. A module holds a file when one sits in it at any depth, except under a
   directory directly inside the module that carries a name skipped at a repository root (`build`, `build-*`,
   `siblings`, `node_modules`, `.git` and the hosting-service directory), so a module holding only build output holds
   no file. A language `checks/languages.txt` does not list, or lists without a `source-root`, is refused rather than
@@ -435,10 +438,13 @@ weivel-core-gate --sources <rules-file> <core-root>
   `src/main/java/org/weivel/core/Core.java`) is an offender. Each directory on the way down from the base to the
   source root must hold no directory but the root's next step, so an empty `src/main/java/org` or
   `src/main/java/com/other`, which no file walk sees, is an offender too. Moving the source root below the base
-  therefore refuses everything that was refused before. A base that does not hold the source root strictly, one equal
+  therefore refuses everything that was refused before. A base that does not hold a source root strictly, one equal
   to it (the root `src/main/java/` under the base `src/main/java` too) or beside it under a longer name
-  (`src/main/java` around `src/main/javax/...`), is refused with 2. Parity reads nothing of Java outside the source
-  base: its tests under `src/test/java` and the plugins its tests load from a jar, under `src/plugins/java`, are no
+  (`src/main/java` around `src/main/javax/...`), is refused with 2, and so are a base holding several source roots and,
+  where a language names any base, a source root no base or several bases hold. Java names two trees this way, the
+  second `src/main/java22` around `src/main/java22/com/weivel`, where its sources for Java 22 and later lie: each is
+  judged by every rule above, so a file outside the package root there is an offender and a module present only there
+  is present. Parity reads nothing of Java outside the source bases: its tests under `src/test/java` and the plugins its tests load from a jar, under `src/plugins/java`, are no
   modules, and purity still allows them as Java sources. A language that publishes its interface apart from its
   sources names where with a `header-root`, as C does with `include/weivel/c`. Every file under the header root is
   read, at any depth and in a directory of any name: nothing is skipped there, `build` and `siblings` included. Each
