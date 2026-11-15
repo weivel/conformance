@@ -490,11 +490,26 @@ weivel-core-gate --sources <rules-file> <core-root>
   same rules file also lists `forbid-source` names (`<reason> <word|call|prefix|text> <name>`) found anywhere under
   the core's `src` and `include`, and `source-in-mutex-only` lock names refused outside the `mutex-source` file. The
   core never calls out, so its public interface may hand it nothing it could call: each `public-header` line
-  (`<reason> <path>`, `include/weivel/core.h`) names a header whose every function pointer type is an offender, a
-  pointer declarator (`(*name)(`, `(* const name)(`, `(*)(`, `(CALL *name)(`) and a typedef of a function type
-  (`typedef int name(int);`) alike, read with comments and literals blanked and macro text included. A cast such as
-  `(uint32_t *)(x)` names nothing after its star and is not one. A named header that is missing is refused with 2, and
-  so is a rules file with no `public-header` line, since the interface would then go unread.
+  (`<reason> <path>`, `include/weivel/core.h`) names a header whose every function pointer type is an offender.
+  The header is read after the C compiler the kit was built with has preprocessed it (`cl /E` under MSVC, `cc -E`
+  elsewhere), so its own macros are expanded and its comments gone. Its `#include` lines are blanked first, so no
+  system header is read and none is needed, and a macro only a system header defines stays unexpanded. Of what the
+  header's own lines become, the gate tokenizes the code and drops string and character literals, then refuses:
+  - a parenthesized pointer declarator followed by a parameter list: any number of stars, with any of `const`,
+    `volatile`, `restrict`, `__restrict`, `_Atomic` and the MSVC pointer qualifiers among them, any `__attribute__`,
+    `__declspec` or `_Alignas` group anywhere in it, any number of words before the stars, and after them a name, an
+    array of them or a function returning one: `(*name)(`, `(**name)(`, `(* volatile name)(`, `(*name[4])(`,
+    `(*name(void))(`, `(API CALL *name)(`;
+  - the same with nothing after the stars when every word before them is a calling convention (`__cdecl`,
+    `__stdcall`, `__fastcall`, `__vectorcall` and the like) or there is none: `(*)(`, `(__cdecl *)(`;
+  - a parameter of function type, a name inside parentheses with a type before it and a parameter list after it:
+    `void f(void callback(int))`;
+  - a typedef of a function type, at the line of its `typedef`: `typedef int name(int);`.
+  A cast such as `(uint32_t *)(x)` has a type word and no name around its star and is not one, and the operand of
+  `sizeof`, `_Alignof`, `typeof` or `__builtin_*` and the inside of an attribute are never read as declarators, so
+  `typedef int x __attribute__((aligned(8)));` and `typedef char pad[sizeof(int)];` pass. Each offending line is
+  reported once, by its line in the header. A named header that is missing, or that its preprocessor refuses, is
+  refused with 2, and so is a rules file with no `public-header` line, since the interface would then go unread.
 - Under sanitizers: the job built with address and undefined behaviour sanitizers leaves out every test that reads
   the built core (`core_gate_*` and `core_reads_nothing_of_the_world`). Instrumentation makes the core import
   `__asan_*` and `__ubsan_*`, which the gate rightly refuses, and those tests say nothing about the runner. A

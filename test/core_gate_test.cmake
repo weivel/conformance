@@ -155,52 +155,85 @@ elseif(SCENARIO STREQUAL "source_scan_accepts_lookalikes_and_the_mutex_file")
     file(WRITE "${root}/test/plant.c" "x = getenv(name)\n")
     expect(0 "4 sources read.*the core's sources read nothing of the world" "" ${GATE} --sources ${RULES} ${root})
 elseif(SCENARIO STREQUAL "source_scan_refuses_a_function_pointer_in_the_public_header")
-    set(root "${WORK}/${SCENARIO}")
-    file(REMOVE_RECURSE "${root}")
-    file(WRITE "${root}/src/core.c" "static int (*internal)(int);\n")
-    file(WRITE "${root}/include/weivel/core.h"
-        "typedef void (*weivel_listener)(int value);\n"
-        "typedef struct weivel_hooks { void (*on_event)(void *context); } weivel_hooks;\n"
-        "int weivel_each(int (WEIVEL_CALL *visit)(int));\n"
-        "typedef int weivel_visit(int);\n"
-        "void weivel_take(void (* const callback)(void));\n"
-        "int weivel_sort(int (*)(const void *, const void *));\n"
-        "typedef weivel_status\n    weivel_hook(\n    weivel_core *core);\n")
-    set(expected "")
-    foreach(line 1 2 3 4 5 6 7)
-        list(APPEND expected "include/weivel/core\\.h:${line}: declares a function pointer type")
-    endforeach()
-    execute_process(COMMAND ${GATE} --sources ${RULES} ${root} RESULT_VARIABLE code OUTPUT_VARIABLE out
-        ERROR_VARIABLE err)
-    if(NOT code EQUAL 1)
-        message(FATAL_ERROR "${SCENARIO}: exit ${code}, expected 1\n${out}${err}")
-    endif()
-    foreach(pattern IN LISTS expected)
-        if(NOT "${out}${err}" MATCHES "${pattern}")
-            message(FATAL_ERROR "${SCENARIO}: no line matches '${pattern}'\n${out}${err}")
+    set(forms pointer struct_member double_pointer array const volatile restrict parameter returning one_word
+        several_words attribute abstract convention_abstract macro_star macro_declarator typedef_type typedef_split)
+    set(form_pointer "typedef void (*weivel_listener)(int value);\n")
+    set(form_struct_member "typedef struct weivel_hooks { void (*on_event)(void *context); } weivel_hooks;\n")
+    set(form_double_pointer "void weivel_take(void (**callback)(void));\n")
+    set(form_array "extern void (*weivel_table[4])(void);\n")
+    set(form_const "void weivel_take(void (* const callback)(void));\n")
+    set(form_volatile "void weivel_take(void (* volatile callback)(void));\n")
+    set(form_restrict "void weivel_take(void (* restrict callback)(void));\n")
+    set(form_parameter "void weivel_take(void callback(int));\n")
+    set(form_returning "int (*weivel_get(void))(int);\n")
+    set(form_one_word "int weivel_each(int (WEIVEL_CALL *visit)(int));\n")
+    set(form_several_words "int weivel_each(int (WEIVEL_API WEIVEL_CALL *visit)(int));\n")
+    set(form_attribute "void weivel_take(void (__attribute__((nonnull)) *callback)(void));\n")
+    set(form_abstract "int weivel_sort(int (*)(const void *, const void *));\n")
+    set(form_convention_abstract "int weivel_sort(int (__cdecl *)(int));\n")
+    set(form_macro_star "#define WEIVEL_POINTER *\nvoid weivel_take(void (WEIVEL_POINTER callback)(void));\n")
+    set(form_macro_declarator "#define WEIVEL_HOOK(name) (*name)\nvoid WEIVEL_HOOK(weivel_hook)(void);\n")
+    set(form_typedef_type "typedef int weivel_visit(int);\n")
+    set(form_typedef_split "typedef weivel_status\n    weivel_hook(\n    int value);\n")
+    set(line_macro_star 3)
+    set(line_macro_declarator 3)
+    set(missed "")
+    foreach(form IN LISTS forms)
+        set(root "${WORK}/${SCENARIO}/${form}")
+        file(REMOVE_RECURSE "${root}")
+        file(WRITE "${root}/src/core.c" "static int (*internal)(int);\n")
+        file(WRITE "${root}/include/weivel/core.h" "int weivel_api(void);\n${form_${form}}int weivel_after(void);\n")
+        set(line 2)
+        if(DEFINED line_${form})
+            set(line ${line_${form}})
+        endif()
+        execute_process(COMMAND ${GATE} --sources ${RULES} ${root} RESULT_VARIABLE code OUTPUT_VARIABLE out
+            ERROR_VARIABLE err)
+        if(NOT code EQUAL 1 OR NOT "${out}${err}" MATCHES "include/weivel/core\\.h:${line}: declares a function pointer type")
+            list(APPEND missed "${form}")
+            message("${SCENARIO}: the form ${form} is not refused at line ${line} (exit ${code})\n${out}${err}")
+        endif()
+        if("${out}${err}" MATCHES "src/core\\.c|core\\.h:1:")
+            message(FATAL_ERROR "${SCENARIO}: the form ${form} refused a line it does not declare\n${out}${err}")
         endif()
     endforeach()
-    if("${out}${err}" MATCHES "src/core\\.c|core\\.h:8:")
-        message(FATAL_ERROR "${SCENARIO}: a file or line outside the public header's declarations was refused\n${out}${err}")
+    if(NOT missed STREQUAL "")
+        message(FATAL_ERROR "${SCENARIO}: forms not refused: ${missed}")
     endif()
-    message("${out}${err}")
 elseif(SCENARIO STREQUAL "source_scan_accepts_a_public_header_without_function_pointers")
     set(root "${WORK}/${SCENARIO}")
     file(REMOVE_RECURSE "${root}")
     file(WRITE "${root}/src/core.c" "int weivel_api(void) { return 0; }\n")
     file(WRITE "${root}/include/weivel/core.h"
+        "#include <stdint.h>\n"
         "/* (*not)(code), and typedef void hook(int); */\n"
         "// typedef void (*commented)(int);\n"
+        "#ifdef _WIN32\n"
+        "#define WEIVEL_API __declspec(dllimport)\n"
+        "#else\n"
+        "#define WEIVEL_API __attribute__((visibility(\"default\")))\n"
+        "#endif\n"
         "#define WEIVEL_CAST(x) ((uint32_t *)(x))\n"
-        "#define WEIVEL_INIT(type) ((type){sizeof(type)})\n"
-        "weivel_status weivel_open(weivel_core *core, uint32_t *pending_events);\n"
+        "#define WEIVEL_INIT(type) { .size = (uint32_t)sizeof(type) }\n"
+        "WEIVEL_API weivel_status weivel_open(weivel_core *core, uint32_t *pending_events);\n"
         "typedef struct weivel_reason { uint32_t size; const char *detail; } weivel_reason;\n"
         "typedef enum weivel_flags { WEIVEL_FLAG = (1 << 2) } weivel_flags;\n"
         "typedef uint64_t weivel_handle;\n"
         "typedef int weivel_bytes[4];\n"
+        "typedef int weivel_aligned __attribute__((aligned(8)));\n"
+        "typedef char weivel_pad[sizeof(int)];\n"
+        "static uint32_t *const weivel_nothing = WEIVEL_CAST(0);\n"
+        "_Static_assert(sizeof(weivel_handle) == 8, \"eight bytes\");\n"
         "static const char weivel_text[] = \"(*s)(\";\n"
         "int weivel_array(int (values)[4]);\n")
     expect(0 "2 sources read.*the core's sources read nothing of the world" "function pointer"
+        ${GATE} --sources ${RULES} ${root})
+elseif(SCENARIO STREQUAL "source_scan_refuses_a_header_its_preprocessor_rejects")
+    set(root "${WORK}/${SCENARIO}")
+    file(REMOVE_RECURSE "${root}")
+    file(WRITE "${root}/src/core.c" "int weivel_api(void) { return 0; }\n")
+    file(WRITE "${root}/include/weivel/core.h" "#error the header cannot be read\n")
+    expect(2 "the preprocessor .* refused .*include/weivel/core\\.h" "read nothing of the world"
         ${GATE} --sources ${RULES} ${root})
 elseif(SCENARIO STREQUAL "source_scan_refuses_a_tree_without_its_public_header")
     set(root "${WORK}/${SCENARIO}")
