@@ -160,14 +160,18 @@ dispatched when the next one starts:
 - `{ releaseHolder: plugin }` releases that holder or owner through the host, and `{ quarantine: plugin }`
   quarantines it, each ending whatever the plugin still holds without a `releaseHolding`;
 - `{ forgetHolder: plugin }` forgets that plugin, released before, through the host, so the core revokes and ends
-  whatever it came to hold through late calls;
+  whatever it came to hold through late calls. A host whose release forgets the plugin as its last step leaves a late
+  call only one window, while the released plugin hears the events its own release queued, so the steps a vector
+  places between that plugin's `releaseHolder` and its `forgetHolder` are made from that plugin's listener on the
+  first such event, and `forgetHolder` then checks that the host no longer holds it;
 - `{ readUnloads: true }` reads the counter.
 
 A vector that reads the counter is judged only while nothing in the process but the layer holds the echo binary
 open: the suite, and every other test the process runs, keeps no handle of its own on it across the vector's steps.
-A suite that opens the binary itself, to read the address a definition's symbol answers for `sameObject`, closes it
-again before the first step, since a handle of its own would keep the binary open after the layer closed it and the
-counter would never move.
+A suite that opens the binary itself, to read the address a definition's symbol answers for `sameObject`, does so
+right after the layer's load, while the layer holds the binary, and closes it again before the next step: opened
+before the layer's load and closed, the binary may map at another address and a correct layer reads false, and a
+handle kept across steps would keep the binary open after the layer closed it, so the counter would never move.
 
 After the last step, once the layer has nothing left to run, the suite reads:
 
