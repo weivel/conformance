@@ -8,9 +8,9 @@ cmake_minimum_required(VERSION 3.15)
 
 set(ratio_gates control-call library-call)
 set(ratio_gate_name "^(control-call|library-call)(-[a-z0-9]+)?$")
-set(noise_bounds quiet-noise worst-noise)
+set(noise_bounds quiet-noise worst-noise noise-margin)
 set(platforms linux windows macos)
-set(scalars ratio-margin noise-margin)
+set(scalars ratio-margin)
 set(number "^[0-9]+(\\.[0-9]+)?$")
 
 set(problems "")
