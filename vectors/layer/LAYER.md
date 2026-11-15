@@ -122,8 +122,8 @@ A `library` vector here loads a C library through the layer's host, which only a
 never opens a binary. Its library is the core's test library, `echo`, built beside the core (`test/echo/echo.h`):
 `echo_service_definition` answers its `echo_definition`, whose `echo` repeats its input when handed the
 definition's own `context` and whose `count_unloads` hands the binary a counter it adds one to when it is closed;
-`echo_null_definition` answers NULL, and `echo_short_definition` a struct whose `size` is 4, below
-`2 * sizeof(void *)` on every platform.
+`echo_null_definition` answers NULL, and `echo_one_byte_short_definition` a struct whose `size` is
+`2 * sizeof(void *) - 1`, one byte below the floor of the platform it was built for.
 
 Its `given` is `{ declaration, holders, steps }`. `declaration` is the library's declaration, handed to the host as
 the standard reads it or as the suite builds it, with the path of the built echo library beside it. `holders` names
@@ -184,9 +184,9 @@ A definition whose struct's `size` is below `2 * sizeof(void *)`, the `size` and
 alignment, refuses the load exactly as a NULL definition does.
 
 The suite builds the vector's `given` through its layer and witnesses what `library/a-null-definition-fails-the-load`
-does, with `echo_short_definition`: the load refused as the caller's mistake, nothing registered, nothing reported. A
-host that compares against 8, true only on a 32-bit target, loads `echo_short_definition` on no platform, since its
-`size` is 4; the floor itself is held by review and the language's own tests.
+does, with `echo_one_byte_short_definition`: the load refused as the caller's mistake, nothing registered, nothing
+reported. Its `size` is one byte below the floor, so a host that compares against 8, the floor of a 32-bit target
+only, loads it on a 64-bit one and fails here.
 
 ## `library/an-unload-revokes-every-holding-of-a-definition`
 

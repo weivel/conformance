@@ -23,7 +23,7 @@
           "functions": [
             {
               "name": "definition",
-              "symbol": "echo_short_definition",
+              "symbol": "echo_one_byte_short_definition",
               "kind": "definition"
             }
           ]
