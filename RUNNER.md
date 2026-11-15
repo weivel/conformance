@@ -161,8 +161,9 @@ hands it to the standard's reader. Answers `{ read, release, services, path, ref
 
 A definition is its service's only function, and only a library declaring a bytes function needs a release: the
 reader refuses a definition beside another function at the function that brings the two together, as
-`conflicting_field`, and a declaration with a bytes function and no release at `release`, as `missing_field`. A third
-kind is refused at its `kind`, so naming a second kind opened no others.
+`conflicting_field`, a `context` on a definition at that `context`, as `conflicting_field` too, since a definition
+carries its context inside its own struct, and a declaration with a bytes function and no release at `release`, as
+`missing_field`. A third kind is refused at its `kind`, so naming a second kind opened no others.
 
 The same op under `vectors/layer/library/` loads a declaration through a language's host, and is witnessed as
 `vectors/layer/LAYER.md` says.
