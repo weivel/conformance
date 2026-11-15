@@ -351,8 +351,8 @@ fields separated by one space:
   place can alias the operation's stores on that path alone; and both paths read the operation's function pointer out
   of the struct the same way, both once before the timed loop or both on every call, since one load more per call on
   one side is a cost and not noise. A language may sample this row in rounds and batch lengths of its own, unlike its
-  same-language pair's, stating its sampling in its `CONTENT.md`. The row is judged by its platform's noise bounds and `noise-margin`,
-  as the same-language pair is, carries no line of its own, and its gate is the identity
+  same-language pair's, stating its sampling in its `CONTENT.md`. The row is judged by its platform's noise bounds
+  and `noise-margin`, as the same-language pair is, carries no line of its own, and its gate is the identity
   `library/a-definition-is-the-providers-own-pointer` witnesses. A C layer
   crosses no foreign interface, so its bare call is the same control call made through the core's function table
   without the layer's wrapper, and `control-call` bounds what the wrapper adds. The platform is
