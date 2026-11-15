@@ -427,7 +427,9 @@ weivel-core-gate --sources <rules-file> <core-root>
   repository carries one top-level directory per module, named exactly as listed, under its `source-root`. A language
   may name several source roots, and then a module present under any one of them is present. A missing required
   module, a directory not on the list, a module directory that holds no file and a loose file directly under a source
-  root are all offenders. Every directory directly under each source root is judged, whatever its name. A module holds a file when one sits in it at any depth, except under a
+  root are all offenders. Every directory directly under each source root is judged, whatever its name. A declared
+  source root missing on disk is refused with 2, the message naming the root, the line that declared it
+  (`java source-root src/main/java22/com/weivel`) and the list it came from. A module holds a file when one sits in it at any depth, except under a
   directory directly inside the module that carries a name skipped at a repository root (`build`, `build-*`,
   `siblings`, `node_modules`, `.git` and the hosting-service directory), so a module holding only build output holds
   no file. A language `checks/languages.txt` does not list, or lists without a `source-root`, is refused rather than
@@ -441,10 +443,14 @@ weivel-core-gate --sources <rules-file> <core-root>
   therefore refuses everything that was refused before. A base that does not hold a source root strictly, one equal
   to it (the root `src/main/java/` under the base `src/main/java` too) or beside it under a longer name
   (`src/main/java` around `src/main/javax/...`), is refused with 2, and so are a base holding several source roots and,
-  where a language names any base, a source root no base or several bases hold. Java names two trees this way, the
+  where a language names any base, a source root no base or several bases hold; each such refusal names the base and
+  the roots, or the root and the bases, it fails to pair. Java names two trees this way, the
   second `src/main/java22` around `src/main/java22/com/weivel`, where its sources for Java 22 and later lie: each is
   judged by every rule above, so a file outside the package root there is an offender and a module present only there
-  is present. Parity reads nothing of Java outside the source bases: its tests under `src/test/java` and the plugins its tests load from a jar, under `src/plugins/java`, are no
+  is present. Under the directory holding a source base (`src/main`), a file carrying one of the language's
+  `extension`s that lies under no base is an offender, so an undeclared `src/main/java23/...` tree or a loose
+  `src/main/D.java` cannot hide beside the declared ones; any other file there, `src/main/resources/notes.txt`, is
+  not read. Parity reads nothing of Java outside the directories holding its source bases: its tests under `src/test/java` and the plugins its tests load from a jar, under `src/plugins/java`, are no
   modules, and purity still allows them as Java sources. A language that publishes its interface apart from its
   sources names where with a `header-root`, as C does with `include/weivel/c`. Every file under the header root is
   read, at any depth and in a directory of any name: nothing is skipped there, `build` and `siblings` included. Each

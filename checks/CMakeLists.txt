@@ -58,6 +58,8 @@ set(checks_test_scenarios
     parity_rejects_a_java22_file_outside_its_package_root
     parity_rejects_a_stray_module_and_directory_under_the_second_java_root
     parity_refuses_source_roots_and_bases_that_do_not_pair
+    parity_names_a_missing_source_root_and_its_line
+    parity_rejects_a_java_source_outside_every_source_base
     purity_accepts_a_java_layer_with_its_test_plugins
     layers_reads_java_tests_and_no_test_plugin
     parity_rejects_an_empty_module_directory

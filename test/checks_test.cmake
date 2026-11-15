@@ -510,13 +510,27 @@ elseif(SCENARIO STREQUAL "parity_refuses_source_roots_and_bases_that_do_not_pair
     expect_parity(2 "gives java the source-root src/main/java22/com/weivel, which no source-base holds"
         "every required module" java ${root}/unheld.txt)
     plant("twice.txt" "java extension .java\njava source-root src/main/java/com/weivel\njava source-base src/main\njava source-base src/main/java\n")
-    expect_parity(2 "gives java the source-root src/main/java/com/weivel, which more than one source-base holds"
+    expect_parity(2 "gives java the source-root src/main/java/com/weivel, which more than one source-base holds: src/main and src/main/java"
         "every required module" java ${root}/twice.txt)
     plant("both.txt" "java extension .java\njava source-root src/main/java/com/weivel\njava source-root src/main/java22/com/weivel\njava source-base src/main\n")
-    expect_parity(2 "gives java the source-base src/main, which holds more than one source-root"
+    expect_parity(2 "gives java the source-base src/main, which holds more than one source-root: src/main/java/com/weivel and src/main/java22/com/weivel"
         "every required module" java ${root}/both.txt)
+    plant("neither.txt" "java extension .java\njava source-root src/main/java/com/weivel\njava source-root src/main/java22/com/weivel\njava source-base src/main/java\njava source-base src/test/java\n")
+    expect_parity(2 "gives java the source-base src/test/java, which does not hold its source-root src/main/java/com/weivel or src/main/java22/com/weivel"
+        "every required module" java ${root}/neither.txt)
+elseif(SCENARIO STREQUAL "parity_names_a_missing_source_root_and_its_line")
+    plant_java_layer()
     file(REMOVE_RECURSE "${root}/src/main/java22")
-    expect_parity(2 "cannot read the directory" "every required module" java ${LANGUAGES})
+    expect_parity(2 "the source-root src/main/java22/com/weivel, declared by the line 'java source-root src/main/java22/com/weivel' of .*languages\\.txt, is missing: cannot read the directory"
+        "every required module" java ${LANGUAGES})
+elseif(SCENARIO STREQUAL "parity_rejects_a_java_source_outside_every_source_base")
+    plant_java_layer()
+    expect_parity(0 "every required module" "outside every source-base" java ${LANGUAGES})
+    plant("src/main/D.java" "class D {}")
+    plant("src/main/java23/com/weivel/core/Later.java" "package com.weivel.core; class Later {}")
+    plant("src/main/resources/Notes.txt" "prose")
+    expect_parity(1 "'src/main/D\\.java' is a java source outside every source-base.*'src/main/java23/com/weivel/core/Later\\.java' is a java source outside every source-base"
+        "every required module|Notes" java ${LANGUAGES})
 else()
     message(FATAL_ERROR "unknown scenario ${SCENARIO}")
 endif()
