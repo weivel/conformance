@@ -1,0 +1,70 @@
+{
+  "id": "library/an-unload-revokes-every-holding-of-a-definition",
+  "op": "library",
+  "covers": "12.5",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "services": [
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda",
+      "calendar",
+      "notes"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "echo"
+      },
+      {
+        "holder": "calendar",
+        "get": "echo"
+      },
+      {
+        "unload": true
+      },
+      {
+        "holder": "notes",
+        "get": "echo"
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true,
+        false
+      ]
+    },
+    "revoked": {
+      "equals": [
+        [
+          "agenda",
+          "echo"
+        ],
+        [
+          "calendar",
+          "echo"
+        ]
+      ]
+    }
+  }
+}

@@ -116,6 +116,104 @@ registers the provider, runs the clock to `horizonMillis`, records the timer's m
 - `fired` exactly empty: the timer never fired, so only the layer's own check before the call handed the core the
   time.
 
+## The `library` op in a layer
+
+A `library` vector here loads a C library through the layer's host, which only a layer can do, because the core
+never opens a binary. Its library is the core's test library, `echo`, built beside the core (`test/echo/echo.h`):
+`echo_service_definition` answers its `echo_definition`, whose `echo` repeats its input when handed the
+definition's own `context` and whose `count_unloads` hands the binary a counter it adds one to when it is closed;
+`echo_null_definition` answers NULL, and `echo_short_definition` a struct whose `size` is 4, below
+`2 * sizeof(void *)` on every platform.
+
+Its `given` is `{ declaration, holders, steps }`. `declaration` is the library's declaration, handed to the host as
+the standard reads it or as the suite builds it, with the path of the built echo library beside it. `holders` names
+plugins the suite opens on the host before the first step, each consuming every service id the declaration lists, so
+the reach fence never decides a step. The steps run in order:
+
+- `{ load: true }` loads the declaration through the host's public load call;
+- `{ holder, get: id }` gets the service as that holder, which then holds it;
+- `{ holder, echo: text }` calls the definition's `echo` through the object that holder resolved, with its `context`
+  and the text's UTF-8 bytes, and releases the answer through the definition's own `release`;
+- `{ holder, countUnloads: true }` hands the binary, through the object that holder resolved, a counter the suite
+  owns that outlives the binary;
+- `{ unload: true }` unloads the library through the host's public unload call;
+- `{ holder, releaseHolding: id }` lets go of that holder's revoked holding, in the language's own way of saying a
+  holder no longer uses an object, so the layer ends it with `weivel_release_holding`;
+- `{ readUnloads: true }` reads the counter.
+
+After the last step, once the layer has nothing left to run, the suite reads:
+
+- `loaded`: whether the load answered success;
+- `callersMistake`: whether the load was refused as the caller's mistake, the language's answer to a misused call
+  (`WEIVEL_C_STATUS_MISUSE` in C, the thrown misuse error elsewhere), and not a refusal of the core's;
+- `got`: one boolean per `get` step, true when it was served;
+- `sameObject`: whether every object a `get` served is the very pointer the definition's symbol answered, pointer
+  equality in C and the same native address elsewhere, never an equal copy;
+- `echoed`: the text each `echo` step answered;
+- `revoked`: each `[holder, id]` revocation the layer handed a holder, sorted;
+- `unloads`: the counter at each `readUnloads` step;
+- `reported`: what the layer told its error sink or log, which a caller's mistake never reaches.
+
+## `library/a-definition-is-the-providers-own-pointer`
+
+A host registers a definition as the pointer its symbol answered, with no wrapper, count or copy, so a consumer's call
+through it is a plain native call.
+
+The suite builds the vector's `given` through its layer and witnesses:
+
+- the load succeeds, and `agenda`'s get is served with the very pointer `echo_service_definition` answers, exactly as
+  `sameObject` states: an object a host made around the pointer, or a copy of the struct, fails here;
+- calling the definition's `echo` through what `agenda` resolved, with its own `context`, answers `ping`, as `echoed`
+  states, so the context the consumer reads is the library's own.
+
+## `library/a-null-definition-fails-the-load`
+
+A definition whose symbol answers NULL refuses the load as the caller's mistake, undone as a load that fails partway.
+
+The suite builds the vector's `given` through its layer, a bytes service declared before the definition, and
+witnesses:
+
+- the load fails, refused as the caller's mistake, as `loaded` and `callersMistake` state;
+- neither the bytes service nor the definition is registered afterwards: both of `agenda`'s gets miss, as `got`
+  states, so a host that registered `echo-bytes` before it called the definition and left it there fails here;
+- nothing reaches the layer's error sink or log, as `reported` states.
+
+## `library/a-definition-below-its-size-fails-the-load`
+
+A definition whose struct's `size` is below `2 * sizeof(void *)`, the `size` and one pointer under the platform's
+alignment, refuses the load exactly as a NULL definition does.
+
+The suite builds the vector's `given` through its layer and witnesses what `library/a-null-definition-fails-the-load`
+does, with `echo_short_definition`: the load refused as the caller's mistake, nothing registered, nothing reported. A
+host that compares against 8, true only on a 32-bit target, loads `echo_short_definition` on no platform, since its
+`size` is 4; the floor itself is held by review and the language's own tests.
+
+## `library/an-unload-revokes-every-holding-of-a-definition`
+
+A definition is called directly, so no call to it can be refused after its library's unload: the unload unregisters
+it at once, and the core revokes it to every holder.
+
+The suite builds the vector's `given` through its layer and witnesses:
+
+- `agenda` and `calendar` are each told of the revocation, as `revoked` states, by the event the core queued and the
+  layer handed on, never by a check the layer makes on a call;
+- `notes`'s get after the unload misses, as the last of `got` states, so the definition is gone from the registry at
+  the unload and not at its binary's close.
+
+## `library/a-binary-stays-open-while-a-holding-lives`
+
+The binary of a library with definition services is closed only once every holding of each of them has been released
+since the unload, and then at once, when the core's `WEIVEL_EVENT_HOLDINGS_RELEASED` for the last of them is drained.
+
+The suite builds the vector's `given` through its layer, hands the binary its counter through `agenda`'s object,
+unloads with both holdings live, and witnesses `unloads` exactly:
+
+- 0 after the unload, while `agenda` and `calendar` both still hold the definition: a host that closes the binary at
+  the unload, as it may for a library of bytes functions alone, fails here;
+- 0 once `agenda` has released its holding, while `calendar` still holds it;
+- 1 once `calendar` has released the last holding, so the binary closed on the release event and not only when the
+  host is freed.
+
 ## The `lifecycle` op
 
 A `lifecycle` vector is answered only by a layer, because only a layer calls a plugin's `activate` and `deactivate`.

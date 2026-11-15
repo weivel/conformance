@@ -1,0 +1,63 @@
+{
+  "id": "library/a-definition-below-its-size-fails-the-load",
+  "op": "library",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "release": "echo_release",
+      "services": [
+        {
+          "id": "echo-bytes",
+          "functions": [
+            {
+              "name": "echo",
+              "symbol": "echo_echo",
+              "kind": "bytes"
+            }
+          ]
+        },
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_short_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "echo-bytes"
+      },
+      {
+        "holder": "agenda",
+        "get": "echo"
+      }
+    ]
+  },
+  "then": {
+    "loaded": false,
+    "callersMistake": true,
+    "got": {
+      "equals": [
+        false,
+        false
+      ]
+    },
+    "reported": {
+      "equals": []
+    }
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "id": "library/a-binary-stays-open-while-a-holding-lives",
+  "op": "library",
+  "covers": "12.5",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "services": [
+        {
+          "id": "echo",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda",
+      "calendar"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "echo"
+      },
+      {
+        "holder": "calendar",
+        "get": "echo"
+      },
+      {
+        "holder": "agenda",
+        "countUnloads": true
+      },
+      {
+        "unload": true
+      },
+      {
+        "readUnloads": true
+      },
+      {
+        "holder": "agenda",
+        "releaseHolding": "echo"
+      },
+      {
+        "readUnloads": true
+      },
+      {
+        "holder": "calendar",
+        "releaseHolding": "echo"
+      },
+      {
+        "readUnloads": true
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "unloads": {
+      "equals": [
+        0,
+        0,
+        1
+      ]
+    }
+  }
+}
