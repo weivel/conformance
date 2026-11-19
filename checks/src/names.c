@@ -6,7 +6,7 @@
 #include "lockfile.h"
 #include "tree.h"
 
-static const char *const EXEMPT_PATHS[] = {"LICENSE", ".weivel/repo.json"};
+static const char *const EXEMPT_PATHS[] = {"LICENSE", "repo.json"};
 
 #define BINARY_PROBE_BYTES 8192
 #define COUNT_OF(array) (sizeof(array) / sizeof((array)[0]))

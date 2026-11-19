@@ -439,7 +439,7 @@ weivel-core-gate --sources <rules-file> <core-root>
   `.cmake`. A star further in may stand for nothing, so `tsconfig*.json` allows `tsconfig.json`.
   `languages_list_holds_the_pinned_lines` holds the list to its exact lines, so what a role allows or refuses changes
   only together with that test.
-- Names: no file may carry a word from the list, case-folded. `LICENSE`, `.weivel/repo.json`, the list itself, binary
+- Names: no file may carry a word from the list, case-folded. `LICENSE`, `repo.json`, the list itself, binary
   files and, at the root only, the directories `.git`, the hosting-service directory beside it, `build`, `build-*`,
   `siblings` and `node_modules` are not read. Purity and the core's source scan skip the same root directories, and
   nothing deeper is skipped by name. A file is binary when a NUL byte occurs in its first 8 KB, and each skipped file is printed.

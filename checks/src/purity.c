@@ -6,8 +6,7 @@
 #include "tree.h"
 
 static const char *const COMMON_EXTENSIONS[] = {".md", ".txt"};
-static const char *const COMMON_NAMES[] = {".gitignore", ".gitattributes", "LICENSE", "MODULES"};
-static const char *const COMMON_PREFIX = ".weivel/";
+static const char *const COMMON_NAMES[] = {".gitignore", ".gitattributes", "LICENSE", "MODULES", "repo.json"};
 static const char *const NATIVE_LANGUAGE = "c";
 static const char *const NATIVE_DATA_EXTENSION = ".json";
 static const char *const NATIVE_ROLES[] = {"c", "core", "kit", "standard"};
@@ -102,7 +101,7 @@ static int is_common(const char *path) {
             return 1;
         }
     }
-    return strncmp(path, COMMON_PREFIX, strlen(COMMON_PREFIX)) == 0;
+    return 0;
 }
 
 static int is_native_role(const char *role) {
