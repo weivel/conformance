@@ -240,7 +240,8 @@ elseif(SCENARIO STREQUAL "layers_accepts_a_suite_naming_every_vector")
     plant("repo/test/layer.test.ts" "describe(\"consume/a-listener\", () => {});\ndescribe('want/a-deadline', () => {});\n")
     expect(0 "every one of 2 layer vectors" "" ${LAYERS} ${root}/repo ${root}/layer typescript ${LANGUAGES})
 elseif(SCENARIO STREQUAL "layers_sets_aside_a_directory_the_language_is_exempt_from")
-    plant_layer_vectors("consume/a-listener;description/a-load;description/binding/a-call;description/bindings/a-sibling")
+    plant_layer_vectors(
+        "consume/a-listener;description/a-load;description/binding/a-call;description/bindings/a-sibling")
     plant("repo/test/layer_test.c" "\"consume/a-listener\" \"description/a-load\"\n")
     plant("languages.txt" "c extension .c\nc test-root test\nc layer-exempt description/binding\n")
     expect(1 "description/bindings/a-sibling: no test under test names" "a-call:|a-listener:|a-load:"
@@ -249,7 +250,8 @@ elseif(SCENARIO STREQUAL "layers_sets_aside_a_directory_the_language_is_exempt_f
     expect(0 "every one of 3 layer vectors is named under test, and 1 more lie under a directory the language is exempt"
         "" ${LAYERS} ${root}/repo ${root}/layer c ${root}/languages.txt)
     plant("typescript.txt" "typescript extension .ts\ntypescript test-root test\n")
-    plant("repo/test/layer.test.ts" "\"consume/a-listener\" \"description/a-load\" \"description/bindings/a-sibling\"\n")
+    plant("repo/test/layer.test.ts"
+        "\"consume/a-listener\" \"description/a-load\" \"description/bindings/a-sibling\"\n")
     expect(1 "description/binding/a-call: no test under test names" "a-listener:|a-load:|a-sibling:"
         ${LAYERS} ${root}/repo ${root}/layer typescript ${root}/typescript.txt)
 elseif(SCENARIO STREQUAL "layers_refuses_an_exemption_no_vector_lies_under")

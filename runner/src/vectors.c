@@ -155,7 +155,8 @@ static int check_shape(const vector *candidate, char *error, size_t error_size) 
         return refuse(error, error_size, "%s is not a valid vector: %s", path, "given and then must be objects");
     }
     if (match_refuse_meaningless(candidate->then) != NULL) {
-        return refuse(error, error_size, "%s is not a valid vector: %s", path, match_refuse_meaningless(candidate->then));
+        return refuse(error, error_size, "%s is not a valid vector: %s", path,
+                      match_refuse_meaningless(candidate->then));
     }
     if (weivel_json_object_size(candidate->then) == 0) {
         return refuse(error, error_size, "%s is not a valid vector: %s", path, "then asserts nothing");
