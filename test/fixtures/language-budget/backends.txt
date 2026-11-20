@@ -10,6 +10,12 @@ library-call-ffm macos 2.5
 library-call-jna linux 2.5
 library-call-jna windows 2.5
 library-call-jna macos 2.5
+described-call-ffm linux 3
+described-call-ffm windows 3
+described-call-ffm macos 3
+described-call-jna linux 1.5
+described-call-jna windows 1.5
+described-call-jna macos 1.5
 ratio-margin 1.5
 quiet-noise linux 0.001
 quiet-noise windows 0.001

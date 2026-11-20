@@ -368,7 +368,7 @@ fields separated by one space:
   described definition generically: an operation of the standard's `described` fixture called through the bound
   object a consumer resolved, over the same operation called through a bare binding of the fixture's structs written
   by hand, with the same input and its answer and refusal released the same way. A file need not carry it, and one
-  that carries it on a platform carries it on every one. A C layer
+  that carries it on a platform or a backend carries it on every platform of every backend it names. A C layer
   crosses no foreign interface, so its bare call is the same control call made through the core's function table
   without the layer's wrapper, and `control-call` bounds what the wrapper adds. The platform is
   the runner's system, `linux`, `windows` or `macos`, whatever the language itself calls it. The number is the highest
@@ -429,6 +429,21 @@ array, over the same function called bare with the same bytes copied in and its 
 host does. The noise is of million-call batches on the provider's own object, each batch on a path object made for it,
 pooled over both backends since the pair crosses none. The commit that adds the file lists every sample, how each
 bound follows from them, and what the outliers were.
+Its `described-call-ffm` and `described-call-jna` bounds are as its Test workflow's `benchmarks` job measured them on
+2026-11-20, one gating sample a backend and platform in each of attempts 1 to 6 of Test run 44775350720 and attempt 1
+of Test run 44776432788, macOS one fewer since the first attempt's macOS job was cancelled: the described
+mirror's `reflect`, a sample holding a text and a counted array of three texts in and its reflection out, through the
+bound operation a consumer resolved, over the same operation through the mirror's own function pointers with the
+fixture's structs declared by hand, every member the binding answers copied out into Java values and the reflection
+released as the binding releases it. The samples of Test run 44765952616 are not among them: they measured the
+binding before its answers became shared-key values, a path that no longer exists. Java's hand control writes per call
+only the members it changes, where TypeScript's koffi control encodes its whole struct each call, so the Java gate is
+slightly stricter and never falsely green. Its `worst-noise` on every platform was re-derived on the same day, the
+noisiest noise sample times 1.5 as before, from every noise sample of those runs, of Test run 44765952616 attempts 1
+to 6 and of Test run 44752588723 attempt 1. Three definition or same-language samples had tripped the old bounds: on
+Linux 0.004118 in 44752588723 and 0.009986 in 44776432788, and on Windows 0.014668 in attempt 4 of 44765952616.
+macOS's stands, since none of the new samples is as noisy as the samples it was set from. The commit that sets them
+lists every sample.
 
 ## The drift checks
 
