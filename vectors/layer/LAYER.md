@@ -382,13 +382,17 @@ as weivel/c does. The library has two definition services:
   `invert`, `swap_shade`, `grow` and `weigh` each take one input of one kind and answer one; `count_releases`
   answers how many releases of each kind, of both services, have freed something since the binary was opened;
 - `described-walker`, the `described_walker` definition: `open` answers a handle, `use` takes it as an input, and
-  `visit` takes it inside a struct.
+  `visit` takes it inside a struct; `wait` answers the ticks it was asked to wait, at once, and is the one operation the
+  description marks `blocking`; `lend` answers a `described_loan` holding a `counter`, a definition of its own whose
+  `add` answers 1000 plus its `amount`, or MALFORMED for an `amount` that would pass the largest u64. The counter is
+  one static definition the walker's description names in its `definitions`, so an answer carries a definition.
 
 Every refusal it answers carries the detail `described refused on purpose` and the fix `pass anything but "refuse"`.
 The binary also exports two broken descriptions of the walker: `described_broken_count_description`, which the
-standard's `weivel_standard_description_check` refuses, and `described_broken_offset_description`, which the check
-passes while its `described_visit.skip` offset disagrees with the struct's real layout, so only a layer that lays the
-struct out itself can see it. It exports `described_mirror_without_halve_definition` too, a mirror holding NULL for
+standard's `weivel_standard_description_check` refuses, `described_broken_definition_description`, which the check
+refuses at the loan's `counter` because the description holds no nested description for the definition it names, and
+`described_broken_offset_description`, which the check passes while its `described_visit.skip` offset disagrees with
+the struct's real layout, so only a layer that lays the struct out itself can see it. It exports `described_mirror_without_halve_definition` too, a mirror holding NULL for
 `halve` and every other operation the mirror's own, which the mirror's description describes.
 
 **Which layers witness what.** A layer that binds descriptions, building its language's view of a definition from
@@ -409,11 +413,15 @@ the layer has nothing left to run from the one before:
 - `{ load: true }` loads the declaration through the host's public load call;
 - `{ holder, get: id }` gets the service as that holder, which then holds it;
 - `{ holder, call: id, operation, with, keep }` calls the operation of that service through the object the holder
-  resolved, the language's bound object, with the inputs `with` holds, and records what it answered. `keep` names the
-  handle an operation answering one hands back, which the holder then holds under that name; a step calling such an
-  operation always names one;
+  resolved, the language's bound object, with the inputs `with` holds, and records what it answered. `id` is a service
+  id, or the name a definition was kept under, which calls through the language's bound object for that definition.
+  `keep` names the handle or the definition an operation answering one hands back, which the holder then holds under
+  that name; a step calling such an operation always names one;
 - `{ holder, release: name }` lets go of the handle kept under that name, in the language's own way of releasing a
-  handle;
+  handle. For a definition kept under that name it ends the answer that carried it: the definition lives as long as
+  that answer, so a call through the name afterwards is the caller's mistake, calling nothing;
+- `{ holder, blocking: id }` reads, from the bound object the holder resolved for the service `id`, which operations
+  the layer reports blocking, and keeps the operation names for `blocking`;
 - `{ holder, readReleases: true }` calls the mirror's `count_releases` through the object the holder resolved and
   keeps its answer for `released`, not for `calls`;
 - `{ unload: true }` unloads the library through the host's public unload call.
@@ -453,6 +461,11 @@ own value of the kind the description gives it, and back:
   keeps under the name its `keep` gives.
 - A HANDLE member inside an answer struct is written the same way, and the handle it answers is kept under the step's
   `keep` as an answered handle is: a step whose answer holds one names `keep`, and an answer holds at most one.
+- DEFINITION, a `const T *` whose `type` names a definition the description's `definitions` describe, is written
+  `{ "definition": name }` as a member of an answer, the definition the step keeps under the name its `keep` gives,
+  by the same rule as a handle: an answer holds at most one handle or definition. It is the language's bound object for
+  the nested definition, built from the nested description as a service's is from its own, and callable through
+  `{ holder, call: name }`. It is not an input of any vector: no operation of `described` takes one.
 
 **What a layer that binds does beyond the values.**
 
@@ -468,6 +481,13 @@ own value of the kind the description gives it, and back:
 - A language refuses the load of a description its own restrictions cannot bind: TypeScript an operation named `then`,
   which would make the bound object a thenable every `await` calls, and Java an operation of more than 7 parameters.
 
+**What "reports blocking" means.** A layer that binds exposes, on the bound object of a definition, which of its
+operations are blocking, read from the description's `blocking` names and from nothing else; a name the description does
+not list as blocking is not reported, and a definition whose description lists none reports none. A vector cannot name
+an event loop or a thread, so it witnesses only that the operation answers as any other does and that the fact is
+reported; a layer whose callers must not wait proves in its own test that a call of a blocking operation leaves its
+calling thread free.
+
 After the last step the suite reads `loaded`, `callersMistake`, `got`, `sameObject` and `reported` as a `library`
 vector defines them, the object `sameObject` reads being the language's bound object for a described definition, which
 carries the address the definition's symbol answered as a registered definition does. It also reads `calls`, one
@@ -481,6 +501,9 @@ entry per call step in order, for what the operation answered:
 
 The status is the `weivel_status` the operation returned, lowercase without its prefix, read off the core's constants,
 whichever way the language hands it to its caller.
+
+A vector with `blocking` steps also reads `blocking`: one entry per `blocking` step in order, each the list of
+operation names the layer reported for that service, in the description's order, `[]` for none.
 
 A vector that reads releases also reads `released`: one entry per `readReleases` step after its first, each the
 counts that step read minus the counts the first one read, per kind, as decimal strings
@@ -512,6 +535,16 @@ whose `described_visit.steps` is counted by a member it does not have, and witne
 caller's mistake, that neither service is registered afterwards, though the mirror's description is sound, and that
 nothing is reported, as `loaded`, `callersMistake`, `got` and `reported` state. A layer that loads a description
 without checking it, or that registers the mirror before it checks the walker and leaves it there, fails here.
+
+## `description/a-definition-described-without-its-nested-description-fails-the-load`
+
+A description naming a definition it does not describe refuses the load, as one the standard's check refuses does.
+
+The suite builds the vector's `given` through its layer, the walker declaring `described_broken_definition_description`,
+whose `described_loan.counter` is a DEFINITION naming `described_counter` while the description holds no nested
+description for it, and witnesses what `description/a-broken-count-description-fails-the-load` does: the load refused
+as the caller's mistake, neither service registered, nothing reported. A layer that loads such a description would meet
+a definition in an answer it cannot bind, and it fails here, C included, since the check is every layer's.
 
 ## `description/a-definition-declared-without-its-description-loads-as-before`
 
@@ -632,6 +665,28 @@ The suite builds the vector's `given` through its layer, reads releases, opens a
 again, unloads, and reads them a third time through the mirror it still holds. It witnesses `calls` exactly, and
 `released` exactly: no handle released before the unload and one after it. A layer that leaves a held handle to the
 language's collector, or releases it after the binary closed, fails here.
+
+## The blocking and nested-definition vectors
+
+Three vectors of `description/binding/` witness what a description's `blocking` and `definitions` mean to a layer that
+binds:
+
+- `description/binding/a-blocking-operation-answers-as-any-does-and-is-reported-blocking`: the walker's `wait` called
+  with `9007199254740993` ticks answers them, as `calls`, so a layer that runs a blocking operation by another path
+  still answers it as a direct one does; then `blocking` is read for the walker and for the mirror and witnessed
+  exactly: `["wait"]`, then `[]`. A layer that reports every operation, or none, or one name more than the description
+  lists, fails here;
+- `description/binding/an-answer-carrying-a-definition-is-callable-until-released`: `lend` answers the loan with its
+  counter kept; `add` through it answers `1005`, then the largest u64 for an `amount` that reaches it exactly, then
+  MALFORMED for one more; releasing the counter and calling it again is the caller's mistake. A layer that hands back
+  a definition it cannot call, one whose `add` reads the wrong context, or one still callable after its answer ended
+  fails here;
+- `description/binding/a-nested-definitions-answers-are-released-exactly-once`: the counter's calls answer nothing a
+  release frees, so the suite reads releases, calls `find` (refused), `lend` and `add` twice, releases the counter,
+  reads releases, unloads and reads them again, and witnesses `released` exactly: one refusal both times and no
+  reflection, tree or handle. A layer that releases the loan, the nested definition or an `add` answer through a
+  release the description names for none reads one more of some kind, and one that releases the refusal twice reads
+  two refusals.
 
 ## The `lifecycle` op
 

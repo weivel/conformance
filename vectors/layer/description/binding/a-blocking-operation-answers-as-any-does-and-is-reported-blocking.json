@@ -1,0 +1,92 @@
+{
+  "id": "description/binding/a-blocking-operation-answers-as-any-does-and-is-reported-blocking",
+  "op": "description",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-walker",
+        "operation": "wait",
+        "with": {
+          "ticks": "9007199254740993"
+        }
+      },
+      {
+        "holder": "agenda",
+        "blocking": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "blocking": "described-mirror"
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "status": "ok",
+          "answer": "9007199254740993"
+        }
+      ]
+    },
+    "blocking": {
+      "equals": [
+        [
+          "wait"
+        ],
+        []
+      ]
+    }
+  }
+}

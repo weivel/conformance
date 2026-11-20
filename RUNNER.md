@@ -177,7 +177,9 @@ The same op under `vectors/layer/library/` loads a declaration through a languag
 `vectors/layer/LAYER.md` says. A declaration whose services declare their `description` is loaded through a
 language's host by the layer op `description`, under `vectors/layer/description/`, on the standard's `described` test
 library: every layer checks its descriptions at the load, and a layer that binds descriptions also calls it through
-what they say, as `vectors/layer/LAYER.md` states.
+what they say, as `vectors/layer/LAYER.md` states. A description may mark operations `blocking` and describe the
+definitions its answers carry, and those vectors read two facts beyond a call's answer: the operations a layer reports
+blocking, and a nested definition called until the answer that carried it is released.
 
 ### `unbound`
 
