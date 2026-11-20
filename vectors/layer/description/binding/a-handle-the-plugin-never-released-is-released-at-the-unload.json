@@ -48,6 +48,10 @@
       },
       {
         "holder": "agenda",
+        "readReleases": true
+      },
+      {
+        "holder": "agenda",
         "call": "described-walker",
         "operation": "open",
         "with": {
@@ -68,18 +72,14 @@
       },
       {
         "holder": "agenda",
-        "call": "described-mirror",
-        "operation": "count_releases",
-        "with": {}
+        "readReleases": true
       },
       {
         "unload": true
       },
       {
         "holder": "agenda",
-        "call": "described-mirror",
-        "operation": "count_releases",
-        "with": {}
+        "readReleases": true
       }
     ]
   },
@@ -102,24 +102,22 @@
         {
           "status": "ok",
           "answer": "3"
+        }
+      ]
+    },
+    "released": {
+      "equals": [
+        {
+          "reflections": "0",
+          "trees": "0",
+          "refusals": "0",
+          "cursors": "0"
         },
         {
-          "status": "ok",
-          "answer": {
-            "reflections": "0",
-            "trees": "0",
-            "refusals": "0",
-            "cursors": "0"
-          }
-        },
-        {
-          "status": "ok",
-          "answer": {
-            "reflections": "0",
-            "trees": "0",
-            "refusals": "0",
-            "cursors": "1"
-          }
+          "reflections": "0",
+          "trees": "0",
+          "refusals": "0",
+          "cursors": "1"
         }
       ]
     }

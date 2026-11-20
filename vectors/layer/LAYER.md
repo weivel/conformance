@@ -379,8 +379,8 @@ as weivel/c does. The library has two definition services:
 - `described-mirror`, the `described_mirror` definition: `reflect` answers a deep copy of a `described_sample`, a struct
   holding a member of every kind; `tree` answers a value tree built from a sample; `find` answers a text the library
   keeps for `alpha` and `omega`, NONE for any other key and a refusal for `refuse`; `measure`, `negate`, `halve`,
-  `invert`, `swap_shade`, `grow` and `weigh` each take one input of one kind and answer one; `count_releases` answers how
-  many releases of each kind, of both services, have freed something since the binary was opened;
+  `invert`, `swap_shade`, `grow` and `weigh` each take one input of one kind and answer one; `count_releases`
+  answers how many releases of each kind, of both services, have freed something since the binary was opened;
 - `described-walker`, the `described_walker` definition: `open` answers a handle, `use` takes it as an input, and
   `visit` takes it inside a struct.
 
@@ -412,6 +412,8 @@ the layer has nothing left to run from the one before:
   operation always names one;
 - `{ holder, release: name }` lets go of the handle kept under that name, in the language's own way of releasing a
   handle;
+- `{ holder, readReleases: true }` calls the mirror's `count_releases` through the object the holder resolved and
+  keeps its answer for `released`, not for `calls`;
 - `{ unload: true }` unloads the library through the host's public unload call.
 
 A holding outlives the unload until its holder lets go of it, as `library/a-binary-stays-open-while-a-holding-lives`
@@ -425,10 +427,12 @@ own value of the kind the description gives it, and back:
   refusal is written, and a SIZE parameter that counts another one is never written either: the binding sets it from
   what it counts. An input the step leaves out is passed as its kind's zero: 0, a NULL text, pointer or handle, or an
   empty array, bytes or texts with a count of 0.
-- U32 is a JSON integer, an enum's value included, written as its number. F64 is a JSON number.
+- U32 is a JSON integer, an enum's value included, written as its number. F64 is a JSON number, and always finite:
+  JSON has no infinity or NaN, so no vector hands or expects one.
 - U64 and I64, and a SIZE that counts nothing, are decimal strings (`"9007199254740993"`, `"-9223372036854775808"`),
   never JSON numbers, because a JSON reader is free to read a number as a double, which rounds every integer beyond
-  2^53. The suite reads one into its language's 64-bit integer.
+  2^53. The suite reads one into its language's 64-bit integer. `grow` hands and answers a SIZE beyond 2^32, so it
+  assumes a 64-bit `size_t`: a platform whose `size_t` is 32 bits is not a target of these vectors.
 - TEXT is a JSON string, or null for NULL. TEXTS is an array of strings and nulls. BYTES is an array of integers from
   0 to 255. An ARRAY is an array of its elements, each written by its own kind. A NULL array, texts or bytes is
   answered as `[]`, its count being 0 either way.
@@ -441,8 +445,12 @@ own value of the kind the description gives it, and back:
 - VALUE, a `weivel_standard_value`, is the JSON value of the same kind: NULL is null, BOOLEAN true or false, NUMBER a
   number, TEXT a string, LIST an array and RECORD an object of its entries. NONE has no JSON value, so it is left out
   where it stands, a member or an answer.
+- A RECORD's entries are compared as a JSON object is, by key and value, so their order is not witnessed: a layer
+  keeps the provider's order, and no vector can tell it did.
 - HANDLE is `{ "handle": name }`: as an input, the handle a step kept under that name; as an answer, the one the step
   keeps under the name its `keep` gives.
+- A HANDLE member inside an answer struct is written the same way, and the handle it answers is kept under the step's
+  `keep` as an answered handle is: a step whose answer holds one names `keep`, and an answer holds at most one.
 
 After the last step the suite reads `loaded`, `callersMistake`, `got`, `sameObject` and `reported` as a `library`
 vector defines them, the object `sameObject` reads being the language's bound object for a described definition, which
@@ -456,9 +464,16 @@ entry per call step in order, for what the operation answered:
 The status is the `weivel_status` the operation returned, lowercase without its prefix, read off the core's constants,
 whichever way the language hands it to its caller.
 
-A vector reading `count_releases` is judged only while nothing in the process but the layer holds the `described`
-binary open, as a `library` vector reading the echo counter is: the counts are the binary's since it was opened, so a
-handle the suite or another test keeps on it carries the counts of an earlier run into this one.
+A vector that reads releases also reads `released`: one entry per `readReleases` step after its first, each the
+counts that step read minus the counts the first one read, per kind, as decimal strings
+(`{ reflections, trees, refusals, cursors }`). The library keeps its counts for the life of its binary in the process,
+so only a difference says what this run released; a suite that keeps the binary mapped between vectors reads the same
+differences as one that maps it afresh.
+
+What the counts can catch: each counts a release that freed something, so an answer the layer never releases reads one
+fewer, a leak. A second release of a reflection, a tree or a refusal finds it empty, which the convention makes a no-op
+that counts nothing, so releasing one of those twice is caught only by the sanitizers. A cursor's release counts every
+call, so releasing a handle twice reads one more.
 
 ## `description/a-checked-description-registers-the-providers-own-pointer`
 
@@ -565,20 +580,20 @@ nothing for an answer the description names no release for.
 
 The suite builds the vector's `given` through its layer and calls, in order, `reflect` and `tree`, each answering
 storage; `find` and `open`, each refused; `find` answering a text the library keeps; `open` answering a handle, which
-the holder releases; then `count_releases`, the unload, and `count_releases` again through the mirror it still holds.
-It witnesses `calls` exactly, both counts reading one reflection, one tree, two refusals and one handle: a layer that
-leaks an answer reads one fewer, and one that releases a handle again at the unload, after its holder released it,
-reads two handles or crashes.
+the holder releases; then reads releases, unloads, and reads them again through the mirror it still holds, having
+read them once before its first call. It witnesses `calls` exactly, and `released` exactly: both differences read one
+reflection, one tree, two refusals and one handle. A layer that leaks an answer reads one fewer of its kind, and one
+that releases the handle again at the unload, after its holder released it, reads two handles.
 
 ## `description/binding/a-handle-the-plugin-never-released-is-released-at-the-unload`
 
 A handle its holder never lets go of is released by the layer at the unload, through the release the description
 names for it, while its binary is still open.
 
-The suite builds the vector's `given` through its layer, opens a handle and uses it, reads `count_releases`, unloads,
-and reads `count_releases` again through the mirror it still holds. It witnesses `calls` exactly: no handle released
-before the unload and one after it. A layer that leaves a held handle to the language's collector, or releases it
-after the binary closed, fails here.
+The suite builds the vector's `given` through its layer, reads releases, opens a handle and uses it, reads releases
+again, unloads, and reads them a third time through the mirror it still holds. It witnesses `calls` exactly, and
+`released` exactly: no handle released before the unload and one after it. A layer that leaves a held handle to the
+language's collector, or releases it after the binary closed, fails here.
 
 ## The `lifecycle` op
 
