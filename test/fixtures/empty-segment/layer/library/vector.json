@@ -1,0 +1,1 @@
+{ "id": "library/nested//a-vector", "op": "library", "covers": "12.6", "given": {}, "then": { "loaded": true } }

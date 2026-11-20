@@ -20,6 +20,7 @@ static const op_entry OPS[] = {
     {"validate", adapter_validate},
     {"library", adapter_library},
     {"lifecycle", NULL},
+    {"description", NULL},
 };
 
 const op_entry *ops_all(size_t *count) {

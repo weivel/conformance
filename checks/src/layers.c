@@ -10,7 +10,14 @@
 typedef struct {
     text_list ids;
     int *named;
+    int *exempt;
 } vector_ids;
+
+static void vector_ids_free(vector_ids *vectors) {
+    text_list_free(&vectors->ids);
+    free(vectors->named);
+    free(vectors->exempt);
+}
 
 static int ends_with(const char *text, const char *suffix) {
     size_t text_length = strlen(text);
@@ -42,17 +49,13 @@ static int load_vector_ids(const char *directory, vector_ids *vectors, char *err
         return 0;
     }
     vectors->named = calloc(vectors->ids.count, sizeof *vectors->named);
-    if (vectors->named == NULL) {
+    vectors->exempt = calloc(vectors->ids.count, sizeof *vectors->exempt);
+    if (vectors->named == NULL || vectors->exempt == NULL) {
         snprintf(error, error_size, "out of memory");
-        text_list_free(&vectors->ids);
+        vector_ids_free(vectors);
         return 0;
     }
     return 1;
-}
-
-static void vector_ids_free(vector_ids *vectors) {
-    text_list_free(&vectors->ids);
-    free(vectors->named);
 }
 
 static int is_id_character(char character) {
@@ -148,17 +151,51 @@ static int load_language(const char *languages_path, const char *language, langu
     return 0;
 }
 
-static int report_unnamed(const vector_ids *vectors, const char *test_root) {
+static int is_under(const char *id, const char *directory) {
+    size_t length = strlen(directory);
+    return strncmp(id, directory, length) == 0 && id[length] == '/';
+}
+
+/**
+ * Sets aside every vector under a directory the language is exempt from, which its tests need not name. Answers how
+ * many were set aside, or -1 with `error` filled for an exemption no vector lies under: such a line is stale, and would
+ * silently exempt whatever directory is given its name next.
+ */
+static long set_aside_exempt(const language_rules *rules, vector_ids *vectors, char *error, size_t error_size) {
+    size_t exemption;
+    size_t at;
+    long set_aside = 0;
+    for (exemption = 0; exemption < rules->layer_exemptions.count; exemption++) {
+        const char *directory = rules->layer_exemptions.items[exemption];
+        long under = 0;
+        for (at = 0; at < vectors->ids.count; at++) {
+            if (is_under(vectors->ids.items[at], directory)) {
+                under += vectors->exempt[at] ? 0 : 1;
+                vectors->exempt[at] = 1;
+            }
+        }
+        if (under == 0) {
+            snprintf(error, error_size, "the language is exempt from %s, under which no layer vector lies", directory);
+            return -1;
+        }
+        set_aside += under;
+    }
+    return set_aside;
+}
+
+static int report_unnamed(const vector_ids *vectors, const char *test_root, long set_aside) {
     size_t at;
     int offenders = 0;
     for (at = 0; at < vectors->ids.count; at++) {
-        if (!vectors->named[at]) {
+        if (!vectors->named[at] && !vectors->exempt[at]) {
             fprintf(stderr, "%s: no test under %s names this layer vector\n", vectors->ids.items[at], test_root);
             offenders++;
         }
     }
     if (offenders == 0) {
-        printf("weivel-layers: every one of %zu layer vectors is named under %s\n", vectors->ids.count, test_root);
+        printf("weivel-layers: every one of %zu layer vectors is named under %s, and %ld more lie under a directory "
+               "the language is exempt from\n",
+               vectors->ids.count - (size_t)set_aside, test_root, set_aside);
     }
     return offenders;
 }
@@ -166,16 +203,20 @@ static int report_unnamed(const vector_ids *vectors, const char *test_root) {
 static int check(const char *root, const char *vector_directory, const language_rules *rules, char *error,
                  size_t error_size) {
     vector_ids vectors;
-    char *test_directory;
+    char *test_directory = NULL;
+    long set_aside;
     int offenders = -1;
     if (!load_vector_ids(vector_directory, &vectors, error, error_size)) {
         return -1;
     }
-    test_directory = tree_join(root, rules->test_root);
-    if (test_directory == NULL) {
-        snprintf(error, error_size, "out of memory");
-    } else if (mark_named_ids(test_directory, rules, &vectors, error, error_size)) {
-        offenders = report_unnamed(&vectors, rules->test_root);
+    set_aside = set_aside_exempt(rules, &vectors, error, error_size);
+    if (set_aside >= 0) {
+        test_directory = tree_join(root, rules->test_root);
+        if (test_directory == NULL) {
+            snprintf(error, error_size, "out of memory");
+        } else if (mark_named_ids(test_directory, rules, &vectors, error, error_size)) {
+            offenders = report_unnamed(&vectors, rules->test_root, set_aside);
+        }
     }
     free(test_directory);
     vector_ids_free(&vectors);

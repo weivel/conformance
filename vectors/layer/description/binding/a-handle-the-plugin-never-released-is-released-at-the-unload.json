@@ -1,0 +1,127 @@
+{
+  "id": "description/binding/a-handle-the-plugin-never-released-is-released-at-the-unload",
+  "op": "description",
+  "covers": "12.5",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-walker",
+        "operation": "open",
+        "with": {
+          "label": "walk",
+          "start": "3"
+        },
+        "keep": "walk"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-walker",
+        "operation": "use",
+        "with": {
+          "cursor": {
+            "handle": "walk"
+          }
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "count_releases",
+        "with": {}
+      },
+      {
+        "unload": true
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "count_releases",
+        "with": {}
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "status": "ok",
+          "answer": {
+            "handle": "walk"
+          }
+        },
+        {
+          "status": "ok",
+          "answer": "3"
+        },
+        {
+          "status": "ok",
+          "answer": {
+            "reflections": "0",
+            "trees": "0",
+            "refusals": "0",
+            "cursors": "0"
+          }
+        },
+        {
+          "status": "ok",
+          "answer": {
+            "reflections": "0",
+            "trees": "0",
+            "refusals": "0",
+            "cursors": "1"
+          }
+        }
+      ]
+    }
+  }
+}

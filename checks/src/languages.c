@@ -39,6 +39,9 @@ static int apply_line(language_rules *rules, const char *kind, const char *value
     if (strcmp(kind, "source-base") == 0) {
         return text_list_add(&rules->source_bases, value);
     }
+    if (strcmp(kind, "layer-exempt") == 0) {
+        return text_list_add(&rules->layer_exemptions, value);
+    }
     if (strcmp(kind, "test-root") == 0) {
         return replace_text(&rules->test_root, value);
     }
@@ -127,6 +130,7 @@ void language_rules_free(language_rules *rules) {
     text_list_free(&rules->prefixes);
     text_list_free(&rules->source_roots);
     text_list_free(&rules->source_bases);
+    text_list_free(&rules->layer_exemptions);
     free(rules->test_root);
     free(rules->header_root);
     memset(rules, 0, sizeof *rules);

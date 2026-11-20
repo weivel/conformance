@@ -1,0 +1,121 @@
+{
+  "id": "description/binding/visit-takes-a-handle-inside-a-struct",
+  "op": "description",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-walker",
+        "operation": "open",
+        "with": {
+          "label": "walk",
+          "start": "10"
+        },
+        "keep": "walk"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-walker",
+        "operation": "visit",
+        "with": {
+          "visit": {
+            "cursor": {
+              "handle": "walk"
+            },
+            "skip": "2",
+            "steps": [
+              "3",
+              "4"
+            ]
+          }
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-walker",
+        "operation": "visit",
+        "with": {
+          "visit": {
+            "cursor": {
+              "handle": "walk"
+            }
+          }
+        }
+      },
+      {
+        "holder": "agenda",
+        "release": "walk"
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "status": "ok",
+          "answer": {
+            "handle": "walk"
+          }
+        },
+        {
+          "status": "ok",
+          "answer": "19"
+        },
+        {
+          "status": "ok",
+          "answer": "10"
+        }
+      ]
+    }
+  }
+}

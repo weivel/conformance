@@ -1,0 +1,91 @@
+{
+  "id": "description/binding/a-missing-required-input-answers-malformed",
+  "op": "description",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "find",
+        "with": {}
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "reflect",
+        "with": {}
+      },
+      {
+        "holder": "agenda",
+        "call": "described-walker",
+        "operation": "visit",
+        "with": {}
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "status": "malformed"
+        },
+        {
+          "status": "malformed"
+        },
+        {
+          "status": "malformed"
+        }
+      ]
+    }
+  }
+}

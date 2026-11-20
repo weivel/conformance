@@ -93,6 +93,8 @@ set(checks_test_scenarios
     layers_reads_c_tests_and_no_build_script
     layers_accepts_a_suite_naming_every_vector
     layers_rejects_a_vector_no_test_names
+    layers_sets_aside_a_directory_the_language_is_exempt_from
+    layers_refuses_an_exemption_no_vector_lies_under
     layers_does_not_count_an_id_inside_a_longer_one
     layers_reads_only_the_test_root
     layers_ignores_a_vector_copied_under_the_test_root

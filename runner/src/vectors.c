@@ -79,12 +79,21 @@ static int is_slug(const char *start, size_t length) {
     return 1;
 }
 
+/** A family, then one or more segments each after a `/`, every one a slug: the path of a vector in a subdirectory. */
 static int id_is_valid(const char *id) {
+    const char *start = id;
     const char *slash = strchr(id, '/');
     if (slash == NULL) {
         return 0;
     }
-    return is_slug(id, (size_t)(slash - id)) && is_slug(slash + 1, strlen(slash + 1));
+    while (slash != NULL) {
+        if (!is_slug(start, (size_t)(slash - start))) {
+            return 0;
+        }
+        start = slash + 1;
+        slash = strchr(start, '/');
+    }
+    return is_slug(start, strlen(start));
 }
 
 static int id_belongs_to_op(const char *id, const char *op) {
@@ -135,7 +144,7 @@ static int check_shape(const vector *candidate, char *error, size_t error_size) 
                       candidate->op);
     }
     if (candidate->id == NULL || !id_is_valid(candidate->id)) {
-        return refuse(error, error_size, "%s is not a valid vector: %s", path, "id must read family/name in lowercase words");
+        return refuse(error, error_size, "%s is not a valid vector: %s", path, "id must read family/name, or family/directory/name, in lowercase words");
     }
     if (candidate->covers == NULL || !covers_is_valid(candidate->covers)) {
         return refuse(error, error_size, "%s is not a valid vector: %s", path,
