@@ -1,0 +1,88 @@
+{
+  "id": "description/binding/halve-takes-and-answers-a-double",
+  "op": "description",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "halve",
+        "with": {
+          "number": -3
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "halve",
+        "with": {
+          "number": 1e+300
+        }
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "status": "ok",
+          "answer": -1.5
+        },
+        {
+          "status": "ok",
+          "answer": 5e+299
+        }
+      ]
+    }
+  }
+}

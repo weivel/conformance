@@ -1,0 +1,246 @@
+{
+  "id": "description/binding/reflect-answers-every-member-kind",
+  "op": "description",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "reflect",
+        "with": {
+          "sample": {
+            "shade": 2,
+            "tier": 7,
+            "flags": 4294967295,
+            "big": "9007199254740993",
+            "delta": "-9223372036854775808",
+            "ratio": 1e+300,
+            "label": "sample",
+            "tags": [
+              "first",
+              null,
+              "third"
+            ],
+            "bytes": [
+              0,
+              1,
+              255
+            ],
+            "origin": {
+              "label": null,
+              "x": "-5",
+              "y": 0.5
+            },
+            "best": {
+              "label": "best",
+              "x": "9223372036854775807",
+              "y": -2.25
+            },
+            "points": [
+              {
+                "label": "near",
+                "x": "1",
+                "y": 1.5
+              },
+              {
+                "label": null,
+                "x": "-1",
+                "y": 0
+              }
+            ],
+            "numbers": [
+              0,
+              7,
+              4294967295
+            ],
+            "held": [
+              "text",
+              2.5,
+              true,
+              null,
+              {
+                "key": "value"
+              }
+            ],
+            "extra": {
+              "nested": {
+                "deeper": [
+                  1
+                ]
+              }
+            },
+            "values": [
+              "one",
+              [
+                2,
+                false
+              ]
+            ]
+          }
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "reflect",
+        "with": {
+          "sample": {}
+        }
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "status": "ok",
+          "answer": {
+            "sample": {
+              "shade": 2,
+              "tier": 7,
+              "flags": 4294967295,
+              "big": "9007199254740993",
+              "delta": "-9223372036854775808",
+              "ratio": 1e+300,
+              "label": "sample",
+              "tags": [
+                "first",
+                null,
+                "third"
+              ],
+              "bytes": [
+                0,
+                1,
+                255
+              ],
+              "origin": {
+                "label": null,
+                "x": "-5",
+                "y": 0.5
+              },
+              "best": {
+                "label": "best",
+                "x": "9223372036854775807",
+                "y": -2.25
+              },
+              "points": [
+                {
+                  "label": "near",
+                  "x": "1",
+                  "y": 1.5
+                },
+                {
+                  "label": null,
+                  "x": "-1",
+                  "y": 0
+                }
+              ],
+              "numbers": [
+                0,
+                7,
+                4294967295
+              ],
+              "held": [
+                "text",
+                2.5,
+                true,
+                null,
+                {
+                  "key": "value"
+                }
+              ],
+              "extra": {
+                "nested": {
+                  "deeper": [
+                    1
+                  ]
+                }
+              },
+              "values": [
+                "one",
+                [
+                  2,
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "status": "ok",
+          "answer": {
+            "sample": {
+              "shade": 0,
+              "tier": 0,
+              "flags": 0,
+              "big": "0",
+              "delta": "0",
+              "ratio": 0,
+              "label": null,
+              "tags": [],
+              "bytes": [],
+              "origin": {
+                "label": null,
+                "x": "0",
+                "y": 0
+              },
+              "points": [],
+              "numbers": [],
+              "values": []
+            }
+          }
+        }
+      ]
+    }
+  }
+}

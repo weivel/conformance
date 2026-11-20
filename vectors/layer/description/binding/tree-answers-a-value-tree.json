@@ -1,0 +1,119 @@
+{
+  "id": "description/binding/tree-answers-a-value-tree",
+  "op": "description",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "tree",
+        "with": {
+          "sample": {
+            "label": "tree",
+            "tags": [
+              "a",
+              null
+            ],
+            "ratio": 0.25,
+            "held": {
+              "k": [
+                1,
+                "two"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "tree",
+        "with": {
+          "sample": {}
+        }
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "status": "ok",
+          "answer": {
+            "label": "tree",
+            "tags": [
+              "a",
+              null
+            ],
+            "ratio": 0.25,
+            "held": {
+              "k": [
+                1,
+                "two"
+              ]
+            }
+          }
+        },
+        {
+          "status": "ok",
+          "answer": {
+            "label": null,
+            "tags": [],
+            "ratio": 0,
+            "held": null
+          }
+        }
+      ]
+    }
+  }
+}

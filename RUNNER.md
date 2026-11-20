@@ -22,8 +22,13 @@ A vector's directory says which suite judges it.
   core, through an adapter that drives the standard's library (`siblings/standard`) in-process.
 - `vectors/layer/<op>/` is witnessed by each language's own layer suite, because the core never calls a host
   language. `vectors/layer/LAYER.md` says what each suite must witness. The runner loads and counts these and
-  does not run them; the report lists them as awaiting a layer. The `lifecycle` op is asked only here: the kit
-  knows it so its vectors load, and no adapter answers it, so a core vector of that op would be errored.
+  does not run them; the report lists them as awaiting a layer. The `lifecycle` and `description` ops are asked
+  only here: the kit knows them so their vectors load, and no adapter answers them, so a core vector of either would
+  be errored.
+
+A vector's id is its family, which is its op, a `/`, and its name, every part lowercase words joined by hyphens. A
+vector in a subdirectory of its op's directory carries that subdirectory in its id, as
+`description/binding/a-none-answer-arrives-as-none` does, so the id is still its path under its tier without `.json`.
 
 ## Adapters
 
@@ -169,7 +174,9 @@ C identifier, refused at it as `wrong_type` when it is not a string and `invalid
 definition is described, so one beside a bytes function is refused there as `conflicting_field`.
 
 The same op under `vectors/layer/library/` loads a declaration through a language's host, and is witnessed as
-`vectors/layer/LAYER.md` says.
+`vectors/layer/LAYER.md` says. A declaration whose services declare their `description` is loaded through a
+language's host by the layer op `description`, under `vectors/layer/description/`, which binds the standard's
+`described` test library from its descriptions alone.
 
 ### `unbound`
 
@@ -435,7 +442,7 @@ weivel-core-gate --sources <rules-file> <core-root>
   implementation is the role `c` and the language `c`: one word, read by purity as the role and by parity and layers
   as the language. Any other role is a language named in `checks/languages.txt`, whose lines read
   `<language> <kind> <value>` with kind `extension`, `name`, `pattern`, `prefix`, `source-root`, `source-base`,
-  `test-root` or `header-root`; it allows its own files and prose, and a generated `.js` under a Java repository is an
+  `test-root`, `header-root` or `layer-exempt`; it allows its own files and prose, and a generated `.js` under a Java repository is an
   offender.
   A `pattern` holds one `*`, standing for any characters. A pattern that begins with it names files by their ending,
   as an `extension` does, and like one needs a name before that ending: `*.cmake` does not allow a file named
@@ -501,7 +508,13 @@ weivel-core-gate --sources <rules-file> <core-root>
   (`consume/a-throwing-listener-does-not-silence-the-others`), must appear in some source file of the language, one
   with an `extension` the list gives it, under its `test-root`, standing on its own: a longer id, a file path that
   contains it, or a vector copied under the tests as a `.json` fixture does not count. A missing id is an offender.
-  Under the layer vector directory nothing is skipped, so a vector in a directory of any name is asked for. Under the
+  Under the layer vector directory nothing is skipped, so a vector in a directory of any name is asked for, except
+  under a directory a `layer-exempt` line gives the language (`c layer-exempt description/binding`): its vectors ask
+  for what that language's layer does not do by design, as `vectors/layer/LAYER.md` says of each such directory, so
+  none of them is asked for and the summary counts them apart. The line names a directory under the layer vector
+  directory, and covers the vectors whose ids begin with it and a `/`, so `description/bindings/...` is still asked
+  for. An exemption no vector lies under is refused with 2, since a stale line would exempt whatever directory is
+  given its name next. Under the
   test root a directory directly beneath it that carries a name skipped at a repository root (`build`, `build-*`,
   `siblings`, `node_modules`, `.git` and the hosting-service directory) is not read, so build output names no vector.
   A language the list does not name, or names without a `test-root` or an `extension`, is refused, never read as the

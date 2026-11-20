@@ -18,6 +18,7 @@ static const pinned_count PINNED[] = {
     {"core/carry", 1},      {"core/consume", 16},      {"standard/identity", 14},
     {"standard/validate", 30}, {"standard/library", 13}, {"layer/consume", 2},
     {"layer/want", 4},      {"layer/lifecycle", 6},    {"layer/library", 13},
+    {"layer/description", 3}, {"layer/description/binding", 18},
 };
 
 static const char *const SECTIONS[] = {"12.1",         "12.2",         "12.3",         "12.4",
@@ -107,7 +108,7 @@ static void asks_about_every_op_the_kit_knows(void) {
     static const char *const OPS[] = {"supports", "boot",    "order",    "resolve", "revoke",
                                       "scope",    "want",    "reach",    "unbound", "carry",
                                       "consume",  "identity", "validate", "library",
-                                      "lifecycle"};
+                                      "lifecycle", "description"};
     corpus loaded;
     char error[ERROR_CAPACITY];
     size_t at;
@@ -128,6 +129,10 @@ static void asks_about_every_op_the_kit_knows(void) {
 
 static void refuses_an_unknown_op(void) {
     check_refused("unknown-op", "unknown op 'reticulate'");
+}
+
+static void refuses_an_id_with_an_empty_segment(void) {
+    check_refused("empty-segment", "id must read family/name, or family/directory/name");
 }
 
 static void refuses_a_duplicate_id(void) {
@@ -298,6 +303,7 @@ int main(void) {
     covers_every_section_the_kit_pins();
     asks_about_every_op_the_kit_knows();
     refuses_an_unknown_op();
+    refuses_an_id_with_an_empty_segment();
     refuses_a_duplicate_id();
     refuses_an_id_outside_its_op_family();
     refuses_a_vector_that_asserts_nothing();

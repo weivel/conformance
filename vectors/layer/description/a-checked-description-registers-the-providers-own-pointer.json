@@ -1,0 +1,64 @@
+{
+  "id": "description/a-checked-description-registers-the-providers-own-pointer",
+  "op": "description",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "sameObject": true,
+    "reported": {
+      "equals": []
+    }
+  }
+}

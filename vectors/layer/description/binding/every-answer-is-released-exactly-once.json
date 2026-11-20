@@ -1,0 +1,208 @@
+{
+  "id": "description/binding/every-answer-is-released-exactly-once",
+  "op": "description",
+  "covers": "12.5",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "reflect",
+        "with": {
+          "sample": {
+            "label": "once"
+          }
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "tree",
+        "with": {
+          "sample": {}
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "find",
+        "with": {
+          "key": "refuse"
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-walker",
+        "operation": "open",
+        "with": {
+          "label": "refuse",
+          "start": "0"
+        },
+        "keep": "never"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "find",
+        "with": {
+          "key": "alpha"
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-walker",
+        "operation": "open",
+        "with": {
+          "label": "walk",
+          "start": "1"
+        },
+        "keep": "walk"
+      },
+      {
+        "holder": "agenda",
+        "release": "walk"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "count_releases",
+        "with": {}
+      },
+      {
+        "unload": true
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "count_releases",
+        "with": {}
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "status": "ok",
+          "answer": {
+            "sample": {
+              "shade": 0,
+              "tier": 0,
+              "flags": 0,
+              "big": "0",
+              "delta": "0",
+              "ratio": 0,
+              "label": "once",
+              "tags": [],
+              "bytes": [],
+              "origin": {
+                "label": null,
+                "x": "0",
+                "y": 0
+              },
+              "points": [],
+              "numbers": [],
+              "values": []
+            }
+          }
+        },
+        {
+          "status": "ok",
+          "answer": {
+            "label": null,
+            "tags": [],
+            "ratio": 0,
+            "held": null
+          }
+        },
+        {
+          "status": "refused",
+          "detail": "described refused on purpose",
+          "fix": "pass anything but \"refuse\""
+        },
+        {
+          "status": "refused",
+          "detail": "described refused on purpose",
+          "fix": "pass anything but \"refuse\""
+        },
+        {
+          "status": "ok",
+          "answer": "the first letter"
+        },
+        {
+          "status": "ok",
+          "answer": {
+            "handle": "walk"
+          }
+        },
+        {
+          "status": "ok",
+          "answer": {
+            "reflections": "1",
+            "trees": "1",
+            "refusals": "2",
+            "cursors": "1"
+          }
+        },
+        {
+          "status": "ok",
+          "answer": {
+            "reflections": "1",
+            "trees": "1",
+            "refusals": "2",
+            "cursors": "1"
+          }
+        }
+      ]
+    }
+  }
+}

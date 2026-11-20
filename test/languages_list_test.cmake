@@ -9,6 +9,7 @@ set(expected
     "c source-root src"
     "c test-root test"
     "c header-root include/weivel/c"
+    "c layer-exempt description/binding"
     "java extension .java"
     "java name build.gradle"
     "java name settings.gradle"
