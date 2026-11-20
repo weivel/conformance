@@ -8,8 +8,10 @@ name one nowhere.
 
 The one exception is a directory of vectors that ask for something a language's layer does not do by design:
 `checks/languages.txt` names it for that language with a `layer-exempt` line, and `layers` then asks for none of its
-vectors and refuses the line once no vector lies under it. Today that is `description/binding/`, which C is exempt
-from because a C plugin reads a definition through its header and binds nothing (see the `description` op below).
+vectors and refuses the line once no vector lies under it. Today there are two: `description/binding/`, which C is
+exempt from because a C plugin reads a definition through its header and binds nothing (see the `description` op
+below), and `host/`, which C and Java are exempt from because only a language that ships a host program sits it, and
+TypeScript is the one that does (see the `host` op below).
 
 ## `consume/a-throwing-listener-does-not-silence-the-others`
 
@@ -840,3 +842,160 @@ destroys the host, then asks it to verify `agenda`, and witnesses:
 - no want is left pending;
 - the verify after the destroy answers quietly, and nothing the destroy set off, `agenda`'s `activate` ending with
   it, throws to the suite or reaches the layer's log or error sink.
+
+## The `host` op
+
+A `host` vector runs a language's host program, the program `weivel/host.h` of the standard describes, against the
+kit's stub provider `stub-host`, as a child process, and judges what the provider was told. Only a language that ships
+a host program sits these vectors; `checks/languages.txt` exempts C and Java from `host/` with `layer-exempt` lines,
+and the runner knows the op so the vectors load, with no adapter to answer it.
+
+**The library.** `stub-host` is `test/stub-host/` of the kit, the target `stub-host`: `stub-host.dll`,
+`libstub-host.so` or `libstub-host.dylib` in the build's `bin` directory, under `bin/<configuration>` for a
+multi-configuration generator. A suite builds it by configuring `test/stub-host` as a project of its own with
+`-DWEIVEL_STANDARD_SOURCE_DIR` set to its standard sibling and `-DWEIVEL_CORE_SOURCE_DIR` to its core sibling, and
+building that one target; inside the kit's own build it is built beside the kit's other fixtures. Its declaration is
+`test/stub-host/library.json`, and it serves two definitions:
+
+- `weivel.host`, the definition `weivel_standard_host`, whose description the library answers from
+  `stub_host_description`, a one-line forwarder to the standard's `weivel_standard_host_description`. The forwarder
+  exists because the library links the standard statically, so on Windows the standard's symbol is not among the
+  library's exports, and a host finds a declared description only among those;
+- `weivel.scope`, the definition `weivel_standard_scopes`, described by `stub_host_scopes_description`, the forwarder to
+  `weivel_standard_scopes_description`.
+
+It names nothing of any application, and it keeps everything in memory except its record.
+
+**`stub-host.json`.** `start` reads its first argument as a directory and reads `stub-host.json` there. A path in the
+file is joined to the directory with a `/` unless it is absolute; every path the plan answers is joined so. The file
+is an object:
+
+```json
+{
+  "mode": "serve",
+  "libraries": [{ "binary": "lib/one.dll", "declaration": "lib/library.json" }],
+  "plugins": [
+    {
+      "name": "alpha",
+      "directory": "alpha",
+      "manifest": "alpha/manifest.json",
+      "entry": "alpha/entry.js",
+      "scope": true,
+      "settings": { "greeting": "hello", "count": 3, "on": true }
+    },
+    { "name": "beta", "directory": "beta", "manifest": "beta/manifest.json", "entry": "beta/entry.js",
+      "scopeRefused": "beta declares a setting of no known kind" }
+  ],
+  "action": { "plugin": "alpha", "name": "echo", "arguments": { "text": "hi" } },
+  "ticks": [40, 80],
+  "exit": 0,
+  "refuse": { "start": "told to refuse", "started": "will not run on" }
+}
+```
+
+- `mode` is `serve` or `action`, and `plugins` a list, possibly empty; both are required. `libraries` is optional.
+- A plugin's `name` is lowercase letters, digits and hyphens, once per file, and names it in the record. `directory`,
+  `manifest` and `entry` are required. `scope: true` gives it a scope; `scopeRefused` refuses its scope with that
+  detail; with neither, its scope opens and offers nothing. `settings` holds texts, numbers and booleans only, its
+  config's starting values.
+- `action` is required in `action` mode and refused in `serve` mode: the plugin by name, the action's name, and its
+  `arguments`, any JSON, answered as the plan's value tree, kind NONE when absent.
+- `ticks` are milliseconds after the `now` of the first tick: the first tick answers `now + ticks[0]`, each later one
+  the first tick's `now` plus the next entry, and once they are spent a tick answers none.
+- `exit` is the code `stop` answers, 0 when absent, 0 to 255.
+- `refuse.start` makes `start` refuse with that detail, after recording itself; `refuse.started` makes `started`
+  refuse after recording its outcomes.
+
+A file that breaks this shape makes `start` refuse, its detail naming the member.
+
+**What the provider does.** `start` answers the plan: the libraries, then the plugins in the file's order, the mode,
+and in `action` mode the action's plugin by its manifest path as the plan names it. `started` records the outcomes and
+answers OK. `tick` records how it came, answers the next time, and once it has answered none never answers another.
+`finished` records how the action ended. `stop` records itself and answers `exit`. `open` finds the plugin by its
+manifest path exactly as the plan named it, and answers a scoped plugin a config of its `settings`, a secrets store
+that starts empty, paths (`plugin` its directory, `cache` and `config` the directories of those names in it) and a
+log, each the plugin's own and none shared with another plugin. Every call is recorded under one lock, so a call from
+another thread, as a blocking `tick` is, never splits a line.
+
+**`record.txt`.** `start` empties `record.txt` in the directory, then every call appends one line, in the order the
+calls were made. A text that is not a name is written as a JSON string, and a value as compact JSON: a record's
+members in order, a number in the shortest form that reads back as the same double. The lines are:
+
+| line | written when |
+| --- | --- |
+| `start` then ` "<argument>"` for each argument after the directory | `start` was called with a readable file |
+| `open <plugin> scoped`, `open <plugin> empty` or `open <plugin> refused` | `open` answered the plugin's scope, an empty one, or refused it; `unknown` for a manifest the plan never named |
+| `log <plugin> <level> "<message>"`, then ` <fields>` when fields were given | the plugin's log wrote an entry; the level is `trace`, `debug`, `info`, `warn` or `error` |
+| `set <plugin> "<key>" <value>` | the plugin's config stored a setting |
+| `started <count>` | `started` was called with that many outcomes |
+| `outcome <plugin> <state> detail` or `... no-detail` | one per outcome, in the order handed in: `activated`, `refused`, `failed`, or `state-<n>`; `detail` when the outcome carried a non-empty detail |
+| `tick <n> first`, `tick <n> on-time`, `tick <n> early` or `tick <n> unasked` | the `n`th tick: the first, one whose `now` reached the time the previous tick answered, one that came before it, or one after a tick answered none |
+| `finished result <value>`, `finished none`, `finished failure` or `finished malformed` | the action answered a value, answered nothing (kind NONE), threw, or `finished` was handed both or neither |
+| `stop` | `stop` was called |
+
+**The program's order.** The vectors judge the record with `equals`, so they fix the order the contract states:
+`start`; then for each plugin of the plan in order, its scope opened and the plugin activated before the next
+plugin's scope is opened; `started` once, with every plugin's outcome; `tick` at once, and then whenever the time it
+answered comes, until it answers none; in `action` mode, the action run after the first tick answered and `finished`
+told how it ended; and `stop` last, once, whatever happened. A plugin whose scope is refused is not activated and is
+told as `refused`; one whose activation throws is told as `failed`. When `start` refuses, the program calls nothing
+else and exits non-zero. Otherwise it exits with the code `stop` answered.
+
+**A vector's `given`.** `{ stubHost, plugins, arguments?, terminateAfter? }`:
+
+- `stubHost` is the `stub-host.json` to write, without any plugin's `entry`. The suite makes a fresh directory, writes
+  each plugin's entry and manifest as its own language writes them, at the plugin's `directory` and `manifest`, sets
+  each plugin's `entry` to the path of the entry it wrote, relative to the directory, and writes the file;
+- `plugins` says what each plugin's entry does, by `name`, in a form every language realises: `activate` is the steps
+  its activation runs in order, and `actions` the actions it offers by name. The manifest consumes `weivel.config`,
+  `weivel.secrets`, `weivel.paths` and `weivel.log`, so whatever the program offers the plugin under those ids it may
+  get. A step is one of:
+  - `{ log: <message> }`, an entry at `info` through `weivel.log`, with no fields;
+  - `{ logSetting: <key> }`, the key read through `weivel.config`'s `get` and written at `info` as `<key>=<value>`: a
+    text as it is, a number in the shortest form that reads back, a boolean as `true` or `false`, and `none` when the
+    get answers none;
+  - `{ set: <key>, to: <value> }`, the value stored through `weivel.config`'s `set` as a text, number or boolean;
+  - `{ absent: <service id> }`, which throws unless the plugin's get of that id answers nothing;
+  - `{ throw: <text> }`, which throws an error of that text.
+
+  An action is `{ echo: true }`, answering its arguments as they came, `{ answer: <value> }`, answering that value,
+  `{ throw: <text> }`, throwing, or `{}`, answering nothing;
+- `arguments` are passed to the program after the directory, so it hands `start` the directory and then these;
+- `terminateAfter` is a record line: once `record.txt` holds it, the suite sends the program the terminate signal and
+  waits for it to exit. A `serve` run ends no other way, so every `serve` vector names one.
+
+The suite runs `<program> <stub-host library> <directory> <arguments...>` as its program takes them, waits for it to
+exit, and witnesses:
+
+- `record`, the lines of `record.txt`, exactly as `equals` states;
+- `exit`, the program's exit code, exactly; or, where the vector has `exitsNonZero: true`, that the code is not 0.
+
+## The `host/` vectors
+
+- `host/start-hands-its-arguments-and-activates-the-plan-in-order`: the plan lists `gamma`, `alpha`, `beta`, each
+  logging `up` as it activates, and the program is given `--quiet`. `start` is handed `--quiet` after the directory,
+  each scope is opened and its plugin activated in the plan's order, not the alphabet's, and `started` is told three
+  activations in that order;
+- `host/a-plugin-reads-its-own-scoped-config`: `alpha` and `beta` hold different `greeting`s; each reads its own,
+  `alpha` stores `seen` and reads it back, and `beta` reads `count` but finds no `seen`, so a scope is the plugin's
+  alone and a setting stored by one never reaches the other;
+- `host/a-refused-scope-quarantines-that-plugin-alone`: `beta`'s scope is refused, so `beta` never activates and is
+  told as `refused` with a detail, while `alpha` before it and `gamma` after it activate;
+- `host/an-activation-that-throws-is-told-as-failed`: `alpha` throws after logging, and is told as `failed` with a
+  detail, while `beta` after it activates;
+- `host/a-plugin-without-a-scope-is-offered-nothing`: `alpha`'s scope opens empty, and its activation, which throws if
+  any of the four standard ids answers it something, succeeds;
+- `host/tick-is-called-at-each-time-it-answered`: the ticks answer 40 and 80 milliseconds after the first, and the
+  program calls each no earlier than answered, then never again once one answered none;
+- `host/an-action-runs-and-its-result-reaches-finished`: `alpha`'s `echo` answers its arguments, which reach
+  `finished` as the value the plan carried;
+- `host/an-action-answering-nothing-reaches-finished-as-none`: an action that answers nothing reaches `finished` as a
+  value of kind NONE, never as NULL or a failure;
+- `host/a-throwing-action-reaches-finished-as-a-failure`: a throwing action reaches `finished` as a failure;
+- `host/stop-answers-the-exit-code`: `stop` answers 7, and the program exits with 7;
+- `host/a-terminate-signal-stops-cleanly-while-a-tick-waits`: the next tick is ten minutes away when the signal comes,
+  and the program calls `stop` once, ticks no more and exits 0;
+- `host/a-refused-start-calls-nothing-else`: `start` refuses, so nothing else is called, `stop` included, and the
+  program exits non-zero;
+- `host/a-refused-started-still-stops`: `started` refuses, so the program calls `stop` at once, without a tick, and
+  exits with the code it answered.

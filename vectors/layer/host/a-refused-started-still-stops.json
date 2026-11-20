@@ -1,0 +1,45 @@
+{
+  "id": "host/a-refused-started-still-stops",
+  "op": "host",
+  "covers": "invariant-11",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "refuse": {
+        "started": "will not run on"
+      },
+      "exit": 5
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ]
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "started 1",
+        "outcome alpha activated no-detail",
+        "stop"
+      ]
+    },
+    "exit": 5
+  }
+}

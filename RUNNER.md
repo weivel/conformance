@@ -22,9 +22,11 @@ A vector's directory says which suite judges it.
   core, through an adapter that drives the standard's library (`siblings/standard`) in-process.
 - `vectors/layer/<op>/` is witnessed by each language's own layer suite, because the core never calls a host
   language. `vectors/layer/LAYER.md` says what each suite must witness. The runner loads and counts these and
-  does not run them; the report lists them as awaiting a layer. The `lifecycle` and `description` ops are asked
-  only here: the kit knows them so their vectors load, and no adapter answers them, so a core vector of either would
-  be errored.
+  does not run them; the report lists them as awaiting a layer. The `lifecycle`, `description` and `host` ops are
+  asked only here: the kit knows them so their vectors load, and no adapter answers them, so a core vector of any of
+  them would be errored. A `host` vector runs a language's host program as a child process against the kit's stub
+  provider `stub-host` (`test/stub-host/`), and judges the lines the provider appended to its `record.txt`; the shape
+  of its `stub-host.json` and of every record line is in `vectors/layer/LAYER.md`.
 
 A vector's id is its family, which is its op, a `/`, and its name, every part lowercase words joined by hyphens. A
 vector in a subdirectory of its op's directory carries that subdirectory in its id, as

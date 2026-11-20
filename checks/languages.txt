@@ -6,6 +6,7 @@ c source-root src
 c test-root test
 c header-root include/weivel/c
 c layer-exempt description/binding
+c layer-exempt host
 java extension .java
 java name build.gradle
 java name settings.gradle
@@ -18,6 +19,7 @@ java source-base src/main/java
 java source-root src/main/java22/com/weivel
 java source-base src/main/java22
 java test-root src/test/java
+java layer-exempt host
 typescript extension .ts
 typescript name package.json
 typescript name package-lock.json

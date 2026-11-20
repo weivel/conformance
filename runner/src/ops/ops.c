@@ -21,6 +21,7 @@ static const op_entry OPS[] = {
     {"library", adapter_library},
     {"lifecycle", NULL},
     {"description", NULL},
+    {"host", NULL},
 };
 
 const op_entry *ops_all(size_t *count) {

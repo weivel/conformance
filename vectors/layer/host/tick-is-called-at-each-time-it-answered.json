@@ -1,0 +1,49 @@
+{
+  "id": "host/tick-is-called-at-each-time-it-answered",
+  "op": "host",
+  "covers": "invariant-8",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "ticks": [
+        40,
+        80
+      ]
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ],
+    "terminateAfter": "tick 3 on-time"
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "started 1",
+        "outcome alpha activated no-detail",
+        "tick 1 first",
+        "tick 2 on-time",
+        "tick 3 on-time",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

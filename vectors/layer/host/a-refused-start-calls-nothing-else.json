@@ -1,0 +1,39 @@
+{
+  "id": "host/a-refused-start-calls-nothing-else",
+  "op": "host",
+  "covers": "invariant-11",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "refuse": {
+        "start": "told to refuse"
+      }
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ]
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start"
+      ]
+    },
+    "exitsNonZero": true
+  }
+}

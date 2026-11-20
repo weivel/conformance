@@ -1,0 +1,46 @@
+{
+  "id": "host/a-terminate-signal-stops-cleanly-while-a-tick-waits",
+  "op": "host",
+  "covers": "invariant-11",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "ticks": [
+        600000
+      ]
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ],
+    "terminateAfter": "tick 1 first"
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "started 1",
+        "outcome alpha activated no-detail",
+        "tick 1 first",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

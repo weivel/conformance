@@ -1,0 +1,60 @@
+{
+  "id": "host/a-throwing-action-reaches-finished-as-a-failure",
+  "op": "host",
+  "covers": "invariant-11",
+  "given": {
+    "stubHost": {
+      "mode": "action",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "action": {
+        "plugin": "alpha",
+        "name": "explode"
+      },
+      "exit": 0
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ],
+        "actions": {
+          "echo": {
+            "echo": true
+          },
+          "quiet": {},
+          "explode": {
+            "throw": "it broke"
+          },
+          "answer": {
+            "answer": 42
+          }
+        }
+      }
+    ]
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "started 1",
+        "outcome alpha activated no-detail",
+        "tick 1 first",
+        "finished failure",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

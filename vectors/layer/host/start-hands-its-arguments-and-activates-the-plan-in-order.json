@@ -1,0 +1,81 @@
+{
+  "id": "host/start-hands-its-arguments-and-activates-the-plan-in-order",
+  "op": "host",
+  "covers": "invariant-14",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "gamma",
+          "directory": "gamma",
+          "manifest": "gamma/manifest.json",
+          "scope": true
+        },
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        },
+        {
+          "name": "beta",
+          "directory": "beta",
+          "manifest": "beta/manifest.json",
+          "scope": true
+        }
+      ],
+      "exit": 0
+    },
+    "plugins": [
+      {
+        "name": "gamma",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      },
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      },
+      {
+        "name": "beta",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ],
+    "arguments": [
+      "--quiet"
+    ],
+    "terminateAfter": "tick 1 first"
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start \"--quiet\"",
+        "open gamma scoped",
+        "log gamma info \"up\"",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "open beta scoped",
+        "log beta info \"up\"",
+        "started 3",
+        "outcome gamma activated no-detail",
+        "outcome alpha activated no-detail",
+        "outcome beta activated no-detail",
+        "tick 1 first",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}
