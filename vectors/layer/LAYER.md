@@ -511,7 +511,8 @@ operation names the layer reported for that service, in the description's order,
 
 A vector that reads releases also reads `released`: one entry per `readReleases` step after its first, each the
 counts that step read minus the counts the first one read, per kind, as decimal strings
-(`{ reflections, trees, refusals, cursors }`). The library keeps its counts for the life of its binary in the process,
+(`{ reflections, trees, refusals, cursors, nestedRefusals }`, the last the refusals the lent counter's own
+release freed, which no other release counts). The library keeps its counts for the life of its binary in the process,
 so only a difference says what this run released; a suite that keeps the binary mapped between vectors reads the same
 differences as one that maps it afresh.
 
@@ -687,11 +688,12 @@ binds:
   context, one that reports the walker's blocking operations for it, or one still callable after its answer ended
   fails here;
 - `description/binding/a-nested-definitions-answers-are-released-exactly-once`: the counter refuses the amount 13 with a
-  refusal its own `release_refusal` frees, so the suite reads releases, calls `lend`, `add` with 5 and `add` with 13,
-  releases the counter, reads releases, unloads and reads them again, and witnesses `released` exactly: one refusal
-  both times and no reflection, tree or handle. A layer that never releases the nested refusal reads none, one that
-  releases it twice reads two, and one that releases it through the walker's `release_refusal` or context instead of
-  the counter's fails by reading the wrong context or a count that is not one.
+  refusal only its own `release_refusal`, handed its own context, frees and counts as a nested refusal, so the suite
+  reads releases, calls `lend`, `add` with 5 and `add` with 13, releases the counter, reads releases, unloads and reads
+  them again, and witnesses `released` exactly: one nested refusal both times and nothing else. A layer that never
+  releases the nested refusal reads none, and one that releases it through the walker's or the mirror's release, or
+  with the walker's context, reads none as well, since those free nothing of the counter's. A refusal released twice is
+  not caught here, only by a sanitizer.
 
 ## The `lifecycle` op
 

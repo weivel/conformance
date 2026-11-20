@@ -124,14 +124,16 @@
         {
           "reflections": "0",
           "trees": "0",
-          "refusals": "1",
-          "cursors": "0"
+          "refusals": "0",
+          "cursors": "0",
+          "nestedRefusals": "1"
         },
         {
           "reflections": "0",
           "trees": "0",
-          "refusals": "1",
-          "cursors": "0"
+          "refusals": "0",
+          "cursors": "0",
+          "nestedRefusals": "1"
         }
       ]
     }
