@@ -1,0 +1,101 @@
+{
+  "id": "description/binding/an-input-the-operation-does-not-take-is-the-callers-mistake",
+  "op": "description",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "find",
+        "with": {
+          "key": "alpha",
+          "keys": "omega"
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "measure",
+        "with": {
+          "bytes": [
+            1,
+            2
+          ],
+          "length": "2"
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "reflect",
+        "with": {
+          "sample": {
+            "label": "alpha",
+            "colour": "red"
+          }
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "find",
+        "with": {
+          "key": "alpha"
+        }
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "callersMistake": true
+        },
+        {
+          "callersMistake": true
+        },
+        {
+          "callersMistake": true
+        },
+        {
+          "status": "ok",
+          "answer": "the first letter"
+        }
+      ]
+    }
+  }
+}

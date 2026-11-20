@@ -388,15 +388,17 @@ Every refusal it answers carries the detail `described refused on purpose` and t
 The binary also exports two broken descriptions of the walker: `described_broken_count_description`, which the
 standard's `weivel_standard_description_check` refuses, and `described_broken_offset_description`, which the check
 passes while its `described_visit.skip` offset disagrees with the struct's real layout, so only a layer that lays the
-struct out itself can see it.
+struct out itself can see it. It exports `described_mirror_without_halve_definition` too, a mirror holding NULL for
+`halve` and every other operation the mirror's own, which the mirror's description describes.
 
 **Which layers witness what.** A layer that binds descriptions, building its language's view of a definition from
 its description as `weivel/typescript` and `weivel/java` do, witnesses every vector here. A layer that binds nothing,
 as C, whose plugins cast a definition to its header's struct, witnesses the vectors directly in `description/`, which
 only load the library and get its services, and is exempt from `description/binding/` (the `layer-exempt` line of
 `checks/languages.txt`). Every layer checks a description at the load, with the standard's check or its equal, and
-refuses the load when it fails; a layer that binds also compares every struct's size and every offset with its own FFI
-layout and refuses the load on any difference.
+refuses the load when it fails; a layer that binds also compares every struct's size and every member's offset, and
+every operation's offset in the definition's struct, with its own FFI layout and refuses the load on any difference.
+A check that answers OUT_OF_MEMORY fails the load as out of memory, never as the caller's mistake.
 
 Its `given` is `{ declaration, holders, steps }`. `declaration` is the library's declaration, as the standard's
 `test/described/library.json` and its two broken variants are, handed to the host as the standard reads it with the
@@ -452,6 +454,20 @@ own value of the kind the description gives it, and back:
 - A HANDLE member inside an answer struct is written the same way, and the handle it answers is kept under the step's
   `keep` as an answered handle is: a step whose answer holds one names `keep`, and an answer holds at most one.
 
+**What a layer that binds does beyond the values.**
+
+- A name `with` holds that the operation does not take, a SIZE that counts another among them, or a name a struct
+  holds that the caller does not write, is refused as the caller's mistake, and nothing is called.
+- An operation the provider does not offer, its function pointer past the size the definition answered or NULL, is
+  still on the bound object, and a call of it is the caller's mistake, calling nothing.
+- Structs nest at most 1000 levels below the one a call takes or answers, `WEIVEL_STANDARD_VALUE_DEPTH_LIMIT` as for a
+  value tree: a deeper input is the caller's mistake, a deeper answer the provider's fault. No vector reaches it: no
+  struct of `described` reaches itself, and the kit's JSON reader nests no deeper than 256 levels.
+- An operation answering several answers hands them back in its language's idiom: TypeScript an object keyed by each
+  answer's name, Java `DescribedAnswer.Answered.answers()`, a map of each answer by its name.
+- A language refuses the load of a description its own restrictions cannot bind: TypeScript an operation named `then`,
+  which would make the bound object a thenable every `await` calls, and Java an operation of more than 7 parameters.
+
 After the last step the suite reads `loaded`, `callersMistake`, `got`, `sameObject` and `reported` as a `library`
 vector defines them, the object `sameObject` reads being the language's bound object for a described definition, which
 carries the address the definition's symbol answered as a registered definition does. It also reads `calls`, one
@@ -459,7 +475,9 @@ entry per call step in order, for what the operation answered:
 
 - `{ "status": "ok", "answer": value }`, the answer parameter's value, `answer` left out for an answer of kind NONE;
 - `{ "status": "refused", "detail": text, "fix": text }`, the refusal's two texts;
-- `{ "status": "none" }` and `{ "status": "malformed" }`, for an operation that answered NONE or MALFORMED.
+- `{ "status": "none" }` and `{ "status": "malformed" }`, for an operation that answered NONE or MALFORMED;
+- `{ "callersMistake": true }`, for a call the layer refused as the caller's mistake before calling anything, in the
+  language's own way of refusing one.
 
 The status is the `weivel_status` the operation returned, lowercase without its prefix, read off the core's constants,
 whichever way the language hands it to its caller.
@@ -571,6 +589,26 @@ A required input the caller leaves out is passed as NULL, and the provider's MAL
 The suite builds the vector's `given` through its layer, calls `find` with no key, `reflect` with no sample and
 `visit` with no visit, and witnesses `calls` exactly: malformed, three times. A layer that fills a missing input with
 a value of its own making, so the provider answers something else, fails here.
+
+## `description/binding/an-input-the-operation-does-not-take-is-the-callers-mistake`
+
+A name the caller writes that the operation or its struct does not take is refused before anything is called.
+
+The suite builds the vector's `given` through its layer, the mirror declared alone, and calls `find` with a `keys`
+beside its `key`, `measure` with the `length` the binding sets itself, and `reflect` with a sample holding a `colour`
+no `described_sample` has, then `find` with its `key` alone, and witnesses `calls` exactly: the caller's mistake three
+times, then the first letter. A layer that drops a name it does not know, so a misspelt input reaches the provider at
+its zero, fails here.
+
+## `description/binding/an-operation-its-provider-does-not-offer-is-the-callers-mistake`
+
+An operation the description lists and the provider holds NULL for is the caller's mistake to call, and every other
+operation of the same definition still answers.
+
+The suite builds the vector's `given` through its layer, the mirror declared by
+`described_mirror_without_halve_definition` under the mirror's description, calls `halve` and then `negate`, and
+witnesses `calls` exactly: the caller's mistake, then `-5`. A layer that calls through a NULL function pointer, or
+refuses the load of a definition offering less than its description lists, fails here.
 
 ## `description/binding/every-answer-is-released-exactly-once`
 

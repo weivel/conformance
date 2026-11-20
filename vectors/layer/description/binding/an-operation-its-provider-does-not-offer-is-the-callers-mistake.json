@@ -1,0 +1,71 @@
+{
+  "id": "description/binding/an-operation-its-provider-does-not-offer-is-the-callers-mistake",
+  "op": "description",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_without_halve_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "halve",
+        "with": {
+          "number": 3
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "negate",
+        "with": {
+          "number": "5"
+        }
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "callersMistake": true
+        },
+        {
+          "status": "ok",
+          "answer": "-5"
+        }
+      ]
+    }
+  }
+}
