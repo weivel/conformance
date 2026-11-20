@@ -384,16 +384,19 @@ as weivel/c does. The library has two definition services:
 - `described-walker`, the `described_walker` definition: `open` answers a handle, `use` takes it as an input, and
   `visit` takes it inside a struct; `wait` answers the ticks it was asked to wait, at once, and is the one operation the
   description marks `blocking`; `lend` answers a `described_loan` holding a `counter`, a definition of its own whose
-  `add` answers 1000 plus its `amount`, or MALFORMED for an `amount` that would pass the largest u64. The counter is
-  one static definition the walker's description names in its `definitions`, so an answer carries a definition.
+  `add` answers 1000 plus its `amount`, REFUSED for the amount 13, with the library's usual refusal, or MALFORMED for
+  an `amount` that would pass the largest u64. The counter has a `release_refusal` of its own, which counts into the
+  refusals `count_releases` reads. The counter is one static definition the walker's description names in its
+  `definitions`, so an answer carries a definition.
 
 Every refusal it answers carries the detail `described refused on purpose` and the fix `pass anything but "refuse"`.
-The binary also exports two broken descriptions of the walker: `described_broken_count_description`, which the
+The binary also exports three broken descriptions of the walker: `described_broken_count_description`, which the
 standard's `weivel_standard_description_check` refuses, `described_broken_definition_description`, which the check
 refuses at the loan's `counter` because the description holds no nested description for the definition it names, and
-`described_broken_offset_description`, which the check passes while its `described_visit.skip` offset disagrees with
-the struct's real layout, so only a layer that lays the struct out itself can see it. It exports `described_mirror_without_halve_definition` too, a mirror holding NULL for
-`halve` and every other operation the mirror's own, which the mirror's description describes.
+`described_broken_offset_description`, which the check passes while its `described_visit.skip` offset disagrees with the
+struct's real layout, so only a layer that lays the struct out itself can see it. It exports
+`described_mirror_without_halve_definition` too, a mirror holding NULL for `halve` and every other operation the
+mirror's own, which the mirror's description describes.
 
 **Which layers witness what.** A layer that binds descriptions, building its language's view of a definition from
 its description as `weivel/typescript` and `weivel/java` do, witnesses every vector here. A layer that binds nothing,
@@ -405,7 +408,7 @@ every operation's offset in the definition's struct, with its own FFI layout and
 A check that answers OUT_OF_MEMORY fails the load as out of memory, never as the caller's mistake.
 
 Its `given` is `{ declaration, holders, steps }`. `declaration` is the library's declaration, as the standard's
-`test/described/library.json` and its two broken variants are, handed to the host as the standard reads it with the
+`test/described/library.json` and its three broken variants are, handed to the host as the standard reads it with the
 path of the built `described` library beside it; `holders` names plugins the suite opens before the first step, each
 consuming every service id the declaration lists, exactly as in a `library` vector. The steps run in order, each once
 the layer has nothing left to run from the one before:
@@ -420,8 +423,9 @@ the layer has nothing left to run from the one before:
 - `{ holder, release: name }` lets go of the handle kept under that name, in the language's own way of releasing a
   handle. For a definition kept under that name it ends the answer that carried it: the definition lives as long as
   that answer, so a call through the name afterwards is the caller's mistake, calling nothing;
-- `{ holder, blocking: id }` reads, from the bound object the holder resolved for the service `id`, which operations
-  the layer reports blocking, and keeps the operation names for `blocking`;
+- `{ holder, blocking: id }` reads, from the bound object the holder resolved for the service `id`, or from the
+  definition kept under the name `id`, which operations the layer reports blocking, and keeps the operation names for
+  `blocking`;
 - `{ holder, readReleases: true }` calls the mirror's `count_releases` through the object the holder resolved and
   keeps its answer for `released`, not for `calls`;
 - `{ unload: true }` unloads the library through the host's public unload call.
@@ -677,16 +681,17 @@ binds:
   exactly: `["wait"]`, then `[]`. A layer that reports every operation, or none, or one name more than the description
   lists, fails here;
 - `description/binding/an-answer-carrying-a-definition-is-callable-until-released`: `lend` answers the loan with its
-  counter kept; `add` through it answers `1005`, then the largest u64 for an `amount` that reaches it exactly, then
-  MALFORMED for one more; releasing the counter and calling it again is the caller's mistake. A layer that hands back
-  a definition it cannot call, one whose `add` reads the wrong context, or one still callable after its answer ended
+  counter kept, whose reported `blocking` is read and witnessed as `[]`; `add` through it answers `1005`, then the
+  largest u64 for an `amount` that reaches it exactly, then MALFORMED for one more; releasing the counter and calling it
+  again is the caller's mistake. A layer that hands back a definition it cannot call, one whose `add` reads the wrong
+  context, one that reports the walker's blocking operations for it, or one still callable after its answer ended
   fails here;
-- `description/binding/a-nested-definitions-answers-are-released-exactly-once`: the counter's calls answer nothing a
-  release frees, so the suite reads releases, calls `find` (refused), `lend` and `add` twice, releases the counter,
-  reads releases, unloads and reads them again, and witnesses `released` exactly: one refusal both times and no
-  reflection, tree or handle. A layer that releases the loan, the nested definition or an `add` answer through a
-  release the description names for none reads one more of some kind, and one that releases the refusal twice reads
-  two refusals.
+- `description/binding/a-nested-definitions-answers-are-released-exactly-once`: the counter refuses the amount 13 with a
+  refusal its own `release_refusal` frees, so the suite reads releases, calls `lend`, `add` with 5 and `add` with 13,
+  releases the counter, reads releases, unloads and reads them again, and witnesses `released` exactly: one refusal
+  both times and no reflection, tree or handle. A layer that never releases the nested refusal reads none, one that
+  releases it twice reads two, and one that releases it through the walker's `release_refusal` or context instead of
+  the counter's fails by reading the wrong context or a count that is not one.
 
 ## The `lifecycle` op
 

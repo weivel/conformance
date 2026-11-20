@@ -52,14 +52,6 @@
       },
       {
         "holder": "agenda",
-        "call": "described-mirror",
-        "operation": "find",
-        "with": {
-          "key": "refuse"
-        }
-      },
-      {
-        "holder": "agenda",
         "call": "described-walker",
         "operation": "lend",
         "with": {},
@@ -78,7 +70,7 @@
         "call": "counter",
         "operation": "add",
         "with": {
-          "amount": "6"
+          "amount": "13"
         }
       },
       {
@@ -109,11 +101,6 @@
     "calls": {
       "equals": [
         {
-          "status": "refused",
-          "detail": "described refused on purpose",
-          "fix": "pass anything but \"refuse\""
-        },
-        {
           "status": "ok",
           "answer": {
             "counter": {
@@ -126,8 +113,9 @@
           "answer": "1005"
         },
         {
-          "status": "ok",
-          "answer": "1006"
+          "status": "refused",
+          "detail": "described refused on purpose",
+          "fix": "pass anything but \"refuse\""
         }
       ]
     },

@@ -55,6 +55,10 @@
       },
       {
         "holder": "agenda",
+        "blocking": "counter"
+      },
+      {
+        "holder": "agenda",
         "call": "counter",
         "operation": "add",
         "with": {
@@ -123,6 +127,11 @@
         {
           "callersMistake": true
         }
+      ]
+    },
+    "blocking": {
+      "equals": [
+        []
       ]
     }
   }
