@@ -15,6 +15,9 @@ static const char *const STATE_NAMES[] = {"activated", "refused", "failed"};
 
 static stub_run *current_run;
 
+/** Whether `start` was called in this process, which a program does once. */
+static int start_called;
+
 /** What a `next` answer holds as its storage, which owns nothing, so a second use of one answer is still caught. */
 static char next_marker;
 
@@ -89,10 +92,12 @@ static int are_arguments_well_made(const char *const *arguments, size_t argument
     return 1;
 }
 
-/** Makes `run` the current run, freeing the one an earlier `start` read. */
-static void replace_current_run(stub_run *run) {
+void stub_host_forget_run(void) {
+    stub_lock();
     stub_run_free(current_run);
-    current_run = run;
+    current_run = NULL;
+    start_called = 0;
+    stub_unlock();
 }
 
 static weivel_status start_run(const char *const *arguments, size_t argument_count, weivel_standard_host_plan *plan,
@@ -111,7 +116,7 @@ static weivel_status start_run(const char *const *arguments, size_t argument_cou
         return stub_refuse(refusal, "cannot write record.txt in the directory", "hand start a writable directory");
     }
     stub_scope_prepare(run);
-    replace_current_run(run);
+    current_run = run;
     record_start(run, arguments, argument_count);
     if (run->start_refusal != NULL) {
         return stub_refuse(refusal, run->start_refusal, "remove refuse.start from stub-host.json");
@@ -132,6 +137,14 @@ static weivel_status host_start(void *context, const char *const *arguments, siz
                            "pass the directory holding stub-host.json as the first argument");
     }
     stub_lock();
+    if (start_called) {
+        if (current_run != NULL) {
+            record_text(current_run, "start again");
+        }
+        stub_unlock();
+        return WEIVEL_STATUS_MALFORMED;
+    }
+    start_called = 1;
     status = start_run(arguments, argument_count, plan, refusal);
     stub_unlock();
     return status;
@@ -227,7 +240,12 @@ static weivel_status host_tick(void *context, int64_t now, weivel_standard_host_
         snprintf(line, sizeof line, "tick %lu %s", (unsigned long)current_run->ticks_called,
                  tick_timing(current_run, now));
         record_text(current_run, line);
-        answer_next(current_run, next);
+        if (current_run->ticks_called == current_run->refused_tick) {
+            status = stub_refuse(refusal, "the stub host was told to refuse this tick",
+                                 "remove refuse.tick from stub-host.json");
+        } else {
+            answer_next(current_run, next);
+        }
     }
     stub_unlock();
     return status;

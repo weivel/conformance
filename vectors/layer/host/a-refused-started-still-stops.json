@@ -1,7 +1,7 @@
 {
   "id": "host/a-refused-started-still-stops",
   "op": "host",
-  "covers": "invariant-11",
+  "covers": "host",
   "given": {
     "stubHost": {
       "mode": "serve",

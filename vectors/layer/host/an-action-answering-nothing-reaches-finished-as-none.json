@@ -1,7 +1,7 @@
 {
   "id": "host/an-action-answering-nothing-reaches-finished-as-none",
   "op": "host",
-  "covers": "invariant-11",
+  "covers": "host",
   "given": {
     "stubHost": {
       "mode": "action",
@@ -50,7 +50,6 @@
         "log alpha info \"up\"",
         "started 1",
         "outcome alpha activated no-detail",
-        "tick 1 first",
         "finished none",
         "stop"
       ]

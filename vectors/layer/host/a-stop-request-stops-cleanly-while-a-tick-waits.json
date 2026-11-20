@@ -1,7 +1,7 @@
 {
-  "id": "host/a-terminate-signal-stops-cleanly-while-a-tick-waits",
+  "id": "host/a-stop-request-stops-cleanly-while-a-tick-waits",
   "op": "host",
-  "covers": "invariant-11",
+  "covers": "host",
   "given": {
     "stubHost": {
       "mode": "serve",
@@ -27,7 +27,7 @@
         ]
       }
     ],
-    "terminateAfter": "tick 1 first"
+    "stopAfter": "tick 1 first"
   },
   "then": {
     "record": {

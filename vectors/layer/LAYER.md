@@ -846,9 +846,9 @@ destroys the host, then asks it to verify `agenda`, and witnesses:
 ## The `host` op
 
 A `host` vector runs a language's host program, the program `weivel/host.h` of the standard describes, against the
-kit's stub provider `stub-host`, as a child process, and judges what the provider was told. Only a language that ships
-a host program sits these vectors; `checks/languages.txt` exempts C and Java from `host/` with `layer-exempt` lines,
-and the runner knows the op so the vectors load, with no adapter to answer it.
+kit's stub provider `stub-host`, and judges what the provider was told. Only a language that ships a host program sits
+these vectors; `checks/languages.txt` exempts C and Java from `host/` with `layer-exempt` lines, and the runner knows
+the op so the vectors load, with no adapter to answer it. Every host vector covers `host`, the host contract.
 
 **The library.** `stub-host` is `test/stub-host/` of the kit, the target `stub-host`: `stub-host.dll`,
 `libstub-host.so` or `libstub-host.dylib` in the build's `bin` directory, under `bin/<configuration>` for a
@@ -889,7 +889,7 @@ is an object:
   "action": { "plugin": "alpha", "name": "echo", "arguments": { "text": "hi" } },
   "ticks": [40, 80],
   "exit": 0,
-  "refuse": { "start": "told to refuse", "started": "will not run on" }
+  "refuse": { "start": "told to refuse", "started": "will not run on", "tick": 2 }
 }
 ```
 
@@ -900,22 +900,24 @@ is an object:
   config's starting values.
 - `action` is required in `action` mode and refused in `serve` mode: the plugin by name, the action's name, and its
   `arguments`, any JSON, answered as the plan's value tree, kind NONE when absent.
-- `ticks` are milliseconds after the `now` of the first tick: the first tick answers `now + ticks[0]`, each later one
-  the first tick's `now` plus the next entry, and once they are spent a tick answers none.
+- `ticks` are milliseconds after the `now` of the first tick, each later than the one before it: the first tick
+  answers `now + ticks[0]`, each later one the first tick's `now` plus the next entry, and once they are spent a tick
+  answers none.
 - `exit` is the code `stop` answers, 0 when absent, 0 to 255.
 - `refuse.start` makes `start` refuse with that detail, after recording itself; `refuse.started` makes `started`
-  refuse after recording its outcomes.
+  refuse after recording its outcomes; `refuse.tick`, a number from 1, makes that tick refuse after recording itself.
 
 A file that breaks this shape makes `start` refuse, its detail naming the member.
 
 **What the provider does.** `start` answers the plan: the libraries, then the plugins in the file's order, the mode,
-and in `action` mode the action's plugin by its manifest path as the plan names it. `started` records the outcomes and
-answers OK. `tick` records how it came, answers the next time, and once it has answered none never answers another.
-`finished` records how the action ended. `stop` records itself and answers `exit`. `open` finds the plugin by its
-manifest path exactly as the plan named it, and answers a scoped plugin a config of its `settings`, a secrets store
-that starts empty, paths (`plugin` its directory, `cache` and `config` the directories of those names in it) and a
-log, each the plugin's own and none shared with another plugin. Every call is recorded under one lock, so a call from
-another thread, as a blocking `tick` is, never splits a line.
+and in `action` mode the action's plugin by its manifest path as the plan names it. A second `start` in one process
+is the caller's mistake: it is recorded and answers MALFORMED. `started` records the outcomes and answers OK. `tick`
+records how it came, answers the next time, and once it has answered none never answers another. `finished` records
+how the action ended. `stop` records itself and answers `exit`. `open` finds the plugin by its manifest path exactly as
+the plan named it, and answers a scoped plugin a config of its `settings`, a secrets store that starts empty, paths
+(`plugin` its directory, `cache` and `config` the directories of those names in it) and a log, each the plugin's own
+and none shared with another plugin. Every call is recorded under one lock, so a call from another thread, as a
+blocking `tick` is, never splits a line.
 
 **`record.txt`.** `start` empties `record.txt` in the directory, then every call appends one line, in the order the
 calls were made. A text that is not a name is written as a JSON string, and a value as compact JSON: a record's
@@ -924,6 +926,7 @@ members in order, a number in the shortest form that reads back as the same doub
 | line | written when |
 | --- | --- |
 | `start` then ` "<argument>"` for each argument after the directory | `start` was called with a readable file |
+| `start again` | `start` was called a second time |
 | `open <plugin> scoped`, `open <plugin> empty` or `open <plugin> refused` | `open` answered the plugin's scope, an empty one, or refused it; `unknown` for a manifest the plan never named |
 | `log <plugin> <level> "<message>"`, then ` <fields>` when fields were given | the plugin's log wrote an entry; the level is `trace`, `debug`, `info`, `warn` or `error` |
 | `set <plugin> "<key>" <value>` | the plugin's config stored a setting |
@@ -933,15 +936,29 @@ members in order, a number in the shortest form that reads back as the same doub
 | `finished result <value>`, `finished none`, `finished failure` or `finished malformed` | the action answered a value, answered nothing (kind NONE), threw, or `finished` was handed both or neither |
 | `stop` | `stop` was called |
 
-**The program's order.** The vectors judge the record with `equals`, so they fix the order the contract states:
-`start`; then for each plugin of the plan in order, its scope opened and the plugin activated before the next
-plugin's scope is opened; `started` once, with every plugin's outcome; `tick` at once, and then whenever the time it
-answered comes, until it answers none; in `action` mode, the action run after the first tick answered and `finished`
-told how it ended; and `stop` last, once, whatever happened. A plugin whose scope is refused is not activated and is
-told as `refused`; one whose activation throws is told as `failed`. When `start` refuses, the program calls nothing
-else and exits non-zero. Otherwise it exits with the code `stop` answered.
+**The order the vectors judge.** The vectors judge the record with `equals`, so every order in them is one
+`weivel/host.h` states:
 
-**A vector's `given`.** `{ stubHost, plugins, arguments?, terminateAfter? }`:
+- `start`, once;
+- for each plugin of the plan in order, its scope opened immediately before its activation, and the next plugin's
+  scope opened only after that activation ended; a plugin whose scope is refused is not activated and is told as
+  `refused`, one whose activation throws is told as `failed`, and in both an outcome carries a non-empty detail
+  whenever the refusal or the failure carried one;
+- `started`, once, with every plugin's outcome in the plan's order;
+- in `serve` mode, `tick` at once after `started` answered OK, and then whenever the time it answered comes: the
+  program reads its clock again before each tick and waits again while it still reads before `next`, so no tick of a
+  vector is `early`;
+- in `action` mode, no tick at all: the action runs, and `finished` is told how it ended;
+- `stop` last, once, whatever happened: after a refused `started` or `tick`, after the action, and on a stop request.
+  The program then exits with the code `stop` answered. When `start` refuses, the program calls nothing else and
+  exits non-zero.
+
+**A stop request.** A program is asked to end a run by a stop request, which it takes through its own interface and,
+from its command line, from its platform's terminate signals (SIGINT and SIGTERM on POSIX systems, SIGINT and SIGBREAK
+on Windows), as `weivel/host.h` says. A vector only says that the suite sends the program its stop request: a suite
+may send the signal to the program it ran as a child, or ask the program it runs in process through that interface.
+
+**A vector's `given`.** `{ stubHost, plugins, arguments?, stopAfter? }`:
 
 - `stubHost` is the `stub-host.json` to write, without any plugin's `entry`. The suite makes a fresh directory, writes
   each plugin's entry and manifest as its own language writes them, at the plugin's `directory` and `manifest`, sets
@@ -961,11 +978,14 @@ else and exits non-zero. Otherwise it exits with the code `stop` answered.
   An action is `{ echo: true }`, answering its arguments as they came, `{ answer: <value> }`, answering that value,
   `{ throw: <text> }`, throwing, or `{}`, answering nothing;
 - `arguments` are passed to the program after the directory, so it hands `start` the directory and then these;
-- `terminateAfter` is a record line: once `record.txt` holds it, the suite sends the program the terminate signal and
-  waits for it to exit. A `serve` run ends no other way, so every `serve` vector names one.
+- `stopAfter` is a record line: once `record.txt` holds it, the suite sends the program its stop request and waits for
+  the run to end. A line counts once the newline after it is written. A `serve` run that refuses nothing ends no other
+  way, so every such vector names one.
 
-The suite runs `<program> <stub-host library> <directory> <arguments...>` as its program takes them, waits for it to
-exit, and witnesses:
+The suite runs `<program> <stub-host library> <directory> <arguments...>` as its program takes them, or the same run
+through the program's interface, and waits for the run to end. A `stopAfter` line that has not appeared within 10
+seconds of the run starting, or a run that has not ended within 10 seconds of its stop request or, without one, of
+starting, fails the vector. The suite then witnesses:
 
 - `record`, the lines of `record.txt`, exactly as `equals` states;
 - `exit`, the program's exit code, exactly; or, where the vector has `exitsNonZero: true`, that the code is not 0.
@@ -973,9 +993,9 @@ exit, and witnesses:
 ## The `host/` vectors
 
 - `host/start-hands-its-arguments-and-activates-the-plan-in-order`: the plan lists `gamma`, `alpha`, `beta`, each
-  logging `up` as it activates, and the program is given `--quiet`. `start` is handed `--quiet` after the directory,
-  each scope is opened and its plugin activated in the plan's order, not the alphabet's, and `started` is told three
-  activations in that order;
+  logging `up` as it activates, and the program is given `kit-token`. `start` is handed `kit-token` after the
+  directory, each scope is opened and its plugin activated in the plan's order, not the alphabet's, and `started` is
+  told three activations in that order;
 - `host/a-plugin-reads-its-own-scoped-config`: `alpha` and `beta` hold different `greeting`s; each reads its own,
   `alpha` stores `seen` and reads it back, and `beta` reads `count` but finds no `seen`, so a scope is the plugin's
   alone and a setting stored by one never reaches the other;
@@ -986,16 +1006,19 @@ exit, and witnesses:
 - `host/a-plugin-without-a-scope-is-offered-nothing`: `alpha`'s scope opens empty, and its activation, which throws if
   any of the four standard ids answers it something, succeeds;
 - `host/tick-is-called-at-each-time-it-answered`: the ticks answer 40 and 80 milliseconds after the first, and the
-  program calls each no earlier than answered, then never again once one answered none;
+  program calls each no earlier than answered; after the third tick answered none, no tick comes before the stop
+  request;
 - `host/an-action-runs-and-its-result-reaches-finished`: `alpha`'s `echo` answers its arguments, which reach
-  `finished` as the value the plan carried;
+  `finished` as the value the plan carried, with no tick in the run;
 - `host/an-action-answering-nothing-reaches-finished-as-none`: an action that answers nothing reaches `finished` as a
   value of kind NONE, never as NULL or a failure;
 - `host/a-throwing-action-reaches-finished-as-a-failure`: a throwing action reaches `finished` as a failure;
 - `host/stop-answers-the-exit-code`: `stop` answers 7, and the program exits with 7;
-- `host/a-terminate-signal-stops-cleanly-while-a-tick-waits`: the next tick is ten minutes away when the signal comes,
-  and the program calls `stop` once, ticks no more and exits 0;
+- `host/a-stop-request-stops-cleanly-while-a-tick-waits`: the next tick is ten minutes away when the stop request
+  comes, and the program calls `stop` once, ticks no more and exits 0;
 - `host/a-refused-start-calls-nothing-else`: `start` refuses, so nothing else is called, `stop` included, and the
   program exits non-zero;
 - `host/a-refused-started-still-stops`: `started` refuses, so the program calls `stop` at once, without a tick, and
-  exits with the code it answered.
+  exits with the code it answered;
+- `host/a-refused-tick-still-stops`: the first tick refuses, so the program calls `stop` at once, ticks no more, and
+  exits with the code `stop` answered, 3.

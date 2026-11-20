@@ -1,7 +1,7 @@
 {
   "id": "host/start-hands-its-arguments-and-activates-the-plan-in-order",
   "op": "host",
-  "covers": "invariant-14",
+  "covers": "host",
   "given": {
     "stubHost": {
       "mode": "serve",
@@ -54,14 +54,14 @@
       }
     ],
     "arguments": [
-      "--quiet"
+      "kit-token"
     ],
-    "terminateAfter": "tick 1 first"
+    "stopAfter": "tick 1 first"
   },
   "then": {
     "record": {
       "equals": [
-        "start \"--quiet\"",
+        "start \"kit-token\"",
         "open gamma scoped",
         "log gamma info \"up\"",
         "open alpha scoped",

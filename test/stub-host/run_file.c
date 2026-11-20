@@ -354,6 +354,9 @@ static int read_ticks(reading *state, const weivel_json_value *root) {
         if (!weivel_json_as_int64(weivel_json_array_at(ticks, at), &run->ticks[at]) || run->ticks[at] < 0) {
             return refuse(state, "ticks[%lu] must be a whole number of milliseconds, 0 or more", (unsigned long)at);
         }
+        if (at > 0 && run->ticks[at] <= run->ticks[at - 1]) {
+            return refuse(state, "ticks[%lu] must be later than the one before it", (unsigned long)at);
+        }
     }
     return 1;
 }
@@ -381,6 +384,19 @@ static int read_refusal(reading *state, const weivel_json_value *refuse_member, 
     return *detail != NULL || out_of_memory(state);
 }
 
+static int read_refused_tick(reading *state, const weivel_json_value *refusals) {
+    const weivel_json_value *member = weivel_json_object_get(refusals, "tick");
+    int64_t number = 0;
+    if (member == NULL) {
+        return 1;
+    }
+    if (!weivel_json_as_int64(member, &number) || number < 1) {
+        return refuse(state, "refuse.tick must be the number of a tick, 1 or more");
+    }
+    state->run->refused_tick = (size_t)number;
+    return 1;
+}
+
 static int read_refusals(reading *state, const weivel_json_value *root) {
     const weivel_json_value *refusals = weivel_json_object_get(root, "refuse");
     if (refusals == NULL) {
@@ -390,7 +406,8 @@ static int read_refusals(reading *state, const weivel_json_value *root) {
         return refuse(state, "refuse must be an object");
     }
     return read_refusal(state, refusals, "start", &state->run->start_refusal) &&
-           read_refusal(state, refusals, "started", &state->run->started_refusal);
+           read_refusal(state, refusals, "started", &state->run->started_refusal) &&
+           read_refused_tick(state, refusals);
 }
 
 static int read_root(reading *state, const weivel_json_value *root) {

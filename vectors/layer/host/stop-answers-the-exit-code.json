@@ -1,7 +1,7 @@
 {
   "id": "host/stop-answers-the-exit-code",
   "op": "host",
-  "covers": "invariant-11",
+  "covers": "host",
   "given": {
     "stubHost": {
       "mode": "action",
@@ -50,7 +50,6 @@
         "log alpha info \"up\"",
         "started 1",
         "outcome alpha activated no-detail",
-        "tick 1 first",
         "finished result 42",
         "stop"
       ]

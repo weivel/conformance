@@ -1,4 +1,5 @@
 #include "check.h"
+#include "run.h"
 #include "stub_host.h"
 
 #include "weivel/descriptions.h"
@@ -65,8 +66,10 @@ static void check_record(const char *const *expected, size_t count, const char *
     check_text(text, want, label);
 }
 
+/** Calls `start` as a fresh process would, forgetting the run an earlier scenario started. */
 static weivel_status start_with(const char *const *arguments, size_t count, weivel_standard_host_plan *plan,
                                 weivel_standard_service_refusal *refusal) {
+    stub_host_forget_run();
     return host()->start(host()->context, arguments, count, plan, refusal);
 }
 
@@ -166,6 +169,8 @@ static void a_run_file_that_breaks_its_shape_refuses_start(void) {
     check_start_refused("{\"mode\":\"action\",\"plugins\":[]}", "action");
     check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"ticks\":[-1]}", "ticks[0]");
     check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"exit\":256}", "exit");
+    check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"ticks\":[40,40]}", "ticks[1]");
+    check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"refuse\":{\"tick\":0}}", "refuse.tick");
 }
 
 static void a_start_told_to_refuse_records_only_itself(void) {
@@ -255,6 +260,32 @@ static void tick_answers_each_listed_time_after_the_first_then_none(void) {
     tick_once(1119, 0, 0);
     tick_once(5000, 0, 0);
     check_record(RECORD, 5, "tick records how each call came");
+}
+
+static void a_second_start_is_the_callers_mistake(void) {
+    weivel_standard_host_plan second = WEIVEL_INIT(weivel_standard_host_plan);
+    const char *arguments[] = {STUB_HOST_WORK_DIR};
+    static const char *const RECORD[] = {"start", "start again"};
+    start_serve_run();
+    CHECK(host()->start(host()->context, arguments, 1, &second, NULL) == WEIVEL_STATUS_MALFORMED);
+    CHECK(second.storage == NULL);
+    check_record(RECORD, 2, "a second start is recorded and refused");
+}
+
+static void a_tick_told_to_refuse_refuses(void) {
+    weivel_standard_host_plan plan = WEIVEL_INIT(weivel_standard_host_plan);
+    weivel_standard_host_next next = WEIVEL_INIT(weivel_standard_host_next);
+    weivel_standard_service_refusal refusal = WEIVEL_INIT(weivel_standard_service_refusal);
+    static const char *const RECORD[] = {"start", "tick 1 first", "tick 2 on-time"};
+    write_run("{\"mode\":\"serve\",\"plugins\":[],\"ticks\":[10,20],\"refuse\":{\"tick\":2}}");
+    CHECK(start_in_work(&plan, NULL) == WEIVEL_STATUS_OK);
+    host()->release_plan(host()->context, &plan);
+    tick_once(100, 1, 110);
+    CHECK(host()->tick(host()->context, 110, &next, &refusal) == WEIVEL_STATUS_REFUSED);
+    CHECK(next.storage == NULL && next.has_next == 0);
+    CHECK(refusal.detail != NULL);
+    host()->release_refusal(host()->context, &refusal);
+    check_record(RECORD, 3, "the refused tick is recorded before it refuses");
 }
 
 static void finished_records_a_result_none_a_failure_and_a_mistake(void) {
@@ -512,6 +543,8 @@ int main(void) {
     started_records_each_outcome_in_order();
     started_told_to_refuse_refuses();
     tick_answers_each_listed_time_after_the_first_then_none();
+    a_second_start_is_the_callers_mistake();
+    a_tick_told_to_refuse_refuses();
     finished_records_a_result_none_a_failure_and_a_mistake();
     stop_answers_the_exit_code();
     scope_answers_a_scoped_plugin_its_own_definitions();

@@ -71,6 +71,8 @@ typedef struct stub_run {
     uint32_t exit_code;
     char *start_refusal;
     char *started_refusal;
+    /** The number of the tick that refuses, counting from 1, or 0 when none does. */
+    size_t refused_tick;
 } stub_run;
 
 /**
@@ -87,6 +89,8 @@ void stub_scope_prepare(stub_run *run);
 
 /** The run `start` read, or NULL before one was read. */
 stub_run *stub_host_current_run(void);
+/** Frees the current run and lets `start` be called again, as a fresh process would; for the kit's own tests. */
+void stub_host_forget_run(void);
 
 void stub_lock(void);
 void stub_unlock(void);

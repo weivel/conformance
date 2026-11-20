@@ -1,7 +1,7 @@
 {
   "id": "host/tick-is-called-at-each-time-it-answered",
   "op": "host",
-  "covers": "invariant-8",
+  "covers": "host",
   "given": {
     "stubHost": {
       "mode": "serve",
@@ -28,7 +28,7 @@
         ]
       }
     ],
-    "terminateAfter": "tick 3 on-time"
+    "stopAfter": "tick 3 on-time"
   },
   "then": {
     "record": {

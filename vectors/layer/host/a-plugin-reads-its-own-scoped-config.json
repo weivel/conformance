@@ -1,7 +1,7 @@
 {
   "id": "host/a-plugin-reads-its-own-scoped-config",
   "op": "host",
-  "covers": "invariant-12",
+  "covers": "host",
   "given": {
     "stubHost": {
       "mode": "serve",
@@ -58,7 +58,7 @@
         ]
       }
     ],
-    "terminateAfter": "tick 1 first"
+    "stopAfter": "tick 1 first"
   },
   "then": {
     "record": {

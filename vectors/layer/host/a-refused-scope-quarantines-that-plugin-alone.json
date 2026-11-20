@@ -1,7 +1,7 @@
 {
   "id": "host/a-refused-scope-quarantines-that-plugin-alone",
   "op": "host",
-  "covers": "invariant-14",
+  "covers": "host",
   "given": {
     "stubHost": {
       "mode": "serve",
@@ -52,7 +52,7 @@
         ]
       }
     ],
-    "terminateAfter": "tick 1 first"
+    "stopAfter": "tick 1 first"
   },
   "then": {
     "record": {
