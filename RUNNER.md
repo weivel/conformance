@@ -364,11 +364,13 @@ fields separated by one space:
   one side is a cost and not noise. A language may sample this row in rounds and batch lengths of its own, unlike its
   same-language pair's, stating its sampling in its `CONTENT.md`. The row is judged by its platform's noise bounds
   and `noise-margin`, as the same-language pair is, carries no line of its own, and its gate is the identity
-  `library/a-definition-is-the-providers-own-pointer` witnesses. `described-call`, optional, is a language binding a
-  described definition generically: an operation of the standard's `described` fixture called through the bound
-  object a consumer resolved, over the same operation called through a bare binding of the fixture's structs written
-  by hand, with the same input and its answer and refusal released the same way. A file need not carry it, and one
-  that carries it on a platform or a backend carries it on every platform of every backend it names. A C layer
+  `library/a-definition-is-the-providers-own-pointer` witnesses. `described-call` is a language binding a described
+  definition generically: an operation of the standard's `described` fixture called through the bound object a
+  consumer resolved, over the same operation called through a bare binding of the fixture's structs written by hand,
+  with the same input and its answer and refusal released the same way. It is required of every language that
+  `checks/languages.txt` does not list as `layer-exempt` from `description/binding`, since each of those binds
+  descriptions, and on every platform of every backend its file names; a language exempt from it, as C is, need not
+  carry it, and one that carries it carries it on every platform of every backend. A C layer
   crosses no foreign interface, so its bare call is the same control call made through the core's function table
   without the layer's wrapper, and `control-call` bounds what the wrapper adds. The platform is
   the runner's system, `linux`, `windows` or `macos`, whatever the language itself calls it. The number is the highest
@@ -389,8 +391,8 @@ fields separated by one space:
   half again what Linux's own samples ever needed.
 
 Each required gate and each optional gate a file carries, each noise bound and each noise margin on each platform, and
-the ratio margin, appears exactly once, every number positive; `language_budget_of_<language>_is_well_formed` holds each file to that. A platform with no noise line has no
-noise bound, and the same-language gate run there fails.
+the ratio margin, appears exactly once, every number positive; `language_budget_of_<language>_is_well_formed` holds
+each file to that. A platform with no noise line has no noise bound, and the same-language gate run there fails.
 
 **The same-language gate in every language is the identity check**: the service a consumer resolves is the
 provider's own object, pointer equality in C and reference identity elsewhere. The noise bounds only judge the
@@ -406,8 +408,9 @@ that sets them lists the samples. Its `described-call` bounds are as its Test wo
 seven samples a platform, in attempts 1 to 6 of Test run 44739578781 and attempt 1 of Test run 44741595646: the
 described mirror's `reflect`, a sample holding a text and a counted array of three texts in and its reflection out,
 through the bound object a consumer resolved, over the same operation through a bare koffi binding of the fixture's
-structs declared by hand. The commit that sets them lists the samples. Its noise bounds are as they stood on 2026-11-13, written once per platform, the same
-number on each since they were set from all platforms at once, in Test runs 43438389364 and 43441441323.
+structs declared by hand. The commit that sets them lists the samples. Its noise bounds are as they stood on
+2026-11-13, written once per platform, the same number on each since they were set from all platforms at once, in Test
+runs 43438389364 and 43441441323.
 
 `c.txt` carries `weivel/c`'s bounds as its Release `benchmarks` job measured them on 2026-11-14, ten repetitions a run
 in Test runs 43573264428, 43573863406, 43574266777, 43574269766, 43574787768, 43574795017 and 43574798533: the
@@ -466,8 +469,8 @@ weivel-core-gate --sources <rules-file> <core-root>
   implementation is the role `c` and the language `c`: one word, read by purity as the role and by parity and layers
   as the language. Any other role is a language named in `checks/languages.txt`, whose lines read
   `<language> <kind> <value>` with kind `extension`, `name`, `pattern`, `prefix`, `source-root`, `source-base`,
-  `test-root`, `header-root` or `layer-exempt`; it allows its own files and prose, and a generated `.js` under a Java repository is an
-  offender.
+  `test-root`, `header-root` or `layer-exempt`; it allows its own files and prose, and a generated `.js` under a Java
+  repository is an offender.
   A `pattern` holds one `*`, standing for any characters. A pattern that begins with it names files by their ending,
   as an `extension` does, and like one needs a name before that ending: `*.cmake` does not allow a file named
   `.cmake`. A star further in may stand for nothing, so `tsconfig*.json` allows `tsconfig.json`.

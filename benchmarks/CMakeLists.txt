@@ -31,7 +31,8 @@ list(REMOVE_ITEM language_budgets ${CMAKE_CURRENT_SOURCE_DIR}/budget.txt ${CMAKE
 foreach(language_budget IN LISTS language_budgets)
     get_filename_component(language ${language_budget} NAME_WE)
     add_test(NAME language_budget_of_${language}_is_well_formed
-        COMMAND ${CMAKE_COMMAND} -DBUDGET=${language_budget} -DEXPECTED=valid
+        COMMAND ${CMAKE_COMMAND} -DBUDGET=${language_budget} -DEXPECTED=valid -DLANGUAGE=${language}
+            -DLANGUAGES=${PROJECT_SOURCE_DIR}/checks/languages.txt
             -P ${PROJECT_SOURCE_DIR}/test/language_budget_test.cmake)
 endforeach()
 set(language_budget_fixtures ${PROJECT_SOURCE_DIR}/test/fixtures/language-budget)
@@ -61,6 +62,15 @@ foreach(case
         COMMAND ${CMAKE_COMMAND} -DBUDGET=${language_budget_fixtures}/${fixture}.txt -DEXPECTED=invalid
             -DMUST_MATCH=${reason} -P ${PROJECT_SOURCE_DIR}/test/language_budget_test.cmake)
 endforeach()
+add_test(NAME language_budget_refuses_a_binding_language_without_described_call
+    COMMAND ${CMAKE_COMMAND} -DBUDGET=${language_budget_fixtures}/without-described-call.txt -DEXPECTED=invalid
+        -DMUST_MATCH=described-call.linux..is.missing -DLANGUAGE=typescript
+        -DLANGUAGES=${PROJECT_SOURCE_DIR}/checks/languages.txt
+        -P ${PROJECT_SOURCE_DIR}/test/language_budget_test.cmake)
+add_test(NAME language_budget_accepts_a_language_exempt_from_binding_without_described_call
+    COMMAND ${CMAKE_COMMAND} -DBUDGET=${language_budget_fixtures}/without-described-call.txt -DEXPECTED=valid
+        -DLANGUAGE=c -DLANGUAGES=${PROJECT_SOURCE_DIR}/checks/languages.txt
+        -P ${PROJECT_SOURCE_DIR}/test/language_budget_test.cmake)
 add_test(NAME language_budget_accepts_a_gate_per_backend
     COMMAND ${CMAKE_COMMAND} -DBUDGET=${language_budget_fixtures}/backends.txt -DEXPECTED=valid
         -P ${PROJECT_SOURCE_DIR}/test/language_budget_test.cmake)
