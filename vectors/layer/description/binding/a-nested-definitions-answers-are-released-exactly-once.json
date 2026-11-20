@@ -1,0 +1,141 @@
+{
+  "id": "description/binding/a-nested-definitions-answers-are-released-exactly-once",
+  "op": "description",
+  "covers": "12.5",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "readReleases": true
+      },
+      {
+        "holder": "agenda",
+        "call": "described-walker",
+        "operation": "lend",
+        "with": {},
+        "keep": "counter"
+      },
+      {
+        "holder": "agenda",
+        "call": "counter",
+        "operation": "add",
+        "with": {
+          "amount": "5"
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "counter",
+        "operation": "add",
+        "with": {
+          "amount": "13"
+        }
+      },
+      {
+        "holder": "agenda",
+        "release": "counter"
+      },
+      {
+        "holder": "agenda",
+        "readReleases": true
+      },
+      {
+        "unload": true
+      },
+      {
+        "holder": "agenda",
+        "readReleases": true
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "status": "ok",
+          "answer": {
+            "counter": {
+              "definition": "counter"
+            }
+          }
+        },
+        {
+          "status": "ok",
+          "answer": "1005"
+        },
+        {
+          "status": "refused",
+          "detail": "described refused on purpose",
+          "fix": "pass anything but \"refuse\""
+        }
+      ]
+    },
+    "released": {
+      "equals": [
+        {
+          "reflections": "0",
+          "trees": "0",
+          "refusals": "0",
+          "cursors": "0",
+          "nestedRefusals": "1"
+        },
+        {
+          "reflections": "0",
+          "trees": "0",
+          "refusals": "0",
+          "cursors": "0",
+          "nestedRefusals": "1"
+        }
+      ]
+    }
+  }
+}

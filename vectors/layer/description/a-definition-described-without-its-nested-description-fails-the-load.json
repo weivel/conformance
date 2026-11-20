@@ -1,0 +1,64 @@
+{
+  "id": "description/a-definition-described-without-its-nested-description-fails-the-load",
+  "op": "description",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_broken_definition_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      }
+    ]
+  },
+  "then": {
+    "loaded": false,
+    "callersMistake": true,
+    "got": {
+      "equals": [
+        false,
+        false
+      ]
+    },
+    "reported": {
+      "equals": []
+    }
+  }
+}

@@ -192,13 +192,15 @@
           "reflections": "1",
           "trees": "1",
           "refusals": "2",
-          "cursors": "1"
+          "cursors": "1",
+          "nestedRefusals": "0"
         },
         {
           "reflections": "1",
           "trees": "1",
           "refusals": "2",
-          "cursors": "1"
+          "cursors": "1",
+          "nestedRefusals": "0"
         }
       ]
     }

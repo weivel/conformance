@@ -1,0 +1,138 @@
+{
+  "id": "description/binding/an-answer-carrying-a-definition-is-callable-until-released",
+  "op": "description",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "call": "described-walker",
+        "operation": "lend",
+        "with": {},
+        "keep": "counter"
+      },
+      {
+        "holder": "agenda",
+        "blocking": "counter"
+      },
+      {
+        "holder": "agenda",
+        "call": "counter",
+        "operation": "add",
+        "with": {
+          "amount": "5"
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "counter",
+        "operation": "add",
+        "with": {
+          "amount": "18446744073709550615"
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "counter",
+        "operation": "add",
+        "with": {
+          "amount": "18446744073709550616"
+        }
+      },
+      {
+        "holder": "agenda",
+        "release": "counter"
+      },
+      {
+        "holder": "agenda",
+        "call": "counter",
+        "operation": "add",
+        "with": {
+          "amount": "5"
+        }
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "status": "ok",
+          "answer": {
+            "counter": {
+              "definition": "counter"
+            }
+          }
+        },
+        {
+          "status": "ok",
+          "answer": "1005"
+        },
+        {
+          "status": "ok",
+          "answer": "18446744073709551615"
+        },
+        {
+          "status": "malformed"
+        },
+        {
+          "callersMistake": true
+        }
+      ]
+    },
+    "blocking": {
+      "equals": [
+        []
+      ]
+    }
+  }
+}
