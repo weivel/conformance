@@ -54,6 +54,10 @@ static void write_services(answer_writer *answer, const weivel_standard_library 
             write_function(answer, &library->services[service].functions[function]);
         }
         answer_end_array(answer);
+        if (library->descriptions[service] != NULL) {
+            answer_key(answer, "description");
+            answer_string(answer, library->descriptions[service]);
+        }
         answer_end_object(answer);
     }
     answer_end_array(answer);

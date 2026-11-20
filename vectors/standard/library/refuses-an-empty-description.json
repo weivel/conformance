@@ -1,0 +1,31 @@
+{
+  "id": "library/refuses-an-empty-description",
+  "op": "library",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "services": [
+        {
+          "id": "echo",
+          "description": "",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "echo_service_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "then": {
+    "read": false,
+    "path": "services[0].description",
+    "refusal": {
+      "code": "invalid_value"
+    }
+  }
+}
