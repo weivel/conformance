@@ -1,0 +1,32 @@
+{
+  "id": "library/refuses-a-description-beside-bytes-functions",
+  "op": "library",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "release": "echo_release",
+      "services": [
+        {
+          "id": "echo",
+          "description": "echo_service_description",
+          "functions": [
+            {
+              "name": "echo",
+              "symbol": "echo_echo",
+              "kind": "bytes"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "then": {
+    "read": false,
+    "path": "services[0].description",
+    "refusal": {
+      "code": "conflicting_field"
+    }
+  }
+}

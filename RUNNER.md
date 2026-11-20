@@ -154,8 +154,9 @@ hands it to the standard's reader. Answers `{ read, release, services, path, ref
 
 - `read` is true when the reader accepted the declaration. `release` and `services` are answered only then:
   `release` is the declared release symbol, null when the declaration names none, and `services` lists
-  `[{ id, functions: [{ name, symbol, kind }] }]` in the declaration's order, `kind` being `"bytes"` or
-  `"definition"`, read off the standard's constants by value, or the number for one the kit does not name.
+  `[{ id, functions: [{ name, symbol, kind }], description? }]` in the declaration's order, `kind` being `"bytes"` or
+  `"definition"`, read off the standard's constants by value, or the number for one the kit does not name, and
+  `description` the symbol the service declares for its definition's description, answered only when it declares one.
 - `path` is the refused field as the reader names it (`services[0].functions[1]`, `release`), null when read, and
   `refusal` is the standard's refusal as for `validate`, or null.
 
@@ -163,7 +164,9 @@ A definition is its service's only function, and only a library declaring a byte
 reader refuses a definition beside another function at the function that brings the two together, as
 `conflicting_field`, a `context` on a definition at that `context`, as `conflicting_field` too, since a definition
 carries its context inside its own struct, and a declaration with a bytes function and no release at `release`, as
-`missing_field`. A third kind is refused at its `kind`, so naming a second kind opened no others.
+`missing_field`. A third kind is refused at its `kind`, so naming a second kind opened no others. A `description` is a
+C identifier, refused at it as `wrong_type` when it is not a string and `invalid_value` when it is empty, and only a
+definition is described, so one beside a bytes function is refused there as `conflicting_field`.
 
 The same op under `vectors/layer/library/` loads a declaration through a language's host, and is witnessed as
 `vectors/layer/LAYER.md` says.
