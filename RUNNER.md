@@ -364,7 +364,11 @@ fields separated by one space:
   one side is a cost and not noise. A language may sample this row in rounds and batch lengths of its own, unlike its
   same-language pair's, stating its sampling in its `CONTENT.md`. The row is judged by its platform's noise bounds
   and `noise-margin`, as the same-language pair is, carries no line of its own, and its gate is the identity
-  `library/a-definition-is-the-providers-own-pointer` witnesses. A C layer
+  `library/a-definition-is-the-providers-own-pointer` witnesses. `described-call`, optional, is a language binding a
+  described definition generically: an operation of the standard's `described` fixture called through the bound
+  object a consumer resolved, over the same operation called through a bare binding of the fixture's structs written
+  by hand, with the same input and its answer and refusal released the same way. A file need not carry it, and one
+  that carries it on a platform carries it on every one. A C layer
   crosses no foreign interface, so its bare call is the same control call made through the core's function table
   without the layer's wrapper, and `control-call` bounds what the wrapper adds. The platform is
   the runner's system, `linux`, `windows` or `macos`, whatever the language itself calls it. The number is the highest
@@ -384,8 +388,8 @@ fields separated by one space:
   set by the noisiest platform's largest sample, and in Java's samples macOS's would let a quiet Linux pair differ by
   half again what Linux's own samples ever needed.
 
-Each gate, each noise bound and each noise margin on each platform, and the ratio margin, appears exactly once, every number
-positive; `language_budget_of_<language>_is_well_formed` holds each file to that. A platform with no noise line has no
+Each required gate and each optional gate a file carries, each noise bound and each noise margin on each platform, and
+the ratio margin, appears exactly once, every number positive; `language_budget_of_<language>_is_well_formed` holds each file to that. A platform with no noise line has no
 noise bound, and the same-language gate run there fails.
 
 **The same-language gate in every language is the identity check**: the service a consumer resolves is the
@@ -398,7 +402,11 @@ runs 43592067436, 43592102705, 43592105961, 43592109026, 43592111939 and 4359211
 weivel_get_service through the wrapper with the core's timer armed, over the same weivel_get_service on the same core
 through the very koffi function the wrapper calls, and the echo library's call through the host's library service over
 `echo_echo` with the same input through a bare koffi binding, its answer released as the host releases it. The commit
-that sets them lists the samples. Its noise bounds are as they stood on 2026-11-13, written once per platform, the same
+that sets them lists the samples. Its `described-call` bounds are as its Test workflow measured them on 2026-11-20,
+seven samples a platform, in attempts 1 to 6 of Test run 44739578781 and attempt 1 of Test run 44741595646: the
+described mirror's `reflect`, a sample holding a text and a counted array of three texts in and its reflection out,
+through the bound object a consumer resolved, over the same operation through a bare koffi binding of the fixture's
+structs declared by hand. The commit that sets them lists the samples. Its noise bounds are as they stood on 2026-11-13, written once per platform, the same
 number on each since they were set from all platforms at once, in Test runs 43438389364 and 43441441323.
 
 `c.txt` carries `weivel/c`'s bounds as its Release `benchmarks` job measured them on 2026-11-14, ten repetitions a run

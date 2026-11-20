@@ -44,6 +44,7 @@ foreach(case
         unknown-margin:names.no.known.margin
         extra-field:is.neither
         missing-a-platform:library-call.macos..is.missing
+        missing-an-optional-gate-platform:described-call.macos..is.missing
         missing-a-noise-platform:worst-noise.macos..is.missing
         noise-without-platform:worst-noise.0.5678..names.no.known.margin
         unknown-gate:names.no.ratio.gate
