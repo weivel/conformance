@@ -165,6 +165,10 @@ hands it to the standard's reader. Answers `{ read, release, services, path, ref
 - `path` is the refused field as the reader names it (`services[0].functions[1]`, `release`), null when read, and
   `refusal` is the standard's refusal as for `validate`, or null.
 
+A service's `id` follows the rule of `importName`, lowercase words joined by single hyphens or dots, so a library can
+serve a standard id such as `weivel.host`; an empty word, as in `weivel..host`, `.a` or `a.`, is refused at the `id` as
+`invalid_value`.
+
 A definition is its service's only function, and only a library declaring a bytes function needs a release: the
 reader refuses a definition beside another function at the function that brings the two together, as
 `conflicting_field`, a `context` on a definition at that `context`, as `conflicting_field` too, since a definition
