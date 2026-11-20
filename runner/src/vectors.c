@@ -144,7 +144,8 @@ static int check_shape(const vector *candidate, char *error, size_t error_size) 
                       candidate->op);
     }
     if (candidate->id == NULL || !id_is_valid(candidate->id)) {
-        return refuse(error, error_size, "%s is not a valid vector: %s", path, "id must read family/name, or family/directory/name, in lowercase words");
+        return refuse(error, error_size, "%s is not a valid vector: %s", path,
+                      "id must read family/name, or family/directory/name, in lowercase words");
     }
     if (candidate->covers == NULL || !covers_is_valid(candidate->covers)) {
         return refuse(error, error_size, "%s is not a valid vector: %s", path,

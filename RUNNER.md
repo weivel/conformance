@@ -175,8 +175,9 @@ definition is described, so one beside a bytes function is refused there as `con
 
 The same op under `vectors/layer/library/` loads a declaration through a language's host, and is witnessed as
 `vectors/layer/LAYER.md` says. A declaration whose services declare their `description` is loaded through a
-language's host by the layer op `description`, under `vectors/layer/description/`, which binds the standard's
-`described` test library from its descriptions alone.
+language's host by the layer op `description`, under `vectors/layer/description/`, on the standard's `described` test
+library: every layer checks its descriptions at the load, and a layer that binds descriptions also calls it through
+what they say, as `vectors/layer/LAYER.md` states.
 
 ### `unbound`
 

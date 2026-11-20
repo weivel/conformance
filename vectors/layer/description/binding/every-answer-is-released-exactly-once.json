@@ -48,6 +48,10 @@
       },
       {
         "holder": "agenda",
+        "readReleases": true
+      },
+      {
+        "holder": "agenda",
         "call": "described-mirror",
         "operation": "reflect",
         "with": {
@@ -106,18 +110,14 @@
       },
       {
         "holder": "agenda",
-        "call": "described-mirror",
-        "operation": "count_releases",
-        "with": {}
+        "readReleases": true
       },
       {
         "unload": true
       },
       {
         "holder": "agenda",
-        "call": "described-mirror",
-        "operation": "count_releases",
-        "with": {}
+        "readReleases": true
       }
     ]
   },
@@ -183,24 +183,22 @@
           "answer": {
             "handle": "walk"
           }
+        }
+      ]
+    },
+    "released": {
+      "equals": [
+        {
+          "reflections": "1",
+          "trees": "1",
+          "refusals": "2",
+          "cursors": "1"
         },
         {
-          "status": "ok",
-          "answer": {
-            "reflections": "1",
-            "trees": "1",
-            "refusals": "2",
-            "cursors": "1"
-          }
-        },
-        {
-          "status": "ok",
-          "answer": {
-            "reflections": "1",
-            "trees": "1",
-            "refusals": "2",
-            "cursors": "1"
-          }
+          "reflections": "1",
+          "trees": "1",
+          "refusals": "2",
+          "cursors": "1"
         }
       ]
     }
