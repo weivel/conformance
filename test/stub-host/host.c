@@ -15,8 +15,8 @@ static const char *const STATE_NAMES[] = {"activated", "refused", "failed"};
 
 static stub_run *current_run;
 
-/** Whether `start` was called in this process, which a program does once. */
-static int start_called;
+/** Whether a run is open: `start` answered OK and `stop` has not been called since, so another `start` is a mistake. */
+static int run_open;
 
 /** What a `next` answer holds as its storage, which owns nothing, so a second use of one answer is still caught. */
 static char next_marker;
@@ -96,8 +96,14 @@ void stub_host_forget_run(void) {
     stub_lock();
     stub_run_free(current_run);
     current_run = NULL;
-    start_called = 0;
+    run_open = 0;
     stub_unlock();
+}
+
+/** Makes `run` the current run, freeing the one an earlier run read, whose answers ended with its `stop`. */
+static void replace_current_run(stub_run *run) {
+    stub_run_free(current_run);
+    current_run = run;
 }
 
 static weivel_status start_run(const char *const *arguments, size_t argument_count, weivel_standard_host_plan *plan,
@@ -116,7 +122,7 @@ static weivel_status start_run(const char *const *arguments, size_t argument_cou
         return stub_refuse(refusal, "cannot write record.txt in the directory", "hand start a writable directory");
     }
     stub_scope_prepare(run);
-    current_run = run;
+    replace_current_run(run);
     record_start(run, arguments, argument_count);
     if (run->start_refusal != NULL) {
         return stub_refuse(refusal, run->start_refusal, "remove refuse.start from stub-host.json");
@@ -132,20 +138,17 @@ static weivel_status host_start(void *context, const char *const *arguments, siz
         !stub_is_empty_answer(plan->size, PLAN_FIRST_SHAPE, plan->storage) || !stub_is_usable_refusal(refusal)) {
         return WEIVEL_STATUS_MALFORMED;
     }
-    if (argument_count == 0) {
-        return stub_refuse(refusal, "start was handed no argument, so it names no directory",
-                           "pass the directory holding stub-host.json as the first argument");
-    }
     stub_lock();
-    if (start_called) {
-        if (current_run != NULL) {
-            record_text(current_run, "start again");
-        }
-        stub_unlock();
-        return WEIVEL_STATUS_MALFORMED;
+    if (run_open) {
+        record_text(current_run, "start again");
+        status = WEIVEL_STATUS_MALFORMED;
+    } else if (argument_count == 0) {
+        status = stub_refuse(refusal, "start was handed no argument, so it names no directory",
+                             "pass the directory holding stub-host.json as the first argument");
+    } else {
+        status = start_run(arguments, argument_count, plan, refusal);
+        run_open = status == WEIVEL_STATUS_OK;
     }
-    start_called = 1;
-    status = start_run(arguments, argument_count, plan, refusal);
     stub_unlock();
     return status;
 }
@@ -298,6 +301,7 @@ static weivel_status host_stop(void *context, uint32_t *exit_code, weivel_standa
     } else {
         record_text(current_run, "stop");
         *exit_code = current_run->exit_code;
+        run_open = 0;
     }
     stub_unlock();
     return status;

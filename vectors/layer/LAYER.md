@@ -909,15 +909,16 @@ is an object:
 
 A file that breaks this shape makes `start` refuse, its detail naming the member.
 
-**What the provider does.** `start` answers the plan: the libraries, then the plugins in the file's order, the mode,
-and in `action` mode the action's plugin by its manifest path as the plan names it. A second `start` in one process
-is the caller's mistake: it is recorded and answers MALFORMED. `started` records the outcomes and answers OK. `tick`
-records how it came, answers the next time, and once it has answered none never answers another. `finished` records
-how the action ended. `stop` records itself and answers `exit`. `open` finds the plugin by its manifest path exactly as
-the plan named it, and answers a scoped plugin a config of its `settings`, a secrets store that starts empty, paths
-(`plugin` its directory, `cache` and `config` the directories of those names in it) and a log, each the plugin's own
-and none shared with another plugin. Every call is recorded under one lock, so a call from another thread, as a
-blocking `tick` is, never splits a line.
+**What the provider does.** `start` answers the plan: the libraries, then the plugins in the file's order, the mode, and
+in `action` mode the action's plugin by its manifest path as the plan names it. A second `start` while a run is open,
+from a `start` that answered OK until its `stop`, is the caller's mistake: it is recorded and answers MALFORMED. After a
+`stop`, or a `start` that did not answer OK, `start` opens a new run, so a suite may run every vector in one process.
+`started` records the outcomes and answers OK. `tick` records how it came, answers the next time, and once it has
+answered none never answers another. `finished` records how the action ended. `stop` records itself and answers `exit`.
+`open` finds the plugin by its manifest path exactly as the plan named it, and answers a scoped plugin a config of its
+`settings`, a secrets store that starts empty, paths (`plugin` its directory, `cache` and `config` the directories of
+those names in it) and a log, each the plugin's own and none shared with another plugin. Every call is recorded under
+one lock, so a call from another thread, as a blocking `tick` is, never splits a line.
 
 **`record.txt`.** `start` empties `record.txt` in the directory, then every call appends one line, in the order the
 calls were made. A text that is not a name is written as a JSON string, and a value as compact JSON: a record's
@@ -940,10 +941,11 @@ members in order, a number in the shortest form that reads back as the same doub
 `weivel/host.h` states:
 
 - `start`, once;
-- for each plugin of the plan in order, its scope opened immediately before its activation, and the next plugin's
-  scope opened only after that activation ended; a plugin whose scope is refused is not activated and is told as
-  `refused`, one whose activation throws is told as `failed`, and in both an outcome carries a non-empty detail
-  whenever the refusal or the failure carried one;
+- for each plugin of the plan in order, its scope opened immediately before its activation, and the next plugin's scope
+  opened only after that activation ended; the scope is asked of whichever library the program loaded serves
+  `weivel.scope`, the library it was started with included, which for these vectors is `stub-host` itself; a plugin
+  whose scope is refused is not activated and is told as `refused`, one whose activation throws is told as `failed`, and
+  in both an outcome carries a non-empty detail whenever the refusal or the failure carried one;
 - `started`, once, with every plugin's outcome in the plan's order;
 - in `serve` mode, `tick` at once after `started` answered OK, and then whenever the time it answered comes: the
   program reads its clock again before each tick and waits again while it still reads before `next`, so no tick of a
@@ -955,8 +957,10 @@ members in order, a number in the shortest form that reads back as the same doub
 
 **A stop request.** A program is asked to end a run by a stop request, which it takes through its own interface and,
 from its command line, from its platform's terminate signals (SIGINT and SIGTERM on POSIX systems, SIGINT and SIGBREAK
-on Windows), as `weivel/host.h` says. A vector only says that the suite sends the program its stop request: a suite
-may send the signal to the program it ran as a child, or ask the program it runs in process through that interface.
+on Windows), as `weivel/host.h` says. It is honoured from the moment `start` answered OK, and one that arrives during
+a call, as during a blocking `tick`, takes effect once that call returns: `stop` comes next, and no further tick. A
+vector only says that the suite sends the program its stop request: a suite may send the signal to the program it ran
+as a child, or ask the program it runs in process through that interface.
 
 **A vector's `given`.** `{ stubHost, plugins, arguments?, stopAfter? }`:
 
@@ -983,9 +987,9 @@ may send the signal to the program it ran as a child, or ask the program it runs
   way, so every such vector names one.
 
 The suite runs `<program> <stub-host library> <directory> <arguments...>` as its program takes them, or the same run
-through the program's interface, and waits for the run to end. A `stopAfter` line that has not appeared within 10
-seconds of the run starting, or a run that has not ended within 10 seconds of its stop request or, without one, of
-starting, fails the vector. The suite then witnesses:
+through the program's interface, and waits for the run to end. One bound, 30 seconds, holds every wait: a
+`stopAfter` line that has not appeared within 30 seconds of the run starting, or a run that has not ended within 30
+seconds of its stop request or, without one, of starting, fails the vector. The suite then witnesses:
 
 - `record`, the lines of `record.txt`, exactly as `equals` states;
 - `exit`, the program's exit code, exactly; or, where the vector has `exitsNonZero: true`, that the code is not 0.

@@ -89,7 +89,7 @@ void stub_scope_prepare(stub_run *run);
 
 /** The run `start` read, or NULL before one was read. */
 stub_run *stub_host_current_run(void);
-/** Frees the current run and lets `start` be called again, as a fresh process would; for the kit's own tests. */
+/** Frees the current run and closes it, as a fresh process would have none; for the kit's own tests. */
 void stub_host_forget_run(void);
 
 void stub_lock(void);

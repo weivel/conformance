@@ -272,6 +272,32 @@ static void a_second_start_is_the_callers_mistake(void) {
     check_record(RECORD, 2, "a second start is recorded and refused");
 }
 
+static void a_start_after_a_stop_opens_a_new_run(void) {
+    weivel_standard_host_plan plan = WEIVEL_INIT(weivel_standard_host_plan);
+    const char *arguments[] = {STUB_HOST_WORK_DIR};
+    uint32_t exit_code = 0;
+    static const char *const RECORD[] = {"start", "stop"};
+    start_serve_run();
+    CHECK(host()->stop(host()->context, &exit_code, NULL) == WEIVEL_STATUS_OK);
+    write_run("{\"mode\":\"serve\",\"plugins\":[],\"exit\":4}");
+    CHECK(host()->start(host()->context, arguments, 1, &plan, NULL) == WEIVEL_STATUS_OK);
+    host()->release_plan(host()->context, &plan);
+    CHECK(host()->stop(host()->context, &exit_code, NULL) == WEIVEL_STATUS_OK);
+    CHECK(exit_code == 4);
+    check_record(RECORD, 2, "the second run records afresh");
+}
+
+static void a_start_after_a_refused_start_opens_a_run(void) {
+    weivel_standard_host_plan plan = WEIVEL_INIT(weivel_standard_host_plan);
+    const char *arguments[] = {STUB_HOST_WORK_DIR};
+    write_run("{\"mode\":\"serve\",\"plugins\":[],\"refuse\":{\"start\":\"once\"}}");
+    CHECK(start_in_work(&plan, NULL) == WEIVEL_STATUS_REFUSED);
+    CHECK(host()->start(host()->context, NULL, 0, &plan, NULL) == WEIVEL_STATUS_REFUSED);
+    write_run("{\"mode\":\"serve\",\"plugins\":[]}");
+    CHECK(host()->start(host()->context, arguments, 1, &plan, NULL) == WEIVEL_STATUS_OK);
+    host()->release_plan(host()->context, &plan);
+}
+
 static void a_tick_told_to_refuse_refuses(void) {
     weivel_standard_host_plan plan = WEIVEL_INIT(weivel_standard_host_plan);
     weivel_standard_host_next next = WEIVEL_INIT(weivel_standard_host_next);
@@ -544,6 +570,8 @@ int main(void) {
     started_told_to_refuse_refuses();
     tick_answers_each_listed_time_after_the_first_then_none();
     a_second_start_is_the_callers_mistake();
+    a_start_after_a_stop_opens_a_new_run();
+    a_start_after_a_refused_start_opens_a_run();
     a_tick_told_to_refuse_refuses();
     finished_records_a_result_none_a_failure_and_a_mistake();
     stop_answers_the_exit_code();
