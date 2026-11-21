@@ -48,6 +48,9 @@ static int is_all_digits(const char *text) {
 
 int covers_is_valid(const char *covers) {
     static const char INVARIANT[] = "invariant-";
+    if (strcmp(covers, "host") == 0) {
+        return 1;
+    }
     if (strncmp(covers, "12.", 3) == 0) {
         return covers[3] >= '1' && covers[3] <= '6' && covers[4] == '\0';
     }
@@ -149,7 +152,7 @@ static int check_shape(const vector *candidate, char *error, size_t error_size) 
     }
     if (candidate->covers == NULL || !covers_is_valid(candidate->covers)) {
         return refuse(error, error_size, "%s is not a valid vector: %s", path,
-                      "covers must be 12.1 to 12.6 or invariant-1 to invariant-14");
+                      "covers must be 12.1 to 12.6, invariant-1 to invariant-14, or host");
     }
     if (candidate->given == NULL || candidate->then == NULL) {
         return refuse(error, error_size, "%s is not a valid vector: %s", path, "given and then must be objects");

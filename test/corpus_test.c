@@ -16,14 +16,16 @@ static const pinned_count PINNED[] = {
     {"core/resolve", 6},    {"core/revoke", 2},        {"core/scope", 2},
     {"core/want", 3},       {"core/reach", 16},        {"core/unbound", 3},
     {"core/carry", 1},      {"core/consume", 16},      {"standard/identity", 14},
-    {"standard/validate", 30}, {"standard/library", 13}, {"layer/consume", 2},
+    {"standard/validate", 30}, {"standard/library", 16}, {"layer/consume", 2},
     {"layer/want", 4},      {"layer/lifecycle", 6},    {"layer/library", 13},
     {"layer/description", 4}, {"layer/description/binding", 23},
+    {"layer/host", 14},
 };
 
 static const char *const SECTIONS[] = {"12.1",         "12.2",         "12.3",         "12.4",
                                        "12.5",         "12.6",         "invariant-11", "invariant-12",
-                                       "invariant-14", "invariant-4",  "invariant-8"};
+                                       "invariant-14", "invariant-4",  "invariant-8",
+                                       "host"};
 
 static int load_fixture(const char *name, corpus *loaded, char *error) {
     char path[512];
@@ -108,7 +110,7 @@ static void asks_about_every_op_the_kit_knows(void) {
     static const char *const OPS[] = {"supports", "boot",    "order",    "resolve", "revoke",
                                       "scope",    "want",    "reach",    "unbound", "carry",
                                       "consume",  "identity", "validate", "library",
-                                      "lifecycle", "description"};
+                                      "lifecycle", "description", "host"};
     corpus loaded;
     char error[ERROR_CAPACITY];
     size_t at;
@@ -262,6 +264,8 @@ static void admits_every_invariant_the_model_states_and_no_other(void) {
     CHECK(covers_is_valid("12.6"));
     CHECK(!covers_is_valid("12.7"));
     CHECK(!covers_is_valid("12.10"));
+    CHECK(covers_is_valid("host"));
+    CHECK(!covers_is_valid("hosts"));
 }
 
 static void reads_the_tier_from_the_directory(void) {

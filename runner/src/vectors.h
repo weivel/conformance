@@ -44,7 +44,10 @@ void corpus_free(corpus *loaded);
 /** How many vectors live in a directory, named as `vector.directory` is, such as `core/boot`. */
 size_t corpus_count_in(const corpus *loaded, const char *directory);
 
-/** 1 when `covers` names a section of the design (`12.1` to `12.6`) or an invariant (`invariant-1` to `invariant-14`). */
+/**
+ * 1 when `covers` names a section of the design (`12.1` to `12.6`), an invariant (`invariant-1` to `invariant-14`), or
+ * `host`, the host contract of the standard's `weivel/host.h`.
+ */
 int covers_is_valid(const char *covers);
 
 const char *tier_name(vector_tier tier);

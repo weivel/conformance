@@ -1,0 +1,63 @@
+{
+  "id": "host/an-activation-that-throws-is-told-as-failed",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        },
+        {
+          "name": "beta",
+          "directory": "beta",
+          "manifest": "beta/manifest.json",
+          "scope": true
+        }
+      ]
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          },
+          {
+            "throw": "alpha could not start"
+          }
+        ]
+      },
+      {
+        "name": "beta",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ],
+    "stopAfter": "tick 1 first"
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "open beta scoped",
+        "log beta info \"up\"",
+        "started 2",
+        "outcome alpha failed detail",
+        "outcome beta activated no-detail",
+        "tick 1 first",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "id": "host/a-refused-scope-quarantines-that-plugin-alone",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        },
+        {
+          "name": "beta",
+          "directory": "beta",
+          "manifest": "beta/manifest.json",
+          "scopeRefused": "beta declares a setting of no known kind"
+        },
+        {
+          "name": "gamma",
+          "directory": "gamma",
+          "manifest": "gamma/manifest.json",
+          "scope": true
+        }
+      ]
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      },
+      {
+        "name": "beta",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      },
+      {
+        "name": "gamma",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ],
+    "stopAfter": "tick 1 first"
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "open beta refused",
+        "open gamma scoped",
+        "log gamma info \"up\"",
+        "started 3",
+        "outcome alpha activated no-detail",
+        "outcome beta refused detail",
+        "outcome gamma activated no-detail",
+        "tick 1 first",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

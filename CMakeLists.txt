@@ -50,6 +50,17 @@ target_compile_definitions(corpus_test PRIVATE
     KIT_VECTORS_DIR="${PROJECT_SOURCE_DIR}/vectors"
     KIT_FIXTURES_DIR="${PROJECT_SOURCE_DIR}/test/fixtures")
 
+add_subdirectory(test/stub-host stub-host)
+set(stub_host_work ${PROJECT_BINARY_DIR}/stub-host-work)
+file(MAKE_DIRECTORY ${stub_host_work})
+conformance_test(stub_host_test stub_host_objects ${CMAKE_DL_LIBS})
+add_dependencies(stub_host_test stub-host)
+target_compile_definitions(stub_host_test PRIVATE
+    _CRT_SECURE_NO_WARNINGS
+    STUB_HOST_WORK_DIR="${stub_host_work}"
+    STUB_HOST_DECLARATION="${PROJECT_SOURCE_DIR}/test/stub-host/library.json"
+    STUB_HOST_LIBRARY="$<TARGET_FILE:stub-host>")
+
 add_test(NAME runner_names_an_unknown_op
     COMMAND weivel-conformance run ${PROJECT_SOURCE_DIR}/test/fixtures/unknown-op)
 set_tests_properties(runner_names_an_unknown_op PROPERTIES

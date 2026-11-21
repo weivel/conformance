@@ -1,0 +1,49 @@
+{
+  "id": "host/a-refused-tick-still-stops",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "ticks": [
+        40
+      ],
+      "refuse": {
+        "tick": 1
+      },
+      "exit": 3
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ]
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "started 1",
+        "outcome alpha activated no-detail",
+        "tick 1 first",
+        "stop"
+      ]
+    },
+    "exit": 3
+  }
+}

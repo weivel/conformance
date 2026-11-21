@@ -1,0 +1,16 @@
+{
+  "importName": "stub-host",
+  "version": "1.0.0",
+  "services": [
+    {
+      "id": "weivel.host",
+      "description": "stub_host_description",
+      "functions": [{ "name": "definition", "symbol": "stub_host_definition", "kind": "definition" }]
+    },
+    {
+      "id": "weivel.scope",
+      "description": "stub_host_scopes_description",
+      "functions": [{ "name": "definition", "symbol": "stub_host_scopes_definition", "kind": "definition" }]
+    }
+  ]
+}

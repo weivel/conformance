@@ -1,0 +1,84 @@
+{
+  "id": "host/a-plugin-reads-its-own-scoped-config",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true,
+          "settings": {
+            "greeting": "hello"
+          }
+        },
+        {
+          "name": "beta",
+          "directory": "beta",
+          "manifest": "beta/manifest.json",
+          "scope": true,
+          "settings": {
+            "greeting": "bonjour",
+            "count": 3
+          }
+        }
+      ]
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "logSetting": "greeting"
+          },
+          {
+            "set": "seen",
+            "to": true
+          },
+          {
+            "logSetting": "seen"
+          }
+        ]
+      },
+      {
+        "name": "beta",
+        "activate": [
+          {
+            "logSetting": "greeting"
+          },
+          {
+            "logSetting": "count"
+          },
+          {
+            "logSetting": "seen"
+          }
+        ]
+      }
+    ],
+    "stopAfter": "tick 1 first"
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"greeting=hello\"",
+        "set alpha \"seen\" true",
+        "log alpha info \"seen=true\"",
+        "open beta scoped",
+        "log beta info \"greeting=bonjour\"",
+        "log beta info \"count=3\"",
+        "log beta info \"seen=none\"",
+        "started 2",
+        "outcome alpha activated no-detail",
+        "outcome beta activated no-detail",
+        "tick 1 first",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

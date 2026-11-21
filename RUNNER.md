@@ -22,9 +22,11 @@ A vector's directory says which suite judges it.
   core, through an adapter that drives the standard's library (`siblings/standard`) in-process.
 - `vectors/layer/<op>/` is witnessed by each language's own layer suite, because the core never calls a host
   language. `vectors/layer/LAYER.md` says what each suite must witness. The runner loads and counts these and
-  does not run them; the report lists them as awaiting a layer. The `lifecycle` and `description` ops are asked
-  only here: the kit knows them so their vectors load, and no adapter answers them, so a core vector of either would
-  be errored.
+  does not run them; the report lists them as awaiting a layer. The `lifecycle`, `description` and `host` ops are
+  asked only here: the kit knows them so their vectors load, and no adapter answers them, so a core vector of any of
+  them would be errored. A `host` vector runs a language's host program as a child process against the kit's stub
+  provider `stub-host` (`test/stub-host/`), and judges the lines the provider appended to its `record.txt`; the shape
+  of its `stub-host.json` and of every record line is in `vectors/layer/LAYER.md`.
 
 A vector's id is its family, which is its op, a `/`, and its name, every part lowercase words joined by hyphens. A
 vector in a subdirectory of its op's directory carries that subdirectory in its id, as
@@ -164,6 +166,11 @@ hands it to the standard's reader. Answers `{ read, release, services, path, ref
   `description` the symbol the service declares for its definition's description, answered only when it declares one.
 - `path` is the refused field as the reader names it (`services[0].functions[1]`, `release`), null when read, and
   `refusal` is the standard's refusal as for `validate`, or null.
+
+A service's `id` is lowercase words joined by single hyphens or dots, so a library can serve a standard id such as
+`weivel.host`; an empty word, as in `weivel..host`, `.a` or `a.`, is refused at the `id` as `invalid_value`. The
+`importName` follows the same rule and, as a plugin's does, refuses a Windows device name with or without a dot after
+it (`con`, `nul`, `com1.x`), at the `importName` as `invalid_value`.
 
 A definition is its service's only function, and only a library declaring a bytes function needs a release: the
 reader refuses a definition beside another function at the function that brings the two together, as

@@ -351,7 +351,8 @@ elseif(SCENARIO STREQUAL "purity_accepts_a_java_layer_with_its_test_plugins")
     plant("src/plugins/java/com/weivel/fixtures/helper.c" "int x;")
     expect(1 "src/plugins/java/com/weivel/fixtures/helper\\.c" "Plugin\\.java|package-info|gradle" ${PURITY} ${root} java ${LANGUAGES})
 elseif(SCENARIO STREQUAL "layers_reads_java_tests_and_no_test_plugin")
-    plant_layer_vectors("consume/a-listener;want/a-deadline")
+    # The pinned list exempts java from host, which refuses a vector directory holding nothing there.
+    plant_layer_vectors("consume/a-listener;want/a-deadline;host/a-run")
     plant("repo/src/test/java/com/weivel/host/HostTest.java" "@DisplayName(\"consume/a-listener\") class HostTest {}\n")
     plant("repo/src/plugins/java/com/weivel/fixtures/Plugin.java" "// want/a-deadline\nclass Plugin {}\n")
     expect(1 "want/a-deadline: no test under src/test/java names" "consume/a-listener:" ${LAYERS} ${root}/repo ${root}/layer java ${LANGUAGES})
@@ -396,8 +397,9 @@ elseif(SCENARIO STREQUAL "names_rejects_a_forbidden_name_in_a_c_layer")
     plant("src/host/host.c" "int x;\nstatic const char origin[] = \"${second_word}\";")
     expect(1 "include/weivel/c/core\\.h:1: names '${first_name}'.*src/host/host\\.c:2: names '${second_word}'" "" ${NAMES} ${root} ${WORDS})
 elseif(SCENARIO STREQUAL "layers_reads_c_tests_and_no_build_script")
-    # The pinned list exempts c from description/binding, which refuses a vector directory holding nothing there.
-    plant_layer_vectors("consume/a-listener;want/a-deadline;description/binding/a-call")
+    # The pinned list exempts c from description/binding and host, which refuses a vector directory holding nothing
+    # under either.
+    plant_layer_vectors("consume/a-listener;want/a-deadline;description/binding/a-call;host/a-run")
     plant("repo/test/conformance/consume_test.c" "static const char vector[] = \"consume/a-listener\";\n")
     plant("repo/test/conformance/vectors.h" "#define DEADLINE \"want/a-deadline\"\n")
     expect(0 "every one of 2 layer vectors" "" ${LAYERS} ${root}/repo ${root}/layer c ${LANGUAGES})

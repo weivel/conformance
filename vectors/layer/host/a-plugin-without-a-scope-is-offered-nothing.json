@@ -1,0 +1,67 @@
+{
+  "id": "host/a-plugin-without-a-scope-is-offered-nothing",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json"
+        },
+        {
+          "name": "beta",
+          "directory": "beta",
+          "manifest": "beta/manifest.json",
+          "scope": true
+        }
+      ]
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "absent": "weivel.config"
+          },
+          {
+            "absent": "weivel.secrets"
+          },
+          {
+            "absent": "weivel.paths"
+          },
+          {
+            "absent": "weivel.log"
+          }
+        ]
+      },
+      {
+        "name": "beta",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ],
+    "stopAfter": "tick 1 first"
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha empty",
+        "open beta scoped",
+        "log beta info \"up\"",
+        "started 2",
+        "outcome alpha activated no-detail",
+        "outcome beta activated no-detail",
+        "tick 1 first",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}
