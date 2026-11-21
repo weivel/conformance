@@ -47,6 +47,7 @@ foreach(case
         missing-a-platform:library-call.macos..is.missing
         missing-an-optional-gate-platform:described-call.macos..is.missing
         missing-an-optional-gate-backend:described-call-jna.linux..is.missing
+        missing-a-blocking-call-platform:blocking-call.macos..is.missing
         missing-a-noise-platform:worst-noise.macos..is.missing
         noise-without-platform:worst-noise.0.5678..names.no.known.margin
         unknown-gate:names.no.ratio.gate

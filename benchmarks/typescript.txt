@@ -7,6 +7,9 @@ library-call macos 1.9553
 described-call linux 1.1373
 described-call windows 1.0717
 described-call macos 1.1203
+blocking-call linux 32.0162
+blocking-call windows 42.6408
+blocking-call macos 32.3597
 ratio-margin 1.4
 quiet-noise linux 0.0772
 quiet-noise windows 0.0772

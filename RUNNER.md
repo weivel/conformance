@@ -379,14 +379,17 @@ fields separated by one space:
   with the same input and its answer and refusal released the same way. It is required of every language that
   `checks/languages.txt` does not list as `layer-exempt` from `description/binding`, since each of those binds
   descriptions, and on every platform of every backend its file names; a language exempt from it, as C is, need not
-  carry it, and one that carries it carries it on every platform of every backend. A C layer
-  crosses no foreign interface, so its bare call is the same control call made through the core's function table
-  without the layer's wrapper, and `control-call` bounds what the wrapper adds. The platform is
-  the runner's system, `linux`, `windows` or `macos`, whatever the language itself calls it. The number is the highest
-  per-round median ratio CI measured there, and the bound is that number times `ratio-margin`. A platform with no line
-  has no bound, and a gate run there fails. A language that reaches C through more than one backend names the backend
-  after the gate and a hyphen, `control-call-ffm`, and bounds each backend's gates on every platform; its noise lines
-  stay per platform, since the same-language pair crosses no backend.
+  carry it, and one that carries it carries it on every platform of every backend. `blocking-call` is a language
+  that calls a `@blocking` operation off its calling thread: the described fixture's walker `wait` through the bound
+  object a consumer resolved, each call awaited before the next, over the same `wait` called directly on the calling
+  thread. It is optional, carried by a language whose binding moves a blocking call off its calling thread, and on
+  every platform of every backend once carried. A C layer crosses no foreign interface, so its bare call is the same
+  control call made through the core's function table without the layer's wrapper, and `control-call` bounds what
+  the wrapper adds. The platform is the runner's system, `linux`, `windows` or `macos`, whatever the language itself
+  calls it. The number is the highest per-round median ratio CI measured there, and the bound is that number times
+  `ratio-margin`. A platform with no line has no bound, and a gate run there fails. A language that reaches C through
+  more than one backend names the backend after the gate and a hyphen, `control-call-ffm`, and bounds each backend's
+  gates on every platform; its noise lines stay per platform, since the same-language pair crosses no backend.
 - `ratio-margin <number>`: how far over its highest measured ratio a run may go.
 - `quiet-noise <platform> <number>`: how far from 1 the ratio of two paths of identical cost is on a quiet run there.
 - `worst-noise <platform> <number>`: the noisiest such deviation measured there, times a stated margin; a run whose
@@ -417,7 +420,11 @@ that sets them lists the samples. Its `described-call` bounds are as its Test wo
 seven samples a platform, in attempts 1 to 6 of Test run 44739578781 and attempt 1 of Test run 44741595646: the
 described mirror's `reflect`, a sample holding a text and a counted array of three texts in and its reflection out,
 through the bound object a consumer resolved, over the same operation through a bare koffi binding of the fixture's
-structs declared by hand. The commit that sets them lists the samples. Its noise bounds are as they stood on
+structs declared by hand. The commit that sets them lists the samples. Its `blocking-call` bounds are as its Test
+workflow measured them on 2026-11-20 and 2026-11-21, one sample a platform in each of Test runs 44840186687,
+44847576351 and 44852851668: the walker's `wait` through the bound object, which runs it on a worker and settles a
+promise, over the same `wait` through a bare koffi binding called on the calling thread. The commit that sets them
+lists the samples. Its noise bounds are as they stood on
 2026-11-13, written once per platform, the same number on each since they were set from all platforms at once, in Test
 runs 43438389364 and 43441441323.
 
