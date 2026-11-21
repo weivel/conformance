@@ -1,0 +1,182 @@
+{
+  "id": "description/binding/outline-copies-nodes-holding-nodes-both-ways",
+  "op": "description",
+  "covers": "invariant-4",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "services": [
+        {
+          "id": "described-mirror",
+          "description": "described_mirror_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_mirror_definition",
+              "kind": "definition"
+            }
+          ]
+        },
+        {
+          "id": "described-walker",
+          "description": "described_walker_description",
+          "functions": [
+            {
+              "name": "definition",
+              "symbol": "described_walker_definition",
+              "kind": "definition"
+            }
+          ]
+        }
+      ]
+    },
+    "holders": [
+      "agenda"
+    ],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "holder": "agenda",
+        "get": "described-mirror"
+      },
+      {
+        "holder": "agenda",
+        "get": "described-walker"
+      },
+      {
+        "holder": "agenda",
+        "readReleases": true
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "outline",
+        "with": {
+          "node": {
+            "label": "root",
+            "content": [
+              {
+                "label": "a",
+                "content": [
+                  {
+                    "label": "a1",
+                    "content": [
+                      {
+                        "label": "a11"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "label": "b",
+                "depth": 77
+              }
+            ],
+            "next": {
+              "label": "after",
+              "next": {
+                "label": "last"
+              }
+            }
+          }
+        }
+      },
+      {
+        "holder": "agenda",
+        "call": "described-mirror",
+        "operation": "outline",
+        "with": {
+          "node": {
+            "label": "alone"
+          }
+        }
+      },
+      {
+        "holder": "agenda",
+        "readReleases": true
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "got": {
+      "equals": [
+        true,
+        true
+      ]
+    },
+    "calls": {
+      "equals": [
+        {
+          "status": "ok",
+          "answer": {
+            "root": {
+              "label": "root",
+              "depth": 0,
+              "content": [
+                {
+                  "label": "a",
+                  "depth": 1,
+                  "content": [
+                    {
+                      "label": "a1",
+                      "depth": 2,
+                      "content": [
+                        {
+                          "label": "a11",
+                          "depth": 3,
+                          "content": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "b",
+                  "depth": 1,
+                  "content": []
+                }
+              ],
+              "next": {
+                "label": "after",
+                "depth": 1,
+                "content": [],
+                "next": {
+                  "label": "last",
+                  "depth": 2,
+                  "content": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "status": "ok",
+          "answer": {
+            "root": {
+              "label": "alone",
+              "depth": 0,
+              "content": []
+            }
+          }
+        }
+      ]
+    },
+    "released": {
+      "equals": [
+        {
+          "reflections": "0",
+          "trees": "0",
+          "refusals": "0",
+          "cursors": "0",
+          "nestedRefusals": "0",
+          "outlines": "2"
+        }
+      ]
+    }
+  }
+}

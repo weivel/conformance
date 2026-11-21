@@ -112,14 +112,16 @@
           "trees": "0",
           "refusals": "0",
           "cursors": "0",
-          "nestedRefusals": "0"
+          "nestedRefusals": "0",
+          "outlines": "0"
         },
         {
           "reflections": "0",
           "trees": "0",
           "refusals": "0",
           "cursors": "1",
-          "nestedRefusals": "0"
+          "nestedRefusals": "0",
+          "outlines": "0"
         }
       ]
     }
