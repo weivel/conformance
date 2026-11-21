@@ -889,7 +889,8 @@ is an object:
   "action": { "plugin": "alpha", "name": "echo", "arguments": { "text": "hi" } },
   "ticks": [40, 80],
   "exit": 0,
-  "refuse": { "start": "told to refuse", "started": "will not run on", "tick": 2 }
+  "refuse": { "start": "told to refuse", "started": "will not run on", "tick": 2 },
+  "malformedTick": 3
 }
 ```
 
@@ -906,6 +907,8 @@ is an object:
 - `exit` is the code `stop` answers, 0 when absent, 0 to 255.
 - `refuse.start` makes `start` refuse with that detail, after recording itself; `refuse.started` makes `started`
   refuse after recording its outcomes; `refuse.tick`, a number from 1, makes that tick refuse after recording itself.
+- `malformedTick`, a number from 1, makes that tick answer, after recording itself, a `has_next` of 2, which
+  `weivel/host.h` calls malformed; with `refuse.tick` naming the same tick, the refusal wins.
 
 A file that breaks this shape makes `start` refuse, its detail naming the member.
 
@@ -940,26 +943,38 @@ members in order, a number in the shortest form that reads back as the same doub
 **The order the vectors judge.** The vectors judge the record with `equals`, so every order in them is one
 `weivel/host.h` states:
 
-- `start`, once;
+- `start`, once, then the plan's libraries loaded in order: a library that will not load ends the run, with no further
+  library loaded and no plugin activated, and `stop` is still called, as `weivel/host.h` says of the plan;
 - for each plugin of the plan in order, its scope opened immediately before its activation, and the next plugin's scope
   opened only after that activation ended; the scope is asked of whichever library the program loaded serves
   `weivel.scope`, the library it was started with included, which for these vectors is `stub-host` itself; a plugin
   whose scope is refused is not activated and is told as `refused`, one whose activation throws is told as `failed`, and
-  in both an outcome carries a non-empty detail whenever the refusal or the failure carried one;
-- `started`, once, with every plugin's outcome in the plan's order;
+  in both an outcome carries a non-empty detail whenever the refusal or the failure carried one; a plugin whose
+  manifest cannot be read, or is refused by the program's standard or its core, is not activated either, no scope is
+  opened for it, and it is told as `refused` with the detail saying why, and the plan goes on with the next plugin;
+- `started`, once, with every plugin's outcome in the plan's order, each plugin of the plan attempted;
 - in `serve` mode, `tick` at once after `started` answered OK, and then whenever the time it answered comes: the
   program reads its clock again before each tick and waits again while it still reads before `next`, so no tick of a
-  vector is `early`;
+  vector is `early`; a `has_next` of neither 0 nor 1 is malformed and ends the run, and `stop` comes next;
 - in `action` mode, no tick at all: the action runs, and `finished` is told how it ended;
 - `stop` last, once, whatever happened: after a refused `started` or `tick`, after the action, and on a stop request.
   The program then exits with the code `stop` answered. When `start` refuses, the program calls nothing else and
-  exits non-zero.
+  exits non-zero. Before `stop` the program deactivates every plugin it activated and releases every scope it opened,
+  and it unloads the libraries after `stop`; no record line witnesses either, so no vector judges them.
 
 **A stop request.** A program is asked to end a run by a stop request, which it takes through its own interface and,
 from its command line, from its platform's terminate signals (SIGINT and SIGTERM on POSIX systems, SIGINT and SIGBREAK
-on Windows), as `weivel/host.h` says. It is honoured from the moment `start` answered OK, and one that arrives during
-a call, as during a blocking `tick`, takes effect once that call returns: `stop` comes next, and no further tick. A
-vector only says that the suite sends the program its stop request: a suite may send the signal to the program it ran
+on Windows), as `weivel/host.h` says. It is honoured from the moment `start` answered OK, and what it does depends on
+when it arrives:
+
+- before `started` is called, activation being one phase, it takes effect once `started` has been told the outcome of
+  every plugin of the plan, each attempted: `stop` comes next, with no tick and no action;
+- during a later call, as during a blocking `tick`, it takes effect once that call returns: `stop` comes next, and no
+  further tick;
+- while an `action` run's action runs, it takes effect once `finished` has been told how the action ended: `stop` comes
+  next.
+
+A vector only says that the suite sends the program its stop request: a suite may send the signal to the program it ran
 as a child, or ask the program it runs in process through that interface.
 
 **A vector's `given`.** `{ stubHost, plugins, arguments?, stopAfter? }`:
@@ -977,10 +992,16 @@ as a child, or ask the program it runs in process through that interface.
     get answers none;
   - `{ set: <key>, to: <value> }`, the value stored through `weivel.config`'s `set` as a text, number or boolean;
   - `{ absent: <service id> }`, which throws unless the plugin's get of that id answers nothing;
+  - `{ pause: <milliseconds> }`, which waits that long, a whole number from 1 to 10000, in whatever way its language
+    waits, and is how a vector holds an activation or an action open while the suite sends the stop request;
   - `{ throw: <text> }`, which throws an error of that text.
 
+  A plugin whose `unreadableManifest` is true has its entry written as any other's but its manifest not written at its
+  `manifest` path, so the program cannot read it.
+
   An action is `{ echo: true }`, answering its arguments as they came, `{ answer: <value> }`, answering that value,
-  `{ throw: <text> }`, throwing, or `{}`, answering nothing;
+  `{ throw: <text> }`, throwing, or `{}`, answering nothing; any of them may carry `steps`, run first in order, so
+  `{ steps: [{ log: "working" }, { pause: 1000 }], answer: "done" }` logs, waits, then answers;
 - `arguments` are passed to the program after the directory, so it hands `start` the directory and then these;
 - `stopAfter` is a record line: once `record.txt` holds it, the suite sends the program its stop request and waits for
   the run to end. A line counts once the newline after it is written. A `serve` run that refuses nothing ends no other
@@ -1025,4 +1046,14 @@ seconds of its stop request or, without one, of starting, fails the vector. The 
 - `host/a-refused-started-still-stops`: `started` refuses, so the program calls `stop` at once, without a tick, and
   exits with the code it answered;
 - `host/a-refused-tick-still-stops`: the first tick refuses, so the program calls `stop` at once, ticks no more, and
-  exits with the code `stop` answered, 3.
+  exits with the code `stop` answered, 3;
+- `host/an-unreadable-manifest-is-refused-and-the-rest-activate`: `alpha`'s manifest is not written, so `alpha` is told
+  as `refused` with a detail, no scope is opened for it, and `beta` after it activates;
+- `host/a-plan-library-that-will-not-load-still-stops`: the plan's one library names a binary that does not exist, so
+  the program activates nothing, calls `stop` at once and exits with the code it answered, 4;
+- `host/a-stop-request-during-activation-waits-for-started`: the stop request comes while `alpha`'s activation waits,
+  and `beta` still activates, `started` is told both outcomes, and `stop` follows with no tick;
+- `host/a-malformed-next-ends-the-run`: the first tick answers a `has_next` of 2, so the program calls `stop` next,
+  ticks no more and exits with the code `stop` answered, 6;
+- `host/a-stop-request-during-an-action-waits-for-finished`: the stop request comes while `alpha`'s action waits, and
+  `finished` is told its result before `stop`.

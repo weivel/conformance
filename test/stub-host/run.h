@@ -73,6 +73,8 @@ typedef struct stub_run {
     char *started_refusal;
     /** The number of the tick that refuses, counting from 1, or 0 when none does. */
     size_t refused_tick;
+    /** The number of the tick answered with a `has_next` other than 0 or 1, counting from 1, or 0 when none is. */
+    size_t malformed_tick;
 } stub_run;
 
 /**

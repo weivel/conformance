@@ -171,6 +171,8 @@ static void a_run_file_that_breaks_its_shape_refuses_start(void) {
     check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"exit\":256}", "exit");
     check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"ticks\":[40,40]}", "ticks[1]");
     check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"refuse\":{\"tick\":0}}", "refuse.tick");
+    check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"malformedTick\":0}", "malformedTick");
+    check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"malformedTick\":\"1\"}", "malformedTick");
 }
 
 static void a_start_told_to_refuse_records_only_itself(void) {
@@ -312,6 +314,20 @@ static void a_tick_told_to_refuse_refuses(void) {
     CHECK(refusal.detail != NULL);
     host()->release_refusal(host()->context, &refusal);
     check_record(RECORD, 3, "the refused tick is recorded before it refuses");
+}
+
+static void a_malformed_tick_answers_a_has_next_beyond_one(void) {
+    weivel_standard_host_plan plan = WEIVEL_INIT(weivel_standard_host_plan);
+    weivel_standard_host_next next = WEIVEL_INIT(weivel_standard_host_next);
+    static const char *const RECORD[] = {"start", "tick 1 first"};
+    write_run("{\"mode\":\"serve\",\"plugins\":[],\"ticks\":[10],\"malformedTick\":1}");
+    CHECK(start_in_work(&plan, NULL) == WEIVEL_STATUS_OK);
+    host()->release_plan(host()->context, &plan);
+    CHECK(host()->tick(host()->context, 100, &next, NULL) == WEIVEL_STATUS_OK);
+    CHECK(next.has_next > 1);
+    host()->release_next(host()->context, &next);
+    CHECK(next.storage == NULL);
+    check_record(RECORD, 2, "the malformed tick is recorded as any other");
 }
 
 static void finished_records_a_result_none_a_failure_and_a_mistake(void) {
@@ -573,6 +589,7 @@ int main(void) {
     a_start_after_a_stop_opens_a_new_run();
     a_start_after_a_refused_start_opens_a_run();
     a_tick_told_to_refuse_refuses();
+    a_malformed_tick_answers_a_has_next_beyond_one();
     finished_records_a_result_none_a_failure_and_a_mistake();
     stop_answers_the_exit_code();
     scope_answers_a_scoped_plugin_its_own_definitions();

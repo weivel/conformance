@@ -1,0 +1,62 @@
+{
+  "id": "host/a-stop-request-during-activation-waits-for-started",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        },
+        {
+          "name": "beta",
+          "directory": "beta",
+          "manifest": "beta/manifest.json",
+          "scope": true
+        }
+      ]
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          },
+          {
+            "pause": 1000
+          }
+        ]
+      },
+      {
+        "name": "beta",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ],
+    "stopAfter": "log alpha info \"up\""
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "open beta scoped",
+        "log beta info \"up\"",
+        "started 2",
+        "outcome alpha activated no-detail",
+        "outcome beta activated no-detail",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

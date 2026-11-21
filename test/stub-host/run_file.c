@@ -397,6 +397,19 @@ static int read_refused_tick(reading *state, const weivel_json_value *refusals) 
     return 1;
 }
 
+static int read_malformed_tick(reading *state, const weivel_json_value *root) {
+    const weivel_json_value *member = weivel_json_object_get(root, "malformedTick");
+    int64_t number = 0;
+    if (member == NULL) {
+        return 1;
+    }
+    if (!weivel_json_as_int64(member, &number) || number < 1) {
+        return refuse(state, "malformedTick must be the number of a tick, 1 or more");
+    }
+    state->run->malformed_tick = (size_t)number;
+    return 1;
+}
+
 static int read_refusals(reading *state, const weivel_json_value *root) {
     const weivel_json_value *refusals = weivel_json_object_get(root, "refuse");
     if (refusals == NULL) {
@@ -416,7 +429,7 @@ static int read_root(reading *state, const weivel_json_value *root) {
     }
     return read_mode(state, root) && read_libraries(state, root) && read_plugins(state, root) &&
            read_action(state, root) && read_ticks(state, root) && read_exit(state, root) &&
-           read_refusals(state, root);
+           read_refusals(state, root) && read_malformed_tick(state, root);
 }
 
 static int read_text(reading *state, const char *text, size_t length) {

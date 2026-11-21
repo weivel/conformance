@@ -212,9 +212,15 @@ static const char *tick_timing(stub_run *run, int64_t now) {
     return now >= run->due ? "on-time" : "early";
 }
 
+/** Any `has_next` beyond 1 is malformed, so 2 stands for all of them. */
+#define MALFORMED_HAS_NEXT 2
+
 static void answer_next(stub_run *run, weivel_standard_host_next *next) {
     stub_clear_beyond(next, next->size, sizeof *next);
-    if (!run->finished_ticking && run->ticks_answered < run->tick_count) {
+    if (run->ticks_called == run->malformed_tick) {
+        next->has_next = MALFORMED_HAS_NEXT;
+        next->next = 0;
+    } else if (!run->finished_ticking && run->ticks_answered < run->tick_count) {
         run->due = run->first_now + run->ticks[run->ticks_answered++];
         next->has_next = 1;
         next->next = run->due;
