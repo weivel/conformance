@@ -17,7 +17,11 @@ suite defines its own exam, and the first thing it does when the suite disagrees
   `library` is asked in both tiers: the standard's reader judges a declaration, and a layer loads one as host
   services. `description` loads the standard's `described` test library, every layer checking its descriptions at
   the load; its `binding/` subdirectory is witnessed only by a layer that also binds the library from them and calls
-  through what it binds, so C, which binds nothing, is exempt from it.
+  through what it binds, so C, which binds nothing, is exempt from it. The `described` fixture's walker has a
+  blocking operation and lends a counter, a nested definition of its own.
+  `host` runs a language's host program as a child process against the kit's stub provider `stub-host`
+  (`test/stub-host/`) and judges what the provider was told; only a language that ships a host program sits it, so C
+  and Java are exempt from it.
 - `RUNNER.md`: the runner and adapter contract, each op's given and answer, and what `then` can assert. Read this
   before writing an adapter.
 - `runner/src/`: the loader, matcher, report, and the adapters under `ops/`.
@@ -64,6 +68,13 @@ The committed budget, `median_nanoseconds 360`, is 2.5 times the slowest CI runn
 drift job measured these medians in Release on 2026-11-12, four readings per runner over two runs: Windows 133.0 to
 143.9 ns, macOS 85 to 97 ns, Linux 63.2 to 69.3 ns. The factor is wide enough for runner noise and narrow enough that
 an added system call, allocation or sleep in the call path trips it.
+
+## The language benchmark rows
+
+Beside `control-call`, a language that binds descriptions carries the `described-call` row, and a language that moves
+a blocking call off its calling thread carries `blocking-call`: the described fixture's walker `wait` through a bound
+object, over the same `wait` called directly. Both bounds live in the language's file under `benchmarks/`, and
+`RUNNER.md` states how each row is measured.
 
 The core's drift job reads this kit at a pinned commit, the `kit_ref` of the core's drift workflow, so a change to a
 check, list or budget here reaches the core only when that pin moves, in the same wave.
