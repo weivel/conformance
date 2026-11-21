@@ -19,7 +19,7 @@ suite defines its own exam, and the first thing it does when the suite disagrees
   the load; its `binding/` subdirectory is witnessed only by a layer that also binds the library from them and calls
   through what it binds, so C, which binds nothing, is exempt from it. The `described` fixture's walker has a
   blocking operation and lends a counter, a nested definition of its own.
-  `host` runs a language's host program as a child process against the kit's stub provider `stub-host`
+  `host` runs a language's host program, in process or as a child, against the kit's stub provider `stub-host`
   (`test/stub-host/`) and judges what the provider was told; only a language that ships a host program sits it, so C
   and Java are exempt from it.
 - `RUNNER.md`: the runner and adapter contract, each op's given and answer, and what `then` can assert. Read this
