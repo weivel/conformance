@@ -1,0 +1,44 @@
+{
+  "id": "host/a-plan-library-that-will-not-load-still-stops",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "libraries": [
+        {
+          "binary": "lib/missing",
+          "declaration": "lib/library.json"
+        }
+      ],
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "exit": 4
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ]
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "stop"
+      ]
+    },
+    "exit": 4
+  }
+}

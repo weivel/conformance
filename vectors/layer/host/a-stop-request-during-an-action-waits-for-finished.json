@@ -1,0 +1,64 @@
+{
+  "id": "host/a-stop-request-during-an-action-waits-for-finished",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "action",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "action": {
+        "plugin": "alpha",
+        "name": "slow"
+      }
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ],
+        "actions": {
+          "slow": {
+            "steps": [
+              {
+                "log": "working"
+              },
+              {
+                "waitFor": "stop-sent"
+              },
+              {
+                "pause": 200
+              }
+            ],
+            "answer": "done"
+          }
+        }
+      }
+    ],
+    "stopAfter": "log alpha info \"working\""
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "started 1",
+        "outcome alpha activated no-detail",
+        "log alpha info \"working\"",
+        "finished result \"done\"",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

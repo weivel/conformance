@@ -19,7 +19,7 @@ static const pinned_count PINNED[] = {
     {"standard/validate", 30}, {"standard/library", 16}, {"layer/consume", 2},
     {"layer/want", 4},      {"layer/lifecycle", 6},    {"layer/library", 13},
     {"layer/description", 4}, {"layer/description/binding", 23},
-    {"layer/host", 14},
+    {"layer/host", 19},
 };
 
 static const char *const SECTIONS[] = {"12.1",         "12.2",         "12.3",         "12.4",
