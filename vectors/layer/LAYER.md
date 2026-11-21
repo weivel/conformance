@@ -950,8 +950,9 @@ members in order, a number in the shortest form that reads back as the same doub
   `weivel.scope`, the library it was started with included, which for these vectors is `stub-host` itself; a plugin
   whose scope is refused is not activated and is told as `refused`, one whose activation throws is told as `failed`, and
   in both an outcome carries a non-empty detail whenever the refusal or the failure carried one; a plugin whose
-  manifest cannot be read, or is refused by the program's standard or its core, is not activated either, no scope is
-  opened for it, and it is told as `refused` with the detail saying why, and the plan goes on with the next plugin;
+  manifest cannot be read, or is refused by the program's standard or its core, is not activated either, and gets no
+  scope, the program reading and checking a manifest before it opens that plugin's scope as `weivel/host.h` says, and
+  it is told as `refused` with the detail saying why, and the plan goes on with the next plugin;
 - `started`, once, with every plugin's outcome in the plan's order, each plugin of the plan attempted;
 - in `serve` mode, `tick` at once after `started` answered OK, and then whenever the time it answered comes: the
   program reads its clock again before each tick and waits again while it still reads before `next`, so no tick of a
@@ -974,8 +975,13 @@ when it arrives:
 - while an `action` run's action runs, it takes effect once `finished` has been told how the action ended: `stop` comes
   next.
 
-A vector only says that the suite sends the program its stop request: a suite may send the signal to the program it ran
-as a child, or ask the program it runs in process through that interface.
+Once the suite has sent its stop request it writes `stop-sent`, an empty file, in the run directory: in process,
+after the program has taken the request, and as a child, after the signal is sent. A vector that holds a step open
+follows `{ waitFor: "stop-sent" }` with `{ pause: 200 }`, which covers only a child's signal delivery. A suite never
+sends a stop request to a run that has already ended.
+
+A vector only says that the suite sends the program its stop request: a suite may send the signal to the program it
+ran as a child, or ask the program it runs in process through that interface.
 
 **A vector's `given`.** `{ stubHost, plugins, arguments?, stopAfter? }`:
 
@@ -992,8 +998,11 @@ as a child, or ask the program it runs in process through that interface.
     get answers none;
   - `{ set: <key>, to: <value> }`, the value stored through `weivel.config`'s `set` as a text, number or boolean;
   - `{ absent: <service id> }`, which throws unless the plugin's get of that id answers nothing;
+  - `{ waitFor: <file name> }`, which waits until that file exists in the run directory, yielding to its language's
+    event loop where it has one, and throws once the 30-second bound below has passed; a vector holds an activation or
+    an action open with it until the suite has sent its stop request;
   - `{ pause: <milliseconds> }`, which waits that long, a whole number from 1 to 10000, in whatever way its language
-    waits, and is how a vector holds an activation or an action open while the suite sends the stop request;
+    waits;
   - `{ throw: <text> }`, which throws an error of that text.
 
   A plugin whose `unreadableManifest` is true has its entry written as any other's but its manifest not written at its
@@ -1001,7 +1010,8 @@ as a child, or ask the program it runs in process through that interface.
 
   An action is `{ echo: true }`, answering its arguments as they came, `{ answer: <value> }`, answering that value,
   `{ throw: <text> }`, throwing, or `{}`, answering nothing; any of them may carry `steps`, run first in order, so
-  `{ steps: [{ log: "working" }, { pause: 1000 }], answer: "done" }` logs, waits, then answers;
+  `{ steps: [{ log: "working" }, { waitFor: "stop-sent" }], answer: "done" }` logs, waits, then answers, and an action
+  of `{ steps: [...] }` alone answers nothing, like `{}`;
 - `arguments` are passed to the program after the directory, so it hands `start` the directory and then these;
 - `stopAfter` is a record line: once `record.txt` holds it, the suite sends the program its stop request and waits for
   the run to end. A line counts once the newline after it is written. A `serve` run that refuses nothing ends no other
@@ -1051,9 +1061,9 @@ seconds of its stop request or, without one, of starting, fails the vector. The 
   as `refused` with a detail, no scope is opened for it, and `beta` after it activates;
 - `host/a-plan-library-that-will-not-load-still-stops`: the plan's one library names a binary that does not exist, so
   the program activates nothing, calls `stop` at once and exits with the code it answered, 4;
-- `host/a-stop-request-during-activation-waits-for-started`: the stop request comes while `alpha`'s activation waits,
-  and `beta` still activates, `started` is told both outcomes, and `stop` follows with no tick;
+- `host/a-stop-request-during-activation-waits-for-started`: the stop request comes while `alpha`'s activation waits for
+  `stop-sent`, and `beta` still activates, `started` is told both outcomes, and `stop` follows with no tick;
 - `host/a-malformed-next-ends-the-run`: the first tick answers a `has_next` of 2, so the program calls `stop` next,
   ticks no more and exits with the code `stop` answered, 6;
-- `host/a-stop-request-during-an-action-waits-for-finished`: the stop request comes while `alpha`'s action waits, and
-  `finished` is told its result before `stop`.
+- `host/a-stop-request-during-an-action-waits-for-finished`: the stop request comes while `alpha`'s action waits for
+  `stop-sent`, and `finished` is told its result before `stop`.

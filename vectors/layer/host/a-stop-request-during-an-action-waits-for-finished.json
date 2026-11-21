@@ -33,7 +33,10 @@
                 "log": "working"
               },
               {
-                "pause": 1000
+                "waitFor": "stop-sent"
+              },
+              {
+                "pause": 200
               }
             ],
             "answer": "done"
