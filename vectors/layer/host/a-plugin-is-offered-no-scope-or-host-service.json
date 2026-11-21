@@ -1,0 +1,57 @@
+{
+  "id": "host/a-plugin-is-offered-no-scope-or-host-service",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ]
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "consumes": [
+          "weivel.config",
+          "weivel.secrets",
+          "weivel.paths",
+          "weivel.log",
+          "weivel.scope",
+          "weivel.host"
+        ],
+        "activate": [
+          {
+            "absent": "weivel.scope"
+          },
+          {
+            "absent": "weivel.host"
+          },
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ],
+    "stopAfter": "tick 1 first"
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "started 1",
+        "outcome alpha activated no-detail",
+        "tick 1 first",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

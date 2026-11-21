@@ -38,4 +38,13 @@ STUB_HOST_API const weivel_standard_description *stub_host_description(void);
 /** weivel_standard_scopes_description, answered from the library itself for the same reason. */
 STUB_HOST_API const weivel_standard_description *stub_host_scopes_description(void);
 
+/**
+ * A weivel_standard_log that keeps no entry, which `library-declares-log.json` declares under `weivel.log`: a plan
+ * library declaring a standard id beside the scope, as `weivel/host.h` says makes a scope answering it unofferable.
+ */
+STUB_HOST_API const void *stub_host_log_definition(void);
+
+/** weivel_standard_log_description, answered from the library itself for the same reason. */
+STUB_HOST_API const weivel_standard_description *stub_host_log_description(void);
+
 #endif

@@ -921,7 +921,9 @@ answered none never answers another. `finished` records how the action ended. `s
 `open` finds the plugin by its manifest path exactly as the plan named it, and answers a scoped plugin a config of its
 `settings`, a secrets store that starts empty, paths (`plugin` its directory, `cache` and `config` the directories of
 those names in it) and a log, each the plugin's own and none shared with another plugin. Every call is recorded under
-one lock, so a call from another thread, as a blocking `tick` is, never splits a line.
+one lock, so a call from another thread, as a blocking `tick` is, never splits a line. Its log writes its record line
+synchronously, which a test fixture may and a provider may not, since `log.write` is not blocking
+(`weivel/services.h`) and a provider buffers an entry or hands it off.
 
 **`record.txt`.** `start` empties `record.txt` in the directory, then every call appends one line, in the order the
 calls were made. A text that is not a name is written as a JSON string, and a value as compact JSON: a record's
@@ -944,31 +946,42 @@ members in order, a number in the shortest form that reads back as the same doub
 `weivel/host.h` states:
 
 - `start`, once, then the plan's libraries loaded in order: a library that will not load ends the run, with no further
-  library loaded and no plugin activated, and `stop` is still called, as `weivel/host.h` says of the plan;
+  library loaded and no plugin activated, and `stop` is still called, as `weivel/host.h` says of the plan; a `mode`
+  other than SERVE or ACTION is malformed and ends the run the same way, before any library is loaded, which no
+  vector judges since `stub-host` answers no other mode;
 - for each plugin of the plan in order, its scope opened immediately before its activation, and the next plugin's scope
-  opened only after that activation ended; the scope is asked of whichever library the program loaded serves
-  `weivel.scope`, the library it was started with included, which for these vectors is `stub-host` itself; a plugin
+  opened only after that activation ended; the scope is asked of whichever library the program loaded serves a
+  described `weivel.scope`, the library it was started with included, the first loaded winning when two do, the
+  library it was started with first, which for these vectors is `stub-host` itself; a plugin
   whose scope is refused is not activated and is told as `refused`, one whose activation throws is told as `failed`, and
   in both an outcome carries a non-empty detail whenever the refusal or the failure carried one; a plugin whose
   manifest cannot be read, or is refused by the program's standard or its core, is not activated either, and gets no
   scope, the program reading and checking a manifest before it opens that plugin's scope as `weivel/host.h` says, and
   it is told as `refused` with the detail saying why, and the plan goes on with the next plugin;
+- no plugin is offered `weivel.host` or `weivel.scope`, as `weivel/host.h` says: the program loads and binds a
+  library serving either, and a plugin that consumes them finds both absent;
+- a library serving `weivel.scope` declares none of `weivel.config`, `weivel.secrets`, `weivel.paths` and
+  `weivel.log`, as `weivel/host.h` says; when a loaded library declares one of them and a plugin's scope answers it,
+  that scope cannot be offered, so the plugin is offered none of it and is not activated, its scope released, and it
+  is told as `refused` with a detail, and the plan goes on with the next plugin;
 - `started`, once, with every plugin's outcome in the plan's order, each plugin of the plan attempted;
 - in `serve` mode, `tick` at once after `started` answered OK, and then whenever the time it answered comes: the
   program reads its clock again before each tick and waits again while it still reads before `next`, so no tick of a
   vector is `early`; a `has_next` of neither 0 nor 1 is malformed and ends the run, and `stop` comes next;
-- in `action` mode, no tick at all: the action runs, and `finished` is told how it ended;
+- in `action` mode, no tick at all: the action runs, and `finished` is told how it ended; an action whose plugin was
+  not activated, or which that plugin does not offer, is told to `finished` as a failure;
 - `stop` last, once, whatever happened: after a refused `started` or `tick`, after the action, and on a stop request.
-  The program then exits with the code `stop` answered. When `start` refuses, the program calls nothing else and
+  The program then exits with the code `stop` answered, 0 to 255, and with 1 when `stop` does not answer OK, which
+  no vector judges since `stub-host`'s `stop` always does. When `start` refuses, the program calls nothing else and
   exits non-zero. Before `stop` the program deactivates every plugin it activated and releases every scope it opened,
   and it unloads the libraries after `stop`; no record line witnesses either, so no vector judges them.
 
 **A stop request.** A program is asked to end a run by a stop request, which it takes through its own interface and,
 from its command line, from its platform's terminate signals (SIGINT and SIGTERM on POSIX systems, SIGINT and SIGBREAK
-on Windows), as `weivel/host.h` says. It is honoured from the moment `start` answered OK, and what it does depends on
-when it arrives:
+on Windows), as `weivel/host.h` says. What it does depends on when it arrives:
 
-- before `started` is called, activation being one phase, it takes effect once `started` has been told the outcome of
+- before `started` is called, activation being one phase, including before `start` answered OK, when the program
+  keeps it, it takes effect once `started` has been told the outcome of
   every plugin of the plan, each attempted: `stop` comes next, with no tick and no action;
 - during a later call, as during a blocking `tick`, it takes effect once that call returns: `stop` comes next, and no
   further tick;
@@ -991,7 +1004,7 @@ ran as a child, or ask the program it runs in process through that interface.
 - `plugins` says what each plugin's entry does, by `name`, in a form every language realises: `activate` is the steps
   its activation runs in order, and `actions` the actions it offers by name. The manifest consumes `weivel.config`,
   `weivel.secrets`, `weivel.paths` and `weivel.log`, so whatever the program offers the plugin under those ids it may
-  get. A step is one of:
+  get, unless the plugin carries `consumes`, a list of service ids its manifest consumes instead. A step is one of:
   - `{ log: <message> }`, an entry at `info` through `weivel.log`, with no fields;
   - `{ logSetting: <key> }`, the key read through `weivel.config`'s `get` and written at `info` as `<key>=<value>`: a
     text as it is, a number in the shortest form that reads back, a boolean as `true` or `false`, and `none` when the
@@ -1004,6 +1017,11 @@ ran as a child, or ask the program it runs in process through that interface.
   - `{ pause: <milliseconds> }`, which waits that long, a whole number from 1 to 10000, in whatever way its language
     waits;
   - `{ throw: <text> }`, which throws an error of that text.
+
+  A library of `stubHost`'s `libraries` may be `{ stubHostDeclaration: <file name> }` instead of a binary and a
+  declaration: the suite writes it as the path of the `stub-host` library it runs and the path of that file in the
+  kit's `test/stub-host/`, so the plan loads `stub-host` a second time under another declaration. The kit ships one,
+  `library-declares-log.json`, which declares `weivel.log` as `stub_host_log_definition`, a log that keeps no entry.
 
   A plugin whose `unreadableManifest` is true has its entry written as any other's but its manifest not written at its
   `manifest` path, so the program cannot read it.
@@ -1066,4 +1084,9 @@ seconds of its stop request or, without one, of starting, fails the vector. The 
 - `host/a-malformed-next-ends-the-run`: the first tick answers a `has_next` of 2, so the program calls `stop` next,
   ticks no more and exits with the code `stop` answered, 6;
 - `host/a-stop-request-during-an-action-waits-for-finished`: the stop request comes while `alpha`'s action waits for
-  `stop-sent`, and `finished` is told its result before `stop`.
+  `stop-sent`, and `finished` is told its result before `stop`;
+- `host/a-plugin-is-offered-no-scope-or-host-service`: `alpha`'s manifest consumes the four standard ids and
+  `weivel.scope` and `weivel.host` too, and its activation finds both of those absent, then logs `up` through its scope;
+- `host/a-library-declaring-a-standard-id-makes-the-scope-unofferable`: the plan's one library is `stub-host` under
+  `library-declares-log.json`, so `alpha`'s scope, which answers a log, cannot be offered: `alpha` is told as
+  `refused` with a detail and never activates, while `beta` after it, whose scope opens empty, activates.
