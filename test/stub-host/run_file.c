@@ -304,10 +304,41 @@ static const stub_plugin *plugin_by_name(const stub_run *run, const char *name) 
     return NULL;
 }
 
+/**
+ * Copies `action.<member>` into `*into`, leaving it NULL when the member is absent. An empty text is refused unless
+ * `may_be_empty`, which lets a vector hand a program the empty service or method `weivel/host.h` calls malformed.
+ */
+static int read_action_text(reading *state, const weivel_json_value *action, const char *member, int may_be_empty,
+                            char **into) {
+    const char *text = text_member(action, member);
+    if (!is_present(action, member)) {
+        return 1;
+    }
+    if (text == NULL || (!may_be_empty && text[0] == '\0')) {
+        return refuse(state, may_be_empty ? "action.%s must be a text" : "action.%s must be a non-empty text", member);
+    }
+    *into = stub_copy_text(text);
+    return *into != NULL || out_of_memory(state);
+}
+
+/**
+ * Reads the action's `name`, `service` and `method`. `name` is required only when neither of the others is given, and
+ * one of those without the other is kept as given, so a vector can judge a program refusing the plan.
+ */
+static int read_action_names(reading *state, const weivel_json_value *action) {
+    stub_run *run = state->run;
+    if (!read_action_text(state, action, "service", 1, &run->action_service) ||
+        !read_action_text(state, action, "method", 1, &run->action_method) ||
+        !read_action_text(state, action, "name", 0, &run->action_name)) {
+        return 0;
+    }
+    return run->action_name != NULL || run->action_service != NULL || run->action_method != NULL ||
+           refuse(state, "action.name must be a non-empty text");
+}
+
 static int read_action(reading *state, const weivel_json_value *root) {
     const weivel_json_value *action = weivel_json_object_get(root, "action");
     const weivel_json_value *arguments;
-    const char *name;
     stub_run *run = state->run;
     if (run->mode == WEIVEL_STANDARD_HOST_SERVE) {
         return action == NULL || refuse(state, "action is given in serve mode");
@@ -319,13 +350,8 @@ static int read_action(reading *state, const weivel_json_value *root) {
     if (run->action_plugin == NULL) {
         return refuse(state, "action.plugin must name a plugin of plugins");
     }
-    name = text_member(action, "name");
-    if (name == NULL || name[0] == '\0') {
-        return refuse(state, "action.name must be a non-empty text");
-    }
-    run->action_name = stub_copy_text(name);
-    if (run->action_name == NULL) {
-        return out_of_memory(state);
+    if (!read_action_names(state, action)) {
+        return 0;
     }
     arguments = weivel_json_object_get(action, "arguments");
     if (arguments != NULL && !stub_value_from_json(arguments, &run->action_arguments)) {
@@ -525,6 +551,8 @@ void stub_run_free(stub_run *run) {
     }
     free(run->plugins);
     free(run->action_name);
+    free(run->action_service);
+    free(run->action_method);
     stub_value_free(&run->action_arguments);
     free(run->ticks);
     free(run->start_refusal);

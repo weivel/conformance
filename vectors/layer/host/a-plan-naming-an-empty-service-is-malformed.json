@@ -1,0 +1,59 @@
+{
+  "id": "host/a-plan-naming-an-empty-service-is-malformed",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "action",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "action": {
+        "plugin": "alpha",
+        "name": "login",
+        "service": "",
+        "method": "login"
+      },
+      "exit": 5
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ],
+        "provides": {
+          "alpha:accounts": {
+            "login": {
+              "answer": "in"
+            }
+          }
+        },
+        "actions": {
+          "login": {
+            "answer": "from-actions"
+          },
+          "logout": {
+            "answer": "from-actions"
+          }
+        }
+      }
+    ]
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "stop"
+      ]
+    },
+    "exit": 5
+  }
+}

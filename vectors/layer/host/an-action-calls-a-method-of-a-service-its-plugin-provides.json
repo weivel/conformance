@@ -1,0 +1,75 @@
+{
+  "id": "host/an-action-calls-a-method-of-a-service-its-plugin-provides",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "action",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "action": {
+        "plugin": "alpha",
+        "name": "login",
+        "service": "alpha:accounts",
+        "method": "login",
+        "arguments": {
+          "user": "someone",
+          "remember": true
+        }
+      },
+      "exit": 0
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ],
+        "provides": {
+          "alpha:accounts": {
+            "login": {
+              "steps": [
+                {
+                  "log": "login"
+                }
+              ],
+              "echo": true
+            },
+            "logout": {}
+          }
+        },
+        "actions": {
+          "login": {
+            "answer": "from-actions"
+          },
+          "logout": {
+            "answer": "from-actions"
+          }
+        }
+      }
+    ]
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "started 1",
+        "outcome alpha activated no-detail",
+        "log alpha info \"login\"",
+        "finished result {\"user\":\"someone\",\"remember\":true}",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

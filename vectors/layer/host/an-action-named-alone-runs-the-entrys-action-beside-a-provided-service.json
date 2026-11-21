@@ -1,0 +1,62 @@
+{
+  "id": "host/an-action-named-alone-runs-the-entrys-action-beside-a-provided-service",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "action",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "action": {
+        "plugin": "alpha",
+        "name": "login"
+      },
+      "exit": 0
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ],
+        "provides": {
+          "alpha:accounts": {
+            "login": {
+              "answer": "from-method"
+            }
+          }
+        },
+        "actions": {
+          "login": {
+            "answer": "from-actions"
+          },
+          "logout": {
+            "answer": "from-actions"
+          }
+        }
+      }
+    ]
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "started 1",
+        "outcome alpha activated no-detail",
+        "finished result \"from-actions\"",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

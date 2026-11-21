@@ -1,0 +1,64 @@
+{
+  "id": "host/a-throwing-method-reaches-finished-as-a-failure",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "action",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ],
+      "action": {
+        "plugin": "alpha",
+        "name": "login",
+        "service": "alpha:accounts",
+        "method": "login"
+      },
+      "exit": 0
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ],
+        "provides": {
+          "alpha:accounts": {
+            "login": {
+              "throw": "the password is wrong"
+            }
+          }
+        },
+        "actions": {
+          "login": {
+            "answer": "from-actions"
+          },
+          "logout": {
+            "answer": "from-actions"
+          }
+        }
+      }
+    ]
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "started 1",
+        "outcome alpha activated no-detail",
+        "finished failure",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}
