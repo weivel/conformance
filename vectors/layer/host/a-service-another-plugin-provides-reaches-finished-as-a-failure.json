@@ -1,0 +1,96 @@
+{
+  "id": "host/a-service-another-plugin-provides-reaches-finished-as-a-failure",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "action",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        },
+        {
+          "name": "beta",
+          "directory": "beta",
+          "manifest": "beta/manifest.json",
+          "scope": true
+        }
+      ],
+      "action": {
+        "plugin": "alpha",
+        "name": "login",
+        "service": "beta:accounts",
+        "method": "login"
+      },
+      "exit": 0
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ],
+        "provides": {
+          "alpha:accounts": {
+            "login": {
+              "answer": "alpha"
+            }
+          }
+        },
+        "actions": {
+          "login": {
+            "answer": "from-actions"
+          },
+          "logout": {
+            "answer": "from-actions"
+          }
+        }
+      },
+      {
+        "name": "beta",
+        "activate": [
+          {
+            "log": "up"
+          }
+        ],
+        "provides": {
+          "beta:accounts": {
+            "login": {
+              "answer": "beta"
+            }
+          }
+        },
+        "actions": {
+          "login": {
+            "answer": "from-actions"
+          },
+          "logout": {
+            "answer": "from-actions"
+          }
+        }
+      }
+    ]
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"up\"",
+        "open beta scoped",
+        "log beta info \"up\"",
+        "started 2",
+        "outcome alpha activated no-detail",
+        "outcome beta activated no-detail",
+        "finished failure",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

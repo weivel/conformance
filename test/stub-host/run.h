@@ -59,6 +59,8 @@ typedef struct stub_run {
     size_t plugin_count;
     const stub_plugin *action_plugin;
     char *action_name;
+    char *action_service;
+    char *action_method;
     weivel_standard_value action_arguments;
     /** Milliseconds after the first tick's `now`, answered one per tick in order. */
     int64_t *ticks;

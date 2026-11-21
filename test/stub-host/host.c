@@ -9,6 +9,9 @@
 
 #define PLAN_FIRST_SHAPE (offsetof(weivel_standard_host_plan, storage) + sizeof(void *))
 #define NEXT_FIRST_SHAPE (offsetof(weivel_standard_host_next, storage) + sizeof(void *))
+/** Whether a plan the consumer sized `size` holds `member`, which a consumer compiled before it does not. */
+#define PLAN_HOLDS(size, member) \
+    ((size) >= offsetof(weivel_standard_host_plan, member) + sizeof(((weivel_standard_host_plan *)0)->member))
 #define DETAIL_CAPACITY 256
 
 static const char *const STATE_NAMES[] = {"activated", "refused", "failed"};
@@ -76,6 +79,12 @@ static weivel_status fill_plan(const stub_run *run, weivel_standard_host_plan *p
     plan->action_name = run->action_name;
     plan->action_arguments = run->action_arguments;
     plan->storage = block;
+    if (PLAN_HOLDS(plan->size, action_service)) {
+        plan->action_service = run->action_service;
+    }
+    if (PLAN_HOLDS(plan->size, action_method)) {
+        plan->action_method = run->action_method;
+    }
     return WEIVEL_STATUS_OK;
 }
 
@@ -106,6 +115,12 @@ static void replace_current_run(stub_run *run) {
     current_run = run;
 }
 
+/** Whether the run names a service or a method that `plan`, sized by a program compiled before them, cannot hold. */
+static int is_too_old_for(const stub_run *run, const weivel_standard_host_plan *plan) {
+    return (run->action_service != NULL && !PLAN_HOLDS(plan->size, action_service)) ||
+           (run->action_method != NULL && !PLAN_HOLDS(plan->size, action_method));
+}
+
 static weivel_status start_run(const char *const *arguments, size_t argument_count, weivel_standard_host_plan *plan,
                                weivel_standard_service_refusal *refusal) {
     char detail[DETAIL_CAPACITY];
@@ -126,6 +141,10 @@ static weivel_status start_run(const char *const *arguments, size_t argument_cou
     record_start(run, arguments, argument_count);
     if (run->start_refusal != NULL) {
         return stub_refuse(refusal, run->start_refusal, "remove refuse.start from stub-host.json");
+    }
+    if (is_too_old_for(run, plan)) {
+        return stub_refuse(refusal, "the program is too old for this run: its plan cannot hold the action's service "
+                           "and method", "run a program built against a standard whose plan carries them");
     }
     return fill_plan(run, plan);
 }
@@ -328,6 +347,12 @@ static void host_release_plan(void *context, weivel_standard_host_plan *plan) {
     plan->action_name = NULL;
     memset(&plan->action_arguments, 0, sizeof plan->action_arguments);
     plan->storage = NULL;
+    if (PLAN_HOLDS(plan->size, action_service)) {
+        plan->action_service = NULL;
+    }
+    if (PLAN_HOLDS(plan->size, action_method)) {
+        plan->action_method = NULL;
+    }
 }
 
 static void host_release_next(void *context, weivel_standard_host_next *next) {

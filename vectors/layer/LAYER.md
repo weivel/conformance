@@ -910,8 +910,13 @@ is an object:
   `manifest` and `entry` are required. `scope: true` gives it a scope; `scopeRefused` refuses its scope with that
   detail; with neither, its scope opens and offers nothing. `settings` holds texts, numbers and booleans only, its
   config's starting values.
-- `action` is required in `action` mode and refused in `serve` mode: the plugin by name, the action's name, and its
-  `arguments`, any JSON, answered as the plan's value tree, kind NONE when absent.
+- `action` is required in `action` mode and refused in `serve` mode: the plugin by name, the action's `name`, and its
+  `arguments`, any JSON, answered as the plan's value tree, kind NONE when absent. `service` and `method`, each a
+  text, are answered as the plan's `action_service` and `action_method`, and with either of them `name` may be left
+  out, answered as NULL; one of the two without the other, or an empty one, is answered as given, so a vector can
+  judge the program refusing that plan. A plan whose `size` cannot hold a member the run sets, from a program
+  compiled before it, makes `start` refuse, after recording itself, with a detail saying the program is too old for
+  the run; nothing is ever written beyond a plan's size.
 - `ticks` are milliseconds after the `now` of the first tick, each later than the one before it: the first tick
   answers `now + ticks[0]`, each later one the first tick's `now` plus the next entry, and once they are spent a tick
   answers none.
@@ -924,7 +929,8 @@ is an object:
 A file that breaks this shape makes `start` refuse, its detail naming the member.
 
 **What the provider does.** `start` answers the plan: the libraries, then the plugins in the file's order, the mode, and
-in `action` mode the action's plugin by its manifest path as the plan names it. A second `start` while a run is open,
+in `action` mode the action's plugin by its manifest path as the plan names it, and the action's name, service and
+method as the file gives them. A second `start` while a run is open,
 from a `start` that answered OK until its `stop`, is the caller's mistake: it is recorded and answers MALFORMED. After a
 `stop`, or a `start` that did not answer OK, `start` opens a new run, so a suite may run every vector in one process.
 `started` records the outcomes and answers OK. `tick` records how it came, answers the next time, and once it has
@@ -980,7 +986,13 @@ members in order, a number in the shortest form that reads back as the same doub
   program reads its clock again before each tick and waits again while it still reads before `next`, so no tick of a
   vector is `early`; a `has_next` of neither 0 nor 1 is malformed and ends the run, and `stop` comes next;
 - in `action` mode, no tick at all: the action runs, and `finished` is told how it ended; an action whose plugin was
-  not activated, or which that plugin does not offer, is told to `finished` as a failure;
+  not activated, or which that plugin does not offer, is told to `finished` as a failure. Which action runs is
+  `weivel/host.h`'s rule: with `action_service` and `action_method` both set, the method of that service the plugin
+  itself registered, `action_name` unread, so a service another plugin registered, or a method the service does not
+  offer, is a failure and never falls back to the entry's actions, and a method that throws is a failure as an action
+  that throws is; with neither set, `action_name` among the entry's actions, whatever services the plugin provides;
+  with one set and the other not, or either one empty, the plan is malformed and ends the run as a malformed mode
+  does, before any library is loaded, so `stop` follows `start` at once;
 - `stop` last, once, whatever happened: after a refused `started` or `tick`, after the action, and on a stop request.
   The program then exits with the code `stop` answered, 0 to 255, and with 1 when `stop` does not answer OK, which
   no vector judges since `stub-host`'s `stop` always does. When `start` refuses, the program calls nothing else and
@@ -1015,7 +1027,11 @@ ran as a child, or ask the program it runs in process through that interface.
 - `plugins` says what each plugin's entry does, by `name`, in a form every language realises: `activate` is the steps
   its activation runs in order, and `actions` the actions it offers by name. The manifest consumes `weivel.config`,
   `weivel.secrets`, `weivel.paths` and `weivel.log`, so whatever the program offers the plugin under those ids it may
-  get, unless the plugin carries `consumes`, a list of service ids its manifest consumes instead. A step is one of:
+  get, unless the plugin carries `consumes`, a list of service ids its manifest consumes instead. A plugin's
+  `provides`, when it carries one, maps each service id it provides, namespaced by its `name` as the manifest's
+  `importName` (`alpha:accounts` for `alpha`), to that service's methods by name, each method written as an action
+  below is and taking the action's arguments as an action does. Its manifest provides those ids, and its activation
+  registers each one, an object offering those methods, before it runs its steps. A step is one of:
   - `{ log: <message> }`, an entry at `info` through `weivel.log`, with no fields;
   - `{ logSetting: <key> }`, the key read through `weivel.config`'s `get` and written at `info` as `<key>=<value>`: a
     text as it is, a number in the shortest form that reads back, a boolean as `true` or `false`, and `none` when the
@@ -1101,3 +1117,28 @@ seconds of its stop request or, without one, of starting, fails the vector. The 
 - `host/a-library-declaring-a-standard-id-makes-the-scope-unofferable`: the plan's one library is `stub-host` under
   `library-declares-log.json`, so `alpha`'s scope, which answers a log, cannot be offered: `alpha` is told as
   `refused` with a detail and never activates, while `beta` after it, whose scope opens empty, activates.
+- `host/an-action-calls-a-method-of-a-service-its-plugin-provides`: the plan names `alpha`'s service `alpha:accounts`
+  and its method `login`, which logs `login` and answers its arguments, and those reach `finished`; the entry's own
+  `login` action, which answers something else, never runs;
+- `host/a-throwing-method-reaches-finished-as-a-failure`: the method the plan names throws, and reaches `finished` as
+  a failure, though the plan also names the entry's action `login`, which answers;
+- `host/a-service-another-plugin-provides-reaches-finished-as-a-failure`: the plan names `alpha` and the service
+  `beta:accounts`, which `beta` registered, so `alpha` does not provide it: `finished` is told a failure, and neither
+  `beta`'s method nor `alpha`'s own `login` action runs;
+- `host/a-method-the-service-does-not-offer-reaches-finished-as-a-failure`: the plan names the method `logout` of a
+  service offering only `login`, and `finished` is told a failure even though the entry offers an action `logout`;
+- `host/an-action-named-alone-runs-the-entrys-action-beside-a-provided-service`: the plan names only `login`, so the
+  entry's action `login` runs and its answer reaches `finished`, though the plugin's service has a method `login` too;
+- `host/a-plan-naming-a-service-without-a-method-is-malformed`: the plan sets `action_service` alone, so the run ends
+  before anything is loaded: `stop` follows `start`, and the program exits with the code it answered, 5;
+- `host/a-plan-naming-a-method-without-a-service-is-malformed`: the same with `action_method` alone.
+- `host/a-method-of-a-service-no-plugin-registered-reaches-finished-as-a-failure`: the plan names `alpha:missing`,
+  which no plugin registered, and `finished` is told a failure, the entry's own `login` action never running;
+- `host/a-method-run-whose-plugin-was-not-activated-reaches-finished-as-a-failure`: `alpha`'s scope is refused, so it
+  is never activated, and the method the plan names reaches `finished` as a failure;
+- `host/a-plan-naming-an-empty-service-is-malformed`: `action_service` is the empty text beside a method, so the run
+  ends as a malformed plan does, `stop` following `start`, exit 5;
+- `host/a-malformed-plan-loads-none-of-its-libraries`: the plan sets `action_service` alone and carries `stub-host`
+  under `library-declares-log.json` as a library; the run ends with `stop` after `start`, exit 5. No record line
+  witnesses a library loading, since a program need call nothing of a library as it loads it, so the vector judges
+  that a plan carrying a library still ends at once with nothing activated, and the load itself is not witnessed.

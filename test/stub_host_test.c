@@ -129,6 +129,7 @@ static void an_action_run_answers_its_action(void) {
     work_path("alpha/manifest.json", path, sizeof path);
     check_text(plan.action_plugin, path, "the action names its plugin's manifest");
     check_text(plan.action_name, "echo", "the action's name");
+    CHECK(plan.action_service == NULL && plan.action_method == NULL);
     CHECK(plan.action_arguments.kind == WEIVEL_STANDARD_VALUE_RECORD);
     CHECK(plan.action_arguments.count == 2);
     if (plan.action_arguments.count == 2) {
@@ -138,6 +139,114 @@ static void an_action_run_answers_its_action(void) {
         CHECK(plan.action_arguments.entries[1].value.count == 2);
     }
     host()->release_plan(host()->context, &plan);
+}
+
+static const char ONE_PLUGIN_ACTION_RUN[] =
+    "{\"mode\":\"action\",\"plugins\":[{\"name\":\"alpha\",\"directory\":\"alpha\","
+    "\"manifest\":\"alpha/manifest.json\",\"entry\":\"alpha/entry\"}],";
+
+static void write_action_run(const char *action) {
+    char json[1024];
+    snprintf(json, sizeof json, "%s\"action\":%s}", ONE_PLUGIN_ACTION_RUN, action);
+    write_run(json);
+}
+
+static void an_action_run_answers_the_service_method_it_names(void) {
+    weivel_standard_host_plan plan = WEIVEL_INIT(weivel_standard_host_plan);
+    write_action_run("{\"plugin\":\"alpha\",\"name\":\"login\",\"service\":\"alpha:accounts\",\"method\":\"login\","
+                     "\"arguments\":\"someone\"}");
+    CHECK(start_in_work(&plan, NULL) == WEIVEL_STATUS_OK);
+    check_text(plan.action_service, "alpha:accounts", "the action's service");
+    check_text(plan.action_method, "login", "the action's method");
+    check_text(plan.action_name, "login", "a name given beside a method is answered too");
+    CHECK(plan.action_arguments.kind == WEIVEL_STANDARD_VALUE_TEXT);
+    host()->release_plan(host()->context, &plan);
+    CHECK(plan.action_service == NULL && plan.action_method == NULL && plan.storage == NULL);
+    write_action_run("{\"plugin\":\"alpha\",\"service\":\"alpha:accounts\",\"method\":\"login\"}");
+    CHECK(start_in_work(&plan, NULL) == WEIVEL_STATUS_OK);
+    CHECK(plan.action_name == NULL);
+    check_text(plan.action_method, "login", "a method needs no name beside it");
+    host()->release_plan(host()->context, &plan);
+}
+
+static void one_of_service_and_method_is_answered_as_given(void) {
+    weivel_standard_host_plan plan = WEIVEL_INIT(weivel_standard_host_plan);
+    write_action_run("{\"plugin\":\"alpha\",\"service\":\"\",\"method\":\"login\"}");
+    CHECK(start_in_work(&plan, NULL) == WEIVEL_STATUS_OK);
+    check_text(plan.action_service, "", "an empty service is answered as given");
+    host()->release_plan(host()->context, &plan);
+    write_action_run("{\"plugin\":\"alpha\",\"service\":\"alpha:accounts\"}");
+    CHECK(start_in_work(&plan, NULL) == WEIVEL_STATUS_OK);
+    check_text(plan.action_service, "alpha:accounts", "a service without a method is answered");
+    CHECK(plan.action_method == NULL && plan.action_name == NULL);
+    host()->release_plan(host()->context, &plan);
+    write_action_run("{\"plugin\":\"alpha\",\"method\":\"login\"}");
+    CHECK(start_in_work(&plan, NULL) == WEIVEL_STATUS_OK);
+    check_text(plan.action_method, "login", "a method without a service is answered");
+    CHECK(plan.action_service == NULL && plan.action_name == NULL);
+    host()->release_plan(host()->context, &plan);
+}
+
+/** What a consumer compiled before `action_service` holds of its plan, with room after it to see nothing is written. */
+typedef struct older_plan {
+    weivel_standard_host_plan plan;
+    char beyond[sizeof(const char *) * 2];
+} older_plan;
+
+static int is_untouched(const older_plan *older, size_t from) {
+    const unsigned char *bytes = (const unsigned char *)older;
+    size_t at;
+    for (at = from; at < sizeof *older; at++) {
+        if (bytes[at] != 0xA5) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void start_older(older_plan *older, size_t older_size) {
+    memset(older, 0xA5, sizeof *older);
+    memset(&older->plan, 0, older_size);
+    older->plan.size = (uint32_t)older_size;
+}
+
+static void a_plan_from_an_older_consumer_is_written_only_within_its_size(void) {
+    older_plan older;
+    size_t older_size = offsetof(weivel_standard_host_plan, action_service);
+    start_older(&older, older_size);
+    write_action_run("{\"plugin\":\"alpha\",\"name\":\"echo\"}");
+    CHECK(start_in_work(&older.plan, NULL) == WEIVEL_STATUS_OK);
+    CHECK(older.plan.size == older_size && older.plan.storage != NULL);
+    check_text(older.plan.action_name, "echo", "an older plan still carries a named action");
+    CHECK(is_untouched(&older, older_size));
+    host()->release_plan(host()->context, &older.plan);
+    CHECK(older.plan.storage == NULL);
+    CHECK(is_untouched(&older, older_size));
+}
+
+static void a_method_run_refuses_a_plan_too_old_to_hold_it(void) {
+    static const char *const RUNS[] = {"{\"plugin\":\"alpha\",\"service\":\"alpha:accounts\",\"method\":\"login\"}",
+                                       "{\"plugin\":\"alpha\",\"service\":\"alpha:accounts\"}"};
+    static const size_t SIZES[] = {offsetof(weivel_standard_host_plan, action_service),
+                                   offsetof(weivel_standard_host_plan, action_method)};
+    size_t run;
+    size_t size;
+    for (run = 0; run < sizeof RUNS / sizeof RUNS[0]; run++) {
+        for (size = 0; size < sizeof SIZES / sizeof SIZES[0]; size++) {
+            older_plan older;
+            weivel_standard_service_refusal refusal = WEIVEL_INIT(weivel_standard_service_refusal);
+            if (run == 1 && size == 1) {
+                continue;
+            }
+            start_older(&older, SIZES[size]);
+            write_action_run(RUNS[run]);
+            CHECK(start_in_work(&older.plan, &refusal) == WEIVEL_STATUS_REFUSED);
+            CHECK(older.plan.storage == NULL);
+            CHECK(is_untouched(&older, SIZES[size]));
+            CHECK(refusal.detail != NULL && strstr(refusal.detail, "too old") != NULL);
+            host()->release_refusal(host()->context, &refusal);
+        }
+    }
 }
 
 static void check_start_refused(const char *json, const char *needle) {
@@ -173,6 +282,18 @@ static void a_run_file_that_breaks_its_shape_refuses_start(void) {
     check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"refuse\":{\"tick\":0}}", "refuse.tick");
     check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"malformedTick\":0}", "malformedTick");
     check_start_refused("{\"mode\":\"serve\",\"plugins\":[],\"malformedTick\":\"1\"}", "malformedTick");
+    check_start_refused("{\"mode\":\"action\",\"plugins\":[{\"name\":\"alpha\",\"directory\":\"a\",\"manifest\":\"m\","
+                        "\"entry\":\"e\"}],\"action\":{\"plugin\":\"alpha\"}}",
+                        "action.name");
+    check_start_refused("{\"mode\":\"action\",\"plugins\":[{\"name\":\"alpha\",\"directory\":\"a\",\"manifest\":\"m\","
+                        "\"entry\":\"e\"}],\"action\":{\"plugin\":\"alpha\",\"service\":7,\"method\":\"login\"}}",
+                        "action.service");
+    check_start_refused("{\"mode\":\"action\",\"plugins\":[{\"name\":\"alpha\",\"directory\":\"a\",\"manifest\":\"m\","
+                        "\"entry\":\"e\"}],\"action\":{\"plugin\":\"alpha\",\"name\":\"\"}}",
+                        "action.name");
+    check_start_refused("{\"mode\":\"action\",\"plugins\":[{\"name\":\"alpha\",\"directory\":\"a\",\"manifest\":\"m\","
+                        "\"entry\":\"e\"}],\"action\":{\"plugin\":\"alpha\",\"service\":\"alpha:a\",\"method\":3}}",
+                        "action.method");
 }
 
 static void a_start_told_to_refuse_records_only_itself(void) {
@@ -621,6 +742,10 @@ static void the_built_library_exports_what_its_declaration_names(void) {
 int main(void) {
     a_serve_run_answers_its_plan_in_order();
     an_action_run_answers_its_action();
+    an_action_run_answers_the_service_method_it_names();
+    one_of_service_and_method_is_answered_as_given();
+    a_plan_from_an_older_consumer_is_written_only_within_its_size();
+    a_method_run_refuses_a_plan_too_old_to_hold_it();
     a_run_file_that_breaks_its_shape_refuses_start();
     a_start_told_to_refuse_records_only_itself();
     start_refuses_a_call_that_is_not_well_made();
