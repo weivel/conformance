@@ -514,8 +514,8 @@ static any_function find_function(void *module, const char *name) {
     return function;
 }
 
-static char *read_declaration(size_t *length) {
-    FILE *file = fopen(STUB_HOST_DECLARATION, "rb");
+static char *read_declaration(const char *path, size_t *length) {
+    FILE *file = fopen(path, "rb");
     char *text = malloc(RECORD_CAPACITY);
     *length = 0;
     if (file != NULL && text != NULL) {
@@ -542,17 +542,63 @@ static void check_exported_service(void *module, const weivel_standard_library_s
     check_text(description()->definition, definition_struct, "the description names its definition");
 }
 
+static void *open_stub_host(void) {
+#if defined(_WIN32)
+    return (void *)LoadLibraryA(STUB_HOST_LIBRARY);
+#else
+    return dlopen(STUB_HOST_LIBRARY, RTLD_NOW | RTLD_LOCAL);
+#endif
+}
+
+static void close_stub_host(void *module) {
+#if defined(_WIN32)
+    CHECK(module == NULL || FreeLibrary((HMODULE)module) != 0);
+#else
+    CHECK(module == NULL || dlclose(module) == 0);
+#endif
+}
+
+static void check_library_log_keeps_nothing(void *module, const weivel_standard_library_service *service) {
+    definition_symbol definition = (definition_symbol)find_function(module, service->functions[0].symbol);
+    const weivel_standard_log *log = definition == NULL ? NULL : definition();
+    weivel_standard_value text = {.kind = WEIVEL_STANDARD_VALUE_TEXT, .text = "x", .length = 1};
+    CHECK(log != NULL);
+    if (log == NULL) {
+        return;
+    }
+    CHECK(log->write(log->context, WEIVEL_STANDARD_LOG_INFO, "kept nowhere", NULL, NULL) == WEIVEL_STATUS_OK);
+    CHECK(log->write(log->context, 0, "no level", NULL, NULL) == WEIVEL_STATUS_MALFORMED);
+    CHECK(log->write(log->context, WEIVEL_STANDARD_LOG_INFO, NULL, NULL, NULL) == WEIVEL_STATUS_MALFORMED);
+    CHECK(log->write(log->context, WEIVEL_STANDARD_LOG_INFO, "not a record", &text, NULL) == WEIVEL_STATUS_MALFORMED);
+}
+
+static void the_log_declaration_names_a_log_the_library_exports(void) {
+    weivel_standard_library library = WEIVEL_INIT(weivel_standard_library);
+    weivel_standard_refusal refusal = WEIVEL_INIT(weivel_standard_refusal);
+    size_t length;
+    char *declaration = read_declaration(STUB_HOST_LOG_DECLARATION, &length);
+    void *module = open_stub_host();
+    CHECK(module != NULL);
+    CHECK(declaration != NULL &&
+          weivel_standard_read_library(declaration, length, &library, &refusal) == WEIVEL_STATUS_OK);
+    weivel_standard_refusal_release(&refusal);
+    CHECK(library.service_count == 1);
+    if (module != NULL && library.service_count == 1) {
+        check_text(library.services[0].id, WEIVEL_STANDARD_SERVICE_LOG, "the declared service");
+        check_exported_service(module, &library.services[0], library.descriptions[0], "weivel_standard_log");
+        check_library_log_keeps_nothing(module, &library.services[0]);
+    }
+    weivel_standard_library_release(&library);
+    free(declaration);
+    close_stub_host(module);
+}
+
 static void the_built_library_exports_what_its_declaration_names(void) {
     weivel_standard_library library = WEIVEL_INIT(weivel_standard_library);
     weivel_standard_refusal refusal = WEIVEL_INIT(weivel_standard_refusal);
     size_t length;
-    char *declaration = read_declaration(&length);
-    void *module;
-#if defined(_WIN32)
-    module = (void *)LoadLibraryA(STUB_HOST_LIBRARY);
-#else
-    module = dlopen(STUB_HOST_LIBRARY, RTLD_NOW | RTLD_LOCAL);
-#endif
+    char *declaration = read_declaration(STUB_HOST_DECLARATION, &length);
+    void *module = open_stub_host();
     CHECK(module != NULL);
     CHECK(declaration != NULL &&
           weivel_standard_read_library(declaration, length, &library, &refusal) == WEIVEL_STATUS_OK);
@@ -569,11 +615,7 @@ static void the_built_library_exports_what_its_declaration_names(void) {
     }
     weivel_standard_library_release(&library);
     free(declaration);
-#if defined(_WIN32)
-    CHECK(module == NULL || FreeLibrary((HMODULE)module) != 0);
-#else
-    CHECK(module == NULL || dlclose(module) == 0);
-#endif
+    close_stub_host(module);
 }
 
 int main(void) {
@@ -595,5 +637,6 @@ int main(void) {
     scope_answers_a_scoped_plugin_its_own_definitions();
     scope_offers_an_unscoped_plugin_nothing_and_refuses_as_told();
     the_built_library_exports_what_its_declaration_names();
+    the_log_declaration_names_a_log_the_library_exports();
     return check_summary("stub_host_test");
 }

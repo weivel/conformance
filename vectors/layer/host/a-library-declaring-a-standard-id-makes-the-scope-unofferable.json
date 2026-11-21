@@ -1,0 +1,58 @@
+{
+  "id": "host/a-library-declaring-a-standard-id-makes-the-scope-unofferable",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "libraries": [
+        {
+          "stubHostDeclaration": "library-declares-log.json"
+        }
+      ],
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        },
+        {
+          "name": "beta",
+          "directory": "beta",
+          "manifest": "beta/manifest.json"
+        }
+      ]
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "activate": [
+          {
+            "throw": "alpha was activated with a scope that could not be offered"
+          }
+        ]
+      },
+      {
+        "name": "beta",
+        "activate": []
+      }
+    ],
+    "stopAfter": "tick 1 first"
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "open beta empty",
+        "started 2",
+        "outcome alpha refused detail",
+        "outcome beta activated no-detail",
+        "tick 1 first",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}

@@ -59,6 +59,7 @@ target_compile_definitions(stub_host_test PRIVATE
     _CRT_SECURE_NO_WARNINGS
     STUB_HOST_WORK_DIR="${stub_host_work}"
     STUB_HOST_DECLARATION="${PROJECT_SOURCE_DIR}/test/stub-host/library.json"
+    STUB_HOST_LOG_DECLARATION="${PROJECT_SOURCE_DIR}/test/stub-host/library-declares-log.json"
     STUB_HOST_LIBRARY="$<TARGET_FILE:stub-host>")
 
 add_test(NAME runner_names_an_unknown_op

@@ -1,0 +1,11 @@
+{
+  "importName": "stub-host-log",
+  "version": "1.0.0",
+  "services": [
+    {
+      "id": "weivel.log",
+      "description": "stub_host_log_description",
+      "functions": [{ "name": "definition", "symbol": "stub_host_log_definition", "kind": "definition" }]
+    }
+  ]
+}
