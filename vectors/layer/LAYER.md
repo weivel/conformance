@@ -381,8 +381,11 @@ as weivel/c does. The library has two definition services:
 - `described-mirror`, the `described_mirror` definition: `reflect` answers a deep copy of a `described_sample`, a struct
   holding a member of every kind; `tree` answers a value tree built from a sample; `find` answers a text the library
   keeps for `alpha` and `omega`, NONE for any other key and a refusal for `refuse`; `measure`, `negate`, `halve`,
-  `invert`, `swap_shade`, `grow` and `weigh` each take one input of one kind and answer one; `count_releases`
-  answers how many releases of each kind, of both services, have freed something since the binary was opened;
+  `invert`, `swap_shade`, `grow` and `weigh` each take one input of one kind and answer one; `outline` answers a deep
+  copy of a `described_node`, a struct pointing at its own kind through `next` and holding an array of its own kind
+  in `content`, each copy's `depth` set to how many pointers lie between it and the root, and refuses a root labelled
+  `refuse`; `count_releases` answers how many releases of each kind, of both services, have freed something since
+  the binary was opened;
 - `described-walker`, the `described_walker` definition: `open` answers a handle, `use` takes it as an input, and
   `visit` takes it inside a struct; `wait` answers the ticks it was asked to wait, at once, and is the one operation the
   description marks `blocking`; `lend` answers a `described_loan` holding a `counter`, a definition of its own whose
@@ -480,8 +483,10 @@ own value of the kind the description gives it, and back:
 - An operation the provider does not offer, its function pointer past the size the definition answered or NULL, is
   still on the bound object, and a call of it is the caller's mistake, calling nothing.
 - Structs nest at most 1000 levels below the one a call takes or answers, `WEIVEL_STANDARD_VALUE_DEPTH_LIMIT` as for a
-  value tree: a deeper input is the caller's mistake, a deeper answer the provider's fault. No vector reaches it: no
-  struct of `described` reaches itself, and the kit's JSON reader nests no deeper than 256 levels.
+  value tree: a deeper input is the caller's mistake, a deeper answer the provider's fault. A struct may reach its own
+  kind, as `described_node` does, so a layer lays such a struct out once and follows its pointers and arrays as deep
+  as the data goes, never as deep as the description, which is finite. No vector reaches the limit: the kit's JSON
+  reader nests no deeper than 256 levels.
 - An operation answering several answers hands them back in its language's idiom: TypeScript an object keyed by each
   answer's name, Java `DescribedAnswer.Answered.answers()`, a map of each answer by its name.
 - A language refuses the load of a description its own restrictions cannot bind: TypeScript an operation named `then`,
@@ -513,8 +518,8 @@ operation names the layer reported for that service, in the description's order,
 
 A vector that reads releases also reads `released`: one entry per `readReleases` step after its first, each the
 counts that step read minus the counts the first one read, per kind, as decimal strings
-(`{ reflections, trees, refusals, cursors, nestedRefusals }`, the last the refusals the lent counter's own
-release freed, which no other release counts). The library keeps its counts for the life of its binary in the process,
+(`{ reflections, trees, refusals, cursors, nestedRefusals, outlines }`, `nestedRefusals` the refusals the lent
+counter's own release freed, which no other release counts). The library keeps its counts for the life of its binary in the process,
 so only a difference says what this run released; a suite that keeps the binary mapped between vectors reads the same
 differences as one that maps it afresh.
 
@@ -604,7 +609,13 @@ description has, as an input and as an answer:
 - `description/binding/open-answers-a-handle-and-use-takes-it`: a handle answered, kept, handed back as an input and
   released by its holder;
 - `description/binding/visit-takes-a-handle-inside-a-struct`: a handle as a struct's member beside a u64 and an array
-  of u64, then the same struct with only its handle written.
+  of u64, then the same struct with only its handle written;
+- `description/binding/outline-copies-nodes-holding-nodes-both-ways`: a struct reaching its own kind, as an input and
+  inside an answer: a node holding two nodes, the first holding one that holds one, three levels of `content` below
+  the root, and a chain of two through `next`, answered back with every `depth` the provider set, the one handed in
+  ignored, then a lone node; `released` reads two outlines. A layer that lays a struct out by following its members
+  into themselves never finishes binding the mirror, one that marshals a struct to a fixed depth loses the deepest
+  node, and one that leaks the answer reads fewer outlines.
 
 ## `description/binding/a-refusal-arrives-with-its-detail-and-fix`
 

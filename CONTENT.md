@@ -18,7 +18,8 @@ suite defines its own exam, and the first thing it does when the suite disagrees
   services. `description` loads the standard's `described` test library, every layer checking its descriptions at
   the load; its `binding/` subdirectory is witnessed only by a layer that also binds the library from them and calls
   through what it binds, so C, which binds nothing, is exempt from it. The `described` fixture's walker has a
-  blocking operation and lends a counter, a nested definition of its own.
+  blocking operation and lends a counter, a nested definition of its own, and its mirror copies an outline of nodes
+  that point at their own kind.
   `host` runs a language's host program, in process or as a child, against the kit's stub provider `stub-host`
   (`test/stub-host/`) and judges what the provider was told; only a language that ships a host program sits it, so C
   and Java are exempt from it.
