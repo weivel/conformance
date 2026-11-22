@@ -37,3 +37,8 @@ endif()
 
 add_library(stub-host SHARED)
 target_link_libraries(stub-host PRIVATE stub_host_objects)
+weivel_describe(stub-host
+    HEADERS ${weivel_standard_SOURCE_DIR}/include/weivel/services.h stub_host_tally.h
+    PREFIX stub_host_described_
+    EXPORT STUB_HOST_API
+    SERVICE stub_host_tally SYMBOL stub_host_tally_description)

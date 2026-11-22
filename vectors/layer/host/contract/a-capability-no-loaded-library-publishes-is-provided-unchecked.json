@@ -1,0 +1,52 @@
+{
+  "id": "host/contract/a-capability-no-loaded-library-publishes-is-provided-unchecked",
+  "op": "host",
+  "covers": "host",
+  "given": {
+    "stubHost": {
+      "mode": "serve",
+      "plugins": [
+        {
+          "name": "alpha",
+          "directory": "alpha",
+          "manifest": "alpha/manifest.json",
+          "scope": true
+        }
+      ]
+    },
+    "plugins": [
+      {
+        "name": "alpha",
+        "implements": {
+          "stub-host.tally": {
+            "count": {}
+          }
+        },
+        "activate": [
+          {
+            "provide": "stub-host.tally"
+          },
+          {
+            "log": "up"
+          }
+        ]
+      }
+    ],
+    "stopAfter": "tick 1 first"
+  },
+  "then": {
+    "record": {
+      "equals": [
+        "start",
+        "open alpha scoped",
+        "log alpha info \"provided stub-host.tally\"",
+        "log alpha info \"up\"",
+        "started 1",
+        "outcome alpha activated no-detail",
+        "tick 1 first",
+        "stop"
+      ]
+    },
+    "exit": 0
+  }
+}
