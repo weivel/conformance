@@ -998,8 +998,9 @@ members in order, a number in the shortest form that reads back as the same doub
   releases, a release being an operation of the description that answers NOTHING and every other one answering a
   STATUS (`weivel/description.h`), so the operations to offer follow from the description alone and never from their
   names. The refusal's code is `contract-mismatch` and its subject the bare name of the first operation to offer, in
-  the order the description lists them, that the implementation does not offer, and the capability is not provided,
-  which no vector judges. An operation that answers a handle and the operation taking that handle back, as a stream's
+  the order the description lists them, that the implementation does not offer, and the capability is not provided:
+  a plugin whose manifest provides it and whose provide was refused has not provided it when its activation ends, so
+  the core's check of the activation refuses it and it is told as `failed` with a detail. An operation that answers a handle and the operation taking that handle back, as a stream's
   `next` takes the run its `run` answered, are both operations of the implementation itself, so the whole check is
   made at the provide. An implementation offering more than that, a release or an operation the description does not
   list, is accepted. A provide of a capability no loaded library publishes a contract for is never checked against
@@ -1170,7 +1171,9 @@ seconds of its stop request or, without one, of starting, fails the vector. The 
 ## The `host/contract/` vectors
 
 Each runs one plugin, `alpha`, whose activation provides `stub-host.tally` at a `provide` step and then logs `up`, so
-the record shows the provide's outcome and that the activation went on past it.
+the record shows the provide's outcome and that the activation went on past it. Each refusal vector's outcome is
+`failed`, since `alpha`'s manifest provides the capability its refused provide never provided, and each accepted
+one's is `activated`.
 
 - `host/contract/an-implementation-offering-every-operation-is-accepted`: with `library-declares-a-contract.json`
   loaded, `alpha` offers `count`, `run` and `next` and none of the releases, and the provide succeeds;

@@ -48,7 +48,7 @@
         "log alpha info \"refused contract-mismatch count\"",
         "log alpha info \"up\"",
         "started 1",
-        "outcome alpha activated no-detail",
+        "outcome alpha failed detail",
         "tick 1 first",
         "stop"
       ]
