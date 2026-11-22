@@ -4,7 +4,6 @@
 
 #include "weivel/descriptions.h"
 #include "weivel/host.h"
-#include "weivel/json.h"
 #include "weivel/library.h"
 #include "weivel/scope.h"
 
@@ -742,12 +741,6 @@ static void the_built_library_exports_what_its_declaration_names(void) {
 
 static const char *const TALLY_OPERATIONS[] = {"count", "run", "next", "release_run", "release_refusal"};
 
-static const char *contract_member(const weivel_json_value *root, const char *member) {
-    const weivel_json_value *contracts = weivel_json_object_get(root, "contracts");
-    CHECK(weivel_json_array_length(contracts) == 1);
-    return weivel_json_as_string(weivel_json_object_get(weivel_json_array_at(contracts, 0), member));
-}
-
 static void check_tally_description(const weivel_standard_description *description) {
     weivel_standard_refusal refusal = WEIVEL_INIT(weivel_standard_refusal);
     size_t at;
@@ -763,29 +756,26 @@ static void check_tally_description(const weivel_standard_description *descripti
 static void the_contract_declaration_names_a_description_the_library_exports(void) {
     weivel_standard_library library = WEIVEL_INIT(weivel_standard_library);
     weivel_standard_refusal refusal = WEIVEL_INIT(weivel_standard_refusal);
-    weivel_json_error error;
     size_t length;
     char *declaration = read_declaration(STUB_HOST_CONTRACT_DECLARATION, &length);
-    weivel_json_value *root = declaration == NULL ? NULL : weivel_json_parse(declaration, length, &error);
     void *module = open_stub_host();
     description_symbol description;
-    CHECK(module != NULL && root != NULL);
+    CHECK(module != NULL);
     CHECK(declaration != NULL &&
           weivel_standard_read_library(declaration, length, &library, &refusal) == WEIVEL_STATUS_OK);
     weivel_standard_refusal_release(&refusal);
-    CHECK(library.service_count == 1);
-    if (module != NULL && root != NULL && library.service_count == 1) {
+    CHECK(library.service_count == 1 && library.contract_count == 1 && library.contracts != NULL);
+    if (module != NULL && library.service_count == 1 && library.contract_count == 1 && library.contracts != NULL) {
         check_text(library.services[0].id, "stub-host.log", "the declared service");
         check_exported_service(module, &library.services[0], library.descriptions[0], "weivel_standard_log");
-        check_text(contract_member(root, "capability"), "stub-host.tally", "the contract's capability");
-        description = (description_symbol)find_function(module, contract_member(root, "description"));
+        check_text(library.contracts[0].capability, "stub-host.tally", "the contract's capability");
+        description = (description_symbol)find_function(module, library.contracts[0].description);
         CHECK(description != NULL);
         if (description != NULL) {
             check_tally_description(description());
         }
     }
     weivel_standard_library_release(&library);
-    weivel_json_free(root);
     free(declaration);
     close_stub_host(module);
 }
