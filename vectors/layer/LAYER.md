@@ -995,11 +995,15 @@ members in order, a number in the shortest form that reads back as the same doub
   does, before any library is loaded, so `stop` follows `start` at once;
 - a plugin's provide of a capability that a loaded library publishes a contract for, under `contracts` in its
   declaration, is refused when the implementation does not offer every operation of the contract's description but its
-  releases: the refusal's code is `contract-mismatch` and its subject the bare name of the first such operation the
-  description lists, and the capability is not provided. An operation that answers a handle and the operation taking
-  that handle back, as a stream's `next` takes the run its `run` answered, are both operations of the implementation
-  itself, so the whole check is made at the provide. A provide of a capability no loaded library publishes a contract
-  for is never checked against one;
+  releases, a release being an operation of the description that answers NOTHING and every other one answering a
+  STATUS (`weivel/description.h`), so the operations to offer follow from the description alone and never from their
+  names. The refusal's code is `contract-mismatch` and its subject the bare name of the first operation to offer, in
+  the order the description lists them, that the implementation does not offer, and the capability is not provided,
+  which no vector judges. An operation that answers a handle and the operation taking that handle back, as a stream's
+  `next` takes the run its `run` answered, are both operations of the implementation itself, so the whole check is
+  made at the provide. An implementation offering more than that, a release or an operation the description does not
+  list, is accepted. A provide of a capability no loaded library publishes a contract for is never checked against
+  one;
 - `stop` last, once, whatever happened: after a refused `started` or `tick`, after the action, and on a stop request.
   The program then exits with the code `stop` answered, 0 to 255, and with 1 when `stop` does not answer OK, which
   no vector judges since `stub-host`'s `stop` always does. When `start` refuses, the program calls nothing else and
@@ -1175,5 +1179,10 @@ the record shows the provide's outcome and that the activation went on past it.
 - `host/contract/an-implementation-lacking-next-is-refused-at-provide`: `alpha` offers `count` and `run`, which
   answers a run, but not `next`, which reads it, and the provide is refused as `contract-mismatch` with the subject
   `next`: reading a stream is an operation of the implementation, checked at the provide like any other;
+- `host/contract/the-first-missing-operation-the-description-lists-is-named`: `alpha` offers `run` alone, missing both
+  `count` and `next`, and the provide is refused as `contract-mismatch` with the subject `count`, the first the
+  description lists, never `next`;
+- `host/contract/an-implementation-offering-more-than-the-contract-is-accepted`: `alpha` offers `count`, `run` and
+  `next`, the release `release_run`, and `reset`, which the description does not list, and the provide succeeds;
 - `host/contract/a-capability-no-loaded-library-publishes-is-provided-unchecked`: the plan loads no library, so
   nothing publishes `stub-host.tally`, and `alpha`'s implementation offering `count` alone is provided.
