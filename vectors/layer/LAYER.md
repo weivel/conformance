@@ -993,6 +993,13 @@ members in order, a number in the shortest form that reads back as the same doub
   that throws is; with neither set, `action_name` among the entry's actions, whatever services the plugin provides;
   with one set and the other not, or either one empty, the plan is malformed and ends the run as a malformed mode
   does, before any library is loaded, so `stop` follows `start` at once;
+- a plugin's provide of a capability that a loaded library publishes a contract for, under `contracts` in its
+  declaration, is refused when the implementation does not offer every operation of the contract's description but its
+  releases: the refusal's code is `contract-mismatch` and its subject the bare name of the first such operation the
+  description lists, and the capability is not provided. An operation that answers a handle and the operation taking
+  that handle back, as a stream's `next` takes the run its `run` answered, are both operations of the implementation
+  itself, so the whole check is made at the provide. A provide of a capability no loaded library publishes a contract
+  for is never checked against one;
 - `stop` last, once, whatever happened: after a refused `started` or `tick`, after the action, and on a stop request.
   The program then exits with the code `stop` answered, 0 to 255, and with 1 when `stop` does not answer OK, which
   no vector judges since `stub-host`'s `stop` always does. When `start` refuses, the program calls nothing else and
@@ -1031,7 +1038,10 @@ ran as a child, or ask the program it runs in process through that interface.
   `provides`, when it carries one, maps each service id it provides, namespaced by its `name` as the manifest's
   `importName` (`alpha:accounts` for `alpha`), to that service's methods by name, each method written as an action
   below is and taking the action's arguments as an action does. Its manifest provides those ids, and its activation
-  registers each one, an object offering those methods, before it runs its steps. A step is one of:
+  registers each one, an object offering those methods, before it runs its steps. A plugin's `implements`, when it
+  carries one, maps each capability id it provides to the operations its implementation offers by name, each written
+  as an action is; no vector calls one. Its manifest provides those ids as capabilities, and its activation provides
+  each only at a `provide` step naming it. A step is one of:
   - `{ log: <message> }`, an entry at `info` through `weivel.log`, with no fields;
   - `{ logSetting: <key> }`, the key read through `weivel.config`'s `get` and written at `info` as `<key>=<value>`: a
     text as it is, a number in the shortest form that reads back, a boolean as `true` or `false`, and `none` when the
@@ -1043,12 +1053,22 @@ ran as a child, or ask the program it runs in process through that interface.
     an action open with it until the suite has sent its stop request;
   - `{ pause: <milliseconds> }`, which waits that long, a whole number from 1 to 10000, in whatever way its language
     waits;
-  - `{ throw: <text> }`, which throws an error of that text.
+  - `{ throw: <text> }`, which throws an error of that text;
+  - `{ provide: <capability id> }`, which provides the plugin's `implements` of that id, an implementation offering
+    those operations, through its layer, and writes at `info` through `weivel.log` `provided <capability id>` when the
+    provide succeeds, or `refused <code> <subject>` when it is refused, and never throws. Only `contract-mismatch` is a
+    code a vector judges, so a language writes any other refusal in whatever form it names it.
 
   A library of `stubHost`'s `libraries` may be `{ stubHostDeclaration: <file name> }` instead of a binary and a
   declaration: the suite writes it as the path of the `stub-host` library it runs and the path of that file in the
-  kit's `test/stub-host/`, so the plan loads `stub-host` a second time under another declaration. The kit ships one,
-  `library-declares-log.json`, which declares `weivel.log` as `stub_host_log_definition`, a log that keeps no entry.
+  kit's `test/stub-host/`, so the plan loads `stub-host` a second time under another declaration. The kit ships two:
+  `library-declares-log.json`, which declares `weivel.log` as `stub_host_log_definition`, a log that keeps no entry;
+  and `library-declares-a-contract.json`, which declares that log under `stub-host.log`, an id no plugin consumes, and
+  publishes a contract under the capability `stub-host.tally`, described by `stub_host_tally_description`. That
+  description is `stub_host_tally` of `test/stub-host/stub_host_tally.h`, written by `weivel-describe`, which
+  `stub-host` implements nowhere: `count`, a plain operation; `run`, which answers a `stub_host_tally_run` handle;
+  `next`, which takes that handle back; and the releases `release_run` and `release_refusal`. So an implementation
+  of `stub-host.tally` offers `count`, `run` and `next`.
 
   A plugin whose `unreadableManifest` is true has its entry written as any other's but its manifest not written at its
   `manifest` path, so the program cannot read it.
@@ -1142,3 +1162,18 @@ seconds of its stop request or, without one, of starting, fails the vector. The 
   under `library-declares-log.json` as a library; the run ends with `stop` after `start`, exit 5. No record line
   witnesses a library loading, since a program need call nothing of a library as it loads it, so the vector judges
   that a plan carrying a library still ends at once with nothing activated, and the load itself is not witnessed.
+
+## The `host/contract/` vectors
+
+Each runs one plugin, `alpha`, whose activation provides `stub-host.tally` at a `provide` step and then logs `up`, so
+the record shows the provide's outcome and that the activation went on past it.
+
+- `host/contract/an-implementation-offering-every-operation-is-accepted`: with `library-declares-a-contract.json`
+  loaded, `alpha` offers `count`, `run` and `next` and none of the releases, and the provide succeeds;
+- `host/contract/an-implementation-missing-an-operation-is-refused-at-provide`: `alpha` offers `run` and `next` but
+  not `count`, and the provide is refused as `contract-mismatch` with the subject `count`;
+- `host/contract/an-implementation-lacking-next-is-refused-at-provide`: `alpha` offers `count` and `run`, which
+  answers a run, but not `next`, which reads it, and the provide is refused as `contract-mismatch` with the subject
+  `next`: reading a stream is an operation of the implementation, checked at the provide like any other;
+- `host/contract/a-capability-no-loaded-library-publishes-is-provided-unchecked`: the plan loads no library, so
+  nothing publishes `stub-host.tally`, and `alpha`'s implementation offering `count` alone is provided.

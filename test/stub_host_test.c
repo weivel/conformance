@@ -739,6 +739,47 @@ static void the_built_library_exports_what_its_declaration_names(void) {
     close_stub_host(module);
 }
 
+static const char *const TALLY_OPERATIONS[] = {"count", "run", "next", "release_run", "release_refusal"};
+
+static void check_tally_description(const weivel_standard_description *description) {
+    weivel_standard_refusal refusal = WEIVEL_INIT(weivel_standard_refusal);
+    size_t at;
+    CHECK(weivel_standard_description_check(description, &refusal) == WEIVEL_STATUS_OK);
+    weivel_standard_refusal_release(&refusal);
+    check_text(description->definition, "stub_host_tally", "the contract names its definition");
+    CHECK(description->operation_count == sizeof TALLY_OPERATIONS / sizeof TALLY_OPERATIONS[0]);
+    for (at = 0; at < description->operation_count && at < sizeof TALLY_OPERATIONS / sizeof TALLY_OPERATIONS[0]; at++) {
+        check_text(description->operations[at].name, TALLY_OPERATIONS[at], "a contract operation");
+    }
+}
+
+static void the_contract_declaration_names_a_description_the_library_exports(void) {
+    weivel_standard_library library = WEIVEL_INIT(weivel_standard_library);
+    weivel_standard_refusal refusal = WEIVEL_INIT(weivel_standard_refusal);
+    size_t length;
+    char *declaration = read_declaration(STUB_HOST_CONTRACT_DECLARATION, &length);
+    void *module = open_stub_host();
+    description_symbol description;
+    CHECK(module != NULL);
+    CHECK(declaration != NULL &&
+          weivel_standard_read_library(declaration, length, &library, &refusal) == WEIVEL_STATUS_OK);
+    weivel_standard_refusal_release(&refusal);
+    CHECK(library.service_count == 1 && library.contract_count == 1 && library.contracts != NULL);
+    if (module != NULL && library.service_count == 1 && library.contract_count == 1 && library.contracts != NULL) {
+        check_text(library.services[0].id, "stub-host.log", "the declared service");
+        check_exported_service(module, &library.services[0], library.descriptions[0], "weivel_standard_log");
+        check_text(library.contracts[0].capability, "stub-host.tally", "the contract's capability");
+        description = (description_symbol)find_function(module, library.contracts[0].description);
+        CHECK(description != NULL);
+        if (description != NULL) {
+            check_tally_description(description());
+        }
+    }
+    weivel_standard_library_release(&library);
+    free(declaration);
+    close_stub_host(module);
+}
+
 int main(void) {
     a_serve_run_answers_its_plan_in_order();
     an_action_run_answers_its_action();
@@ -763,5 +804,6 @@ int main(void) {
     scope_offers_an_unscoped_plugin_nothing_and_refuses_as_told();
     the_built_library_exports_what_its_declaration_names();
     the_log_declaration_names_a_log_the_library_exports();
+    the_contract_declaration_names_a_description_the_library_exports();
     return check_summary("stub_host_test");
 }

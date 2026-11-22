@@ -1,0 +1,12 @@
+{
+  "importName": "stub-host-tally",
+  "version": "1.0.0",
+  "services": [
+    {
+      "id": "stub-host.log",
+      "description": "stub_host_log_description",
+      "functions": [{ "name": "definition", "symbol": "stub_host_log_definition", "kind": "definition" }]
+    }
+  ],
+  "contracts": [{ "capability": "stub-host.tally", "description": "stub_host_tally_description" }]
+}
