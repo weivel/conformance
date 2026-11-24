@@ -1,0 +1,27 @@
+{
+  "id": "validate/refuses-a-capability-id-outside-the-grammar",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "config-ledger",
+      "api": 2,
+      "entry": "dist/index.js",
+      "capabilities": {
+        "provides": [
+          "provider",
+          "Store:Read"
+        ]
+      }
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "capabilities.provides[1]"
+      ]
+    }
+  }
+}
