@@ -487,6 +487,9 @@ weivel-core-gate --sources <rules-file> <core-root>
   `<language> <kind> <value>` with kind `extension`, `name`, `pattern`, `prefix`, `source-root`, `source-base`,
   `test-root`, `header-root` or `layer-exempt`; it allows its own files and prose, and a generated `.js` under a Java
   repository is an offender.
+  Prose, in every role, is a `.md` or `.txt` file anywhere; every role also allows `.gitignore`, `.gitattributes`,
+  `LICENSE`, `MODULES` and `repo.json` at the root, and `docs/VERSION`, the version file of the docs standard the
+  repository's `docs/` follows, at that path only.
   A `pattern` holds one `*`, standing for any characters. A pattern that begins with it names files by their ending,
   as an `extension` does, and like one needs a name before that ending: `*.cmake` does not allow a file named
   `.cmake`. A star further in may stand for nothing, so `tsconfig*.json` allows `tsconfig.json`.

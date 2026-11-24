@@ -7,6 +7,8 @@
 
 static const char *const COMMON_EXTENSIONS[] = {".md", ".txt"};
 static const char *const COMMON_NAMES[] = {".gitignore", ".gitattributes", "LICENSE", "MODULES", "repo.json"};
+/** The docs standard's version file, which a repository docs tree holds at exactly this path. */
+static const char *const COMMON_PATHS[] = {"docs/VERSION"};
 static const char *const NATIVE_LANGUAGE = "c";
 static const char *const NATIVE_DATA_EXTENSION = ".json";
 static const char *const NATIVE_ROLES[] = {"c", "core", "kit", "standard"};
@@ -98,6 +100,11 @@ static int is_common(const char *path) {
     }
     for (at = 0; at < COUNT_OF(COMMON_NAMES); at++) {
         if (strcmp(name, COMMON_NAMES[at]) == 0 && strcmp(path, name) == 0) {
+            return 1;
+        }
+    }
+    for (at = 0; at < COUNT_OF(COMMON_PATHS); at++) {
+        if (strcmp(path, COMMON_PATHS[at]) == 0) {
             return 1;
         }
     }
