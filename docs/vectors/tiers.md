@@ -18,8 +18,8 @@ the last `core`, `standard` or `layer` directory in its path, and a vector under
 
 The kit's own tests sit the pinned core against `vectors/core` and the pinned standard against `vectors/standard`,
 and the core's drift job sits the core under test against the same corpus, so a core change that breaks a vector
-fails in the core's own CI. Each language implementation's own suite witnesses `vectors/layer`, and the kit's
-[`layers` check](../checks.md) fails a language whose tests name a layer vector nowhere.
+fails in the core's own CI. How each language's own suite witnesses `vectors/layer` is in
+[the layer vectors' docs](layer/README.md).
 
 A vector's id is its family, which is its op, a `/`, and its name, every part lowercase words joined by hyphens. A
 vector in a subdirectory of its op's directory carries that subdirectory in its id, as
