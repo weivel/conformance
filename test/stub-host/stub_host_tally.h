@@ -5,8 +5,9 @@
  * @file
  * The tally contract: a definition the stub host implements nowhere and publishes, in
  * `library-declares-a-contract.json`, under the capability `stub-host.tally`, so a `host/contract/` vector checks a
- * plugin's implementation of it against its description. A plugin providing the capability offers every operation but the releases; `next` takes the run a
- * `run` answered, so a stream's reading is an operation of the implementation itself.
+ * plugin's implementation of it against its description. A plugin providing the capability offers every operation
+ * but the releases; `next` takes the run a `run` answered, so a stream's reading is an operation of the
+ * implementation itself.
  */
 
 #include <stdint.h>
