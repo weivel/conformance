@@ -6,7 +6,7 @@
  * The kit's stub provider of `weivel.host` and `weivel.scope` (`weivel/host.h`, `weivel/scope.h` of the standard),
  * which a language's host program is run against by the `vectors/layer/host/` vectors. Its run is read from the
  * `stub-host.json` in the directory its `start` is handed as the first argument, and everything it is told is
- * appended to `record.txt` in that directory, as `vectors/layer/LAYER.md` defines both. It is a test library only.
+ * appended to `record.txt` in that directory, as `docs/vectors/layer/host.md` defines both. It is a test library only.
  */
 
 #include "weivel/description.h"

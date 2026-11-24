@@ -121,7 +121,7 @@ static int keep_providers(consume_run *run, const weivel_capability_list *list, 
     return 1;
 }
 
-/** An undeclared `all` is answered an empty list and refused, which RUNNER.md answers as `[]`. */
+/** An undeclared `all` is answered an empty list and refused, which docs/runner/ops.md answers as `[]`. */
 static int read_all(consume_run *run, weivel_handle plugin, const char *id) {
     consume_outcome *outcome = &run->outcomes[run->outcome_count++];
     weivel_capability_list list = WEIVEL_INIT(weivel_capability_list);

@@ -1,0 +1,5 @@
+What the kit's tests load or plant, each subfolder named for the case it serves. The vector trees (`tiers`, `nested-tiers`, `no-tier`, `malformed`, `duplicate-ids`, `unknown-op`, `wrong-family`, `bad-covers`, `asserts-nothing`, `present-false`, `absent-false`, `empty-segment`, `no-vectors`) are small corpora `corpus_test.c` loads to prove each refusal of a corpus and how a tier is read from a path; `benchmark` and `language-budget` hold budget files, one malformed in one way each, that the benchmark and language budget tests must refuse with the reason they name; `opaque-bytes` holds files with a NUL byte early and late, which the names check must skip as binary or read as text. None of these is code. The one folder that is, `core-gate/`, is compiled into fixture libraries, so it has a doc of its own.
+
+<!-- generated: source-children -->
+- [core-gate/](core-gate/) - the C sources of the core gate's fixture libraries: a clean base, a mutex object, and one plant per thing the gate must refuse
+<!-- end generated -->

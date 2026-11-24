@@ -1,0 +1,9 @@
+The repo root of the conformance kit: one CMake project in C11 that builds the runner, the drift checks, the core control call benchmark, the stub provider `stub-host` and the kit's tests. It builds nothing of weivel itself: configuring refuses to start unless the core is checked out at `siblings/core` and the standard at `siblings/standard` (a clone, a directory junction or a symlink, at the commits `repo.json` pins), and adds both as subdirectories, so every adapter links the very core and standard the kit is pinned to. Every target of the kit's own is built with warnings as errors (`/W4 /WX /utf-8` on MSVC, `-Wall -Wextra -Wpedantic -Werror` elsewhere), and programs and libraries land in the build's `bin` directory. Beside the unit tests it registers `core_sits_its_vectors` and `standard_sits_its_vectors`, the two corpus runs [the tiers doc](../vectors/tiers.md) says the kit's own tests make. Build and test with `cmake -S . -B build`, `cmake --build build --config Debug` and `ctest --test-dir build --output-on-failure -C Debug`; `build/bin/weivel-conformance run vectors` runs the whole corpus by hand.
+
+<!-- generated: source-children -->
+- [CMakeLists.txt](../../CMakeLists.txt) - the project: the sibling checkouts it requires, the strict warnings, the runner's unit tests and the two corpus runs
+- [benchmarks/](benchmarks/) - the core control call benchmark program and every budget file
+- [checks/](checks/) - the five drift check programs, their lists, and the tests that hold the kit, the core and the lists to them
+- [runner/](runner/) - `weivel-conformance`: the corpus loader, the matcher, the report and one adapter per op
+- [test/](test/) - the kit's own tests, the fixtures they plant, and the stub provider `stub-host`
+<!-- end generated -->

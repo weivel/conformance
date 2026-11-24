@@ -28,6 +28,7 @@ set(checks_test_scenarios
     purity_accepts_a_clean_typescript_repo_and_rejects_a_stray_script
     purity_skips_build_output
     purity_skips_by_name_only_at_the_root
+    purity_allows_the_docs_version_file_only_in_docs
     purity_refuses_an_empty_directory
     purity_rejects_editor_and_cache_directories
     purity_rejects_language_build_files_in_a_c_repo

@@ -130,7 +130,8 @@ static weivel_status start_run(const char *const *arguments, size_t argument_cou
         return status;
     }
     if (status != WEIVEL_STATUS_OK) {
-        return stub_refuse(refusal, detail, "write a stub-host.json the kit's LAYER.md describes into the directory");
+        return stub_refuse(refusal, detail,
+                           "write a stub-host.json the kit's docs/vectors/layer/host.md describes into the directory");
     }
     if (!stub_record_begin(run->record_path)) {
         stub_run_free(run);

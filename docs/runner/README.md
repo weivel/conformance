@@ -1,0 +1,5 @@
+The runner is `weivel-conformance`, a C program in this repository, and this folder is its contract with whoever writes an adapter for it. `weivel-conformance run <directory>` walks a directory of vectors, asks an adapter for each vector's answer, judges the answer against the vector's `then`, and reports. The exit code is 0 only when at least one vector ran and every vector passed, 1 when any did not, and 2 when the corpus is refused or the command is misused. A corpus is refused, before anything runs, when it holds no vector, a file that is not JSON, an op the kit does not know, a vector asserting nothing, an id declared twice, or an id whose family is not its op. Read this folder before writing an adapter; what a vector is, and why the vectors live outside every implementation, is in [the vectors' docs](../vectors/README.md).
+
+- [adapters.md](adapters.md) - what an adapter is, what it may read, and the virtual time it hands the core
+- [ops.md](ops.md) - each op the kit knows: the `given` an adapter is handed and the answer it writes
+- [results.md](results.md) - the report's statuses, and why only `passed` is a pass

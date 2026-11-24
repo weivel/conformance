@@ -1,11 +1,11 @@
 # -DBUDGET=<file> -DEXPECTED=<valid|invalid> [-DMUST_MATCH=<regex>] [-DLANGUAGE=<name> -DLANGUAGES=<languages.txt>]
 #
-# Reads a language's budget file as RUNNER.md states its format, so a malformed line fails here rather than in the
-# benchmark test of the one language that reads it. A ratio gate may name a backend after a hyphen, and every backend
-# a file names carries both required ratio gates on every platform; a file names a backend on every ratio gate or on
-# none. An optional ratio gate need not appear, and once it appears on one platform or backend it appears on every
-# platform of every backend the file names. Given the language, `described-call` is required unless the languages
-# list exempts the language from `description/binding`, since every other language binds descriptions.
+# Reads a language's budget file as docs/benchmarks.md states its format, so a malformed line fails here rather than in
+# the benchmark test of the one language that reads it. A ratio gate may name a backend after a hyphen, and every
+# backend a file names carries both required ratio gates on every platform; a file names a backend on every ratio gate
+# or on none. An optional ratio gate need not appear, and once it appears on one platform or backend it appears on every
+# platform of every backend the file names. Given the language, `described-call` is required unless the languages list
+# exempts the language from `description/binding`, since every other language binds descriptions.
 
 cmake_minimum_required(VERSION 3.15)
 
