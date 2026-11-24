@@ -1,0 +1,35 @@
+{
+  "id": "library/reads-a-declaration-that-only-publishes-contracts",
+  "op": "library",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "contracts": [
+        {
+          "capability": "echo.provider",
+          "description": "echo_provider_description"
+        }
+      ]
+    }
+  },
+  "then": {
+    "read": true,
+    "release": {
+      "absent": true
+    },
+    "services": {
+      "equals": []
+    },
+    "contracts": {
+      "equals": [
+        {
+          "capability": "echo.provider",
+          "description": "echo_provider_description"
+        }
+      ]
+    },
+    "refusal": null
+  }
+}

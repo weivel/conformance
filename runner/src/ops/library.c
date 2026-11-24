@@ -63,6 +63,20 @@ static void write_services(answer_writer *answer, const weivel_standard_library 
     answer_end_array(answer);
 }
 
+static void write_contracts(answer_writer *answer, const weivel_standard_library *library) {
+    size_t contract;
+    answer_begin_array(answer);
+    for (contract = 0; contract < library->contract_count; contract++) {
+        answer_begin_object(answer);
+        answer_key(answer, "capability");
+        answer_string(answer, library->contracts[contract].capability);
+        answer_key(answer, "description");
+        answer_string(answer, library->contracts[contract].description);
+        answer_end_object(answer);
+    }
+    answer_end_array(answer);
+}
+
 static int write_reading(answer_writer *answer, weivel_status status, const weivel_standard_library *library,
                          const weivel_standard_refusal *refusal) {
     int refusal_answered;
@@ -74,6 +88,8 @@ static int write_reading(answer_writer *answer, weivel_status status, const weiv
         answer_text_or_null(answer, library->release);
         answer_key(answer, "services");
         write_services(answer, library);
+        answer_key(answer, "contracts");
+        write_contracts(answer, library);
     }
     answer_key(answer, "path");
     answer_text_or_null(answer, refusal->path);

@@ -458,6 +458,20 @@ static void answers_a_read_declaration_service_by_service(void) {
     weivel_json_free(answer);
 }
 
+static void answers_the_contracts_a_declaration_publishes(void) {
+    weivel_json_value *answer =
+        answer_of(adapter_library, "{\"declaration\":{\"importName\":\"echo\",\"version\":\"1\",\"contracts\":["
+                                   "{\"capability\":\"echo.provider\",\"description\":\"echo_provider_description\"}]}}");
+    const weivel_json_value *contracts = weivel_json_object_get(answer, "contracts");
+    CHECK(flag_at(answer, "read") == 1);
+    CHECK(weivel_json_array_length(weivel_json_object_get(answer, "services")) == 0);
+    CHECK(weivel_json_array_length(contracts) == 1);
+    check_text(text_at(weivel_json_array_at(contracts, 0), "capability"), "echo.provider", "read capability");
+    check_text(text_at(weivel_json_array_at(contracts, 0), "description"), "echo_provider_description",
+               "read contract description");
+    weivel_json_free(answer);
+}
+
 static void answers_a_refused_declaration_by_its_path(void) {
     weivel_json_value *answer =
         answer_of(adapter_library, "{\"declaration\":{\"importName\":\"echo\",\"version\":\"1\",\"services\":["
@@ -507,6 +521,7 @@ int main(void) {
     answers_each_function_kind_by_the_name_a_vector_writes();
     answers_a_read_declaration_service_by_service();
     answers_a_refused_declaration_by_its_path();
+    answers_the_contracts_a_declaration_publishes();
     answers_nothing_for_a_library_without_a_declaration();
     return check_summary("adapters_test");
 }

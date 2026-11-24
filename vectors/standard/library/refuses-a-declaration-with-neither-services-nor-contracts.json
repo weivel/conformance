@@ -1,0 +1,19 @@
+{
+  "id": "library/refuses-a-declaration-with-neither-services-nor-contracts",
+  "op": "library",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0",
+      "services": []
+    }
+  },
+  "then": {
+    "read": false,
+    "path": "services",
+    "refusal": {
+      "code": "invalid_value"
+    }
+  }
+}
