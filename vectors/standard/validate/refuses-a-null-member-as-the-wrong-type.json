@@ -1,0 +1,37 @@
+{
+  "id": "validate/refuses-a-null-member-as-the-wrong-type",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "config-ledger",
+      "api": 2,
+      "entry": null,
+      "services": {
+        "consumes": [
+          {
+            "id": "accounts",
+            "provider": null,
+            "optional": null
+          }
+        ]
+      },
+      "permissions": null
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "entry",
+        "services.consumes[0].provider",
+        "services.consumes[0].optional",
+        "permissions"
+      ]
+    },
+    "refusal": {
+      "code": "wrong_type"
+    }
+  }
+}

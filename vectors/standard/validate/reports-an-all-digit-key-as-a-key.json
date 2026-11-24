@@ -1,0 +1,35 @@
+{
+  "id": "validate/reports-an-all-digit-key-as-a-key",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "a",
+      "api": 2,
+      "services": {
+        "provides": [
+          {
+            "id": "a:x",
+            "attributes": {
+              "9": "nine",
+              "10": "ten"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "services.provides[0].attributes.9",
+        "services.provides[0].attributes.10"
+      ]
+    },
+    "refusal": {
+      "code": "wrong_type"
+    }
+  }
+}
