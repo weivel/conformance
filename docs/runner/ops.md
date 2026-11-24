@@ -29,11 +29,14 @@ Answers `{ started: [id], refusal }`.
 
 Given `{ edgeSource: "capabilities" | "services", hostProvided?: [id], units: [{ id, provides: [{ id, kind }],
 requires: [{ id, kind, optional }] }] }`.
-Answers `{ order: [id], edges: [[provider, consumer]], cycle: [id] | null }`.
+Answers `{ order: [id], edges: [[provider, consumer]], cycle: [id] | null, refusal }`, `refusal` being the plan's
+first refusal or null.
 `edgeSource` is a parameter and not a convention: an engine that draws capability edges while asked for service
-edges is answering a question nobody put to it. A cycle is reported with its members rather than thrown, and
-`order` is then empty. `hostProvided`, when present, lists service ids the host itself supplies: they meet a
-mandatory need exactly as a unit's offer would, and the host never appears in `order`.
+edges is answering a question nobody put to it. A cycle is reported with its members rather than thrown, and the
+cycle's members are not in `order`, while every other unit the plan does not refuse still is. `cycle` names the
+plan's first cycle only. How the core builds the plan is the core's `docs/plan.md`. `hostProvided`, when present,
+lists service ids the host itself supplies: they meet a mandatory need exactly as a unit's offer would, and the host
+never appears in `order`.
 
 ## `resolve`
 
