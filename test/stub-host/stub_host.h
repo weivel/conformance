@@ -28,14 +28,15 @@ STUB_HOST_API const void *stub_host_definition(void);
 STUB_HOST_API const void *stub_host_scopes_definition(void);
 
 /**
- * weivel_standard_host_description, answered from the library itself.
- *
- * @implNote the standard is linked statically, and on Windows its exports are not the library's, so a host looking
- * the declared symbol up in this binary finds only what the binary exports itself.
+ * The description of weivel_standard_host, written by weivel-describe from the standard's header and naming
+ * stub_host_definition, since a description names the one function answering the definition it describes.
  */
 STUB_HOST_API const weivel_standard_description *stub_host_description(void);
 
-/** weivel_standard_scopes_description, answered from the library itself for the same reason. */
+/**
+ * The description of weivel_standard_scopes, written by weivel-describe, naming stub_host_scopes_definition and
+ * nesting the standard's config, secrets, paths and log descriptions.
+ */
 STUB_HOST_API const weivel_standard_description *stub_host_scopes_description(void);
 
 /**
@@ -44,7 +45,7 @@ STUB_HOST_API const weivel_standard_description *stub_host_scopes_description(vo
  */
 STUB_HOST_API const void *stub_host_log_definition(void);
 
-/** weivel_standard_log_description, answered from the library itself for the same reason. */
+/** The description of weivel_standard_log, written by weivel-describe, naming stub_host_log_definition. */
 STUB_HOST_API const weivel_standard_description *stub_host_log_description(void);
 
 #endif

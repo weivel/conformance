@@ -40,14 +40,17 @@ refuses at the loan's `counter` because the description holds no nested descript
 `described_broken_offset_description`, which the check passes while its `described_visit.skip` offset disagrees with the
 struct's real layout, so only a layer that lays the struct out itself can see it. It exports
 `described_mirror_without_halve_definition` too, a mirror holding NULL for `halve` and every other operation the
-mirror's own, which the mirror's description describes.
+mirror's own, described by `described_mirror_without_halve_description`, written from the same struct as the mirror's.
+Each description a service declares names the function answering its definition in `answered_by`, so the mirror's,
+the walker's and the mirror without `halve`'s each describe their own definition and no other.
 
 **Which layers witness what.** A layer that binds descriptions, building its language's view of a definition from
 its description as `weivel/typescript` and `weivel/java` do, witnesses every vector here. A layer that binds nothing,
 as C, whose plugins cast a definition to its header's struct, witnesses the vectors directly in `description/`, which
 only load the library and get its services, and is exempt from `description/binding/` (the `layer-exempt` line of
-`checks/languages.txt`). Every layer checks a description at the load, with the standard's check or its equal, and
-refuses the load when it fails; a layer that binds also compares every struct's size and every member's offset, and
+`checks/languages.txt`). Every layer checks a description at the load, with the standard's check or its equal, then
+checks with `weivel_standard_description_answers` that it answers the definition its service's symbol answered, and
+refuses the load when either fails; a layer that binds also compares every struct's size and every member's offset, and
 every operation's offset in the definition's struct, with its own FFI layout and refuses the load on any difference.
 A check that answers OUT_OF_MEMORY fails the load as out of memory, never as the caller's mistake.
 
@@ -197,6 +200,18 @@ description for it, and witnesses what `description/a-broken-count-description-f
 as the caller's mistake, neither service registered, nothing reported. A layer that loads such a description would meet
 a definition in an answer it cannot bind, and it fails here, C included, since the check is every layer's.
 
+## `description/a-description-answering-another-definition-fails-the-load`
+
+A description refuses the load of a definition it does not name, even when the definition has the very struct it
+describes.
+
+The suite builds the vector's `given` through its layer, the mirror declaring `described_mirror_definition` under
+`described_mirror_without_halve_description`, whose `answered_by` answers the mirror without `halve`, and witnesses what
+`description/a-broken-count-description-fails-the-load` does: the load refused as the caller's mistake, neither service
+registered, nothing reported. Both definitions are `described_mirror`, so the description passes the check and every
+size and offset a layer compares; only the comparison of the two answers refuses it. A layer that loads it binds one
+definition through another's description, and it fails here, C included, since the comparison is every layer's.
+
 ## `description/a-definition-declared-without-its-description-loads-as-before`
 
 A definition whose service declares no description is loaded and registered as every definition was before
@@ -296,7 +311,8 @@ An operation the description lists and the provider holds NULL for is the caller
 operation of the same definition still answers.
 
 The suite builds the vector's `given` through its layer, the mirror declared by
-`described_mirror_without_halve_definition` under the mirror's description, calls `halve` and then `negate`, and
+`described_mirror_without_halve_definition` under its own description, `described_mirror_without_halve_description`,
+which lists `halve` as the mirror's does, calls `halve` and then `negate`, and
 witnesses `calls` exactly: the caller's mistake, then `-5`. A layer that calls through a NULL function pointer, or
 refuses the load of a definition offering less than its description lists, fails here.
 

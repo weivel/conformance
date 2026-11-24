@@ -37,8 +37,22 @@ endif()
 
 add_library(stub-host SHARED)
 target_link_libraries(stub-host PRIVATE stub_host_objects)
+set(stub_host_standard_headers ${weivel_standard_SOURCE_DIR}/include/weivel)
 weivel_describe(stub-host
-    HEADERS ${weivel_standard_SOURCE_DIR}/include/weivel/services.h stub_host_tally.h
+    HEADERS ${stub_host_standard_headers}/services.h ${stub_host_standard_headers}/scope.h
+        ${stub_host_standard_headers}/host.h ${stub_host_standard_headers}/descriptions.h stub_host.h
+    PREFIX stub_host_served_
+    EXPORT STUB_HOST_API
+    SERVICE weivel_standard_host SYMBOL stub_host_description ANSWERED_BY stub_host_definition
+    SERVICE weivel_standard_scopes SYMBOL stub_host_scopes_description ANSWERED_BY stub_host_scopes_definition
+    DESCRIBED_ELSEWHERE weivel_standard_config weivel_standard_secrets weivel_standard_paths weivel_standard_log)
+weivel_describe(stub-host
+    HEADERS ${stub_host_standard_headers}/services.h stub_host.h
+    PREFIX stub_host_served_log_
+    EXPORT STUB_HOST_API
+    SERVICE weivel_standard_log SYMBOL stub_host_log_description ANSWERED_BY stub_host_log_definition)
+weivel_describe(stub-host
+    HEADERS ${stub_host_standard_headers}/services.h stub_host_tally.h
     PREFIX stub_host_described_
     EXPORT STUB_HOST_API
     SERVICE stub_host_tally SYMBOL stub_host_tally_description)
