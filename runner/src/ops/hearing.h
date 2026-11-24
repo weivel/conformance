@@ -27,8 +27,8 @@ typedef struct {
 /**
  * Everything the core told one run, in the order it was told: an adapter answers from this log and from the core's
  * returns, never from what it believes it asked for.
- * @implNote An activation check that refuses is quarantine, not a refusal of the run (RUNNER.md, `consume`), so
- * WEIVEL_REFUSAL_ACTIVATION_MISMATCH never becomes `first_refusal`.
+ * @implNote An activation check that refuses is quarantine, not a refusal of the run (docs/runner/ops.md,
+ * `consume`), so WEIVEL_REFUSAL_ACTIVATION_MISMATCH never becomes `first_refusal`.
  */
 typedef struct {
     heard_event *events;

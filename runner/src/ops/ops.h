@@ -8,7 +8,7 @@
  * Asks the engine under test one question and writes its answer.
  *
  * `given` is the vector's `given`, read only and valid for the call. The adapter drives the engine in-process,
- * writes the answer for its op into `answer` as the object RUNNER.md describes for that op, and returns 1.
+ * writes the answer for its op into `answer` as the object docs/runner/ops.md describes for that op, and returns 1.
  * It returns 0 when it cannot answer, and the vector is then errored: an absence is never a pass. An adapter
  * never reads a vector's `then`, because one that does is marking its own paper.
  */

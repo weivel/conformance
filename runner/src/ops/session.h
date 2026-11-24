@@ -36,7 +36,10 @@ void session_close(core_session *session);
  */
 int session_still_live(core_session *session, weivel_handle handle);
 
-/** The refusal code as RUNNER.md spells it: the WEIVEL_REFUSAL_ name in lowercase, NULL for one the kit does not know. */
+/**
+ * The refusal code as docs/runner/ops.md spells it: the WEIVEL_REFUSAL_ name in lowercase, NULL for one the kit does
+ * not know.
+ */
 const char *session_refusal_name(uint32_t code);
 
 /** A refusal as the core answers it, with what it is about (NULL when nothing) and whether its fix is non-empty. */

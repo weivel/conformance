@@ -331,7 +331,10 @@ static const char *settle_watch(reach_run *run, reach_outcome *outcome) {
     return session_still_live(&run->session, outcome->handle) ? "absent" : NULL;
 }
 
-/** Settles each want and watch after the last step, as RUNNER.md reads them; 0 when the core gave no answer. */
+/**
+ * Settles each want and watch after the last step, as docs/runner/ops.md reads them; 0 when the core gave no
+ * answer.
+ */
 static int settle_waiting(reach_run *run) {
     size_t at;
     for (at = 0; at < run->outcome_count; at++) {
