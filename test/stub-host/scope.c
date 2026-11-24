@@ -1,7 +1,6 @@
 #include "run.h"
 #include "stub_host.h"
 
-#include "weivel/descriptions.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -474,10 +473,6 @@ const void *stub_host_scopes_definition(void) {
     return &SCOPES;
 }
 
-const weivel_standard_description *stub_host_scopes_description(void) {
-    return weivel_standard_scopes_description();
-}
-
 static weivel_status library_log_write(void *context, uint32_t level, const char *message,
                                        const weivel_standard_value *fields, weivel_standard_service_refusal *refusal) {
     (void)context;
@@ -497,8 +492,4 @@ static const weivel_standard_log LIBRARY_LOG = {
 
 const void *stub_host_log_definition(void) {
     return &LIBRARY_LOG;
-}
-
-const weivel_standard_description *stub_host_log_description(void) {
-    return weivel_standard_log_description();
 }

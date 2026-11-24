@@ -2,7 +2,6 @@
 #include "run.h"
 #include "stub_host.h"
 
-#include "weivel/descriptions.h"
 #include "weivel/host.h"
 #include "weivel/library.h"
 #include "weivel/scope.h"
@@ -659,6 +658,7 @@ static void check_exported_service(void *module, const weivel_standard_library_s
     }
     CHECK(definition() != NULL && *(const uint32_t *)definition() >= 8);
     CHECK(weivel_standard_description_check(description(), &refusal) == WEIVEL_STATUS_OK);
+    CHECK(weivel_standard_description_answers(description(), definition(), &refusal) == WEIVEL_STATUS_OK);
     weivel_standard_refusal_release(&refusal);
     check_text(description()->definition, definition_struct, "the description names its definition");
 }

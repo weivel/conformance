@@ -9,7 +9,7 @@
       "services": [
         {
           "id": "described-mirror",
-          "description": "described_mirror_description",
+          "description": "described_mirror_without_halve_description",
           "functions": [
             {
               "name": "definition",

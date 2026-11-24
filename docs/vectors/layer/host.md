@@ -14,12 +14,17 @@ multi-configuration generator. A suite builds it by configuring `test/stub-host`
 building that one target; inside the kit's own build it is built beside the kit's other fixtures. Its declaration is
 `test/stub-host/library.json`, and it serves two definitions:
 
-- `weivel.host`, the definition `weivel_standard_host`, whose description the library answers from
-  `stub_host_description`, a one-line forwarder to the standard's `weivel_standard_host_description`. The forwarder
-  exists because the library links the standard statically, so on Windows the standard's symbol is not among the
-  library's exports, and a host finds a declared description only among those;
-- `weivel.scope`, the definition `weivel_standard_scopes`, described by `stub_host_scopes_description`, the forwarder to
-  `weivel_standard_scopes_description`.
+- `weivel.host`, the definition `weivel_standard_host` answered by `stub_host_definition`, described by
+  `stub_host_description`;
+- `weivel.scope`, the definition `weivel_standard_scopes` answered by `stub_host_scopes_definition`, described by
+  `stub_host_scopes_description`, which nests the standard's config, secrets, paths and log descriptions.
+
+The library describes both itself, as every library serving a standard service does: its build runs `weivel_describe`
+over the standard's `services.h`, `scope.h` and `host.h`, `ANSWERED_BY` its own definition functions and
+`DESCRIBED_ELSEWHERE weivel_standard_config weivel_standard_secrets weivel_standard_paths weivel_standard_log`, since a
+description names the one function answering its definition and a host refuses a service whose description answers
+another. The log definition `stub_host_log_definition`, which the two declarations below serve, is described the same
+way by `stub_host_log_description`.
 
 It names nothing of any application, and it keeps everything in memory except its record.
 

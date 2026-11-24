@@ -1,7 +1,6 @@
 #include "run.h"
 #include "stub_host.h"
 
-#include "weivel/descriptions.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -381,8 +380,4 @@ static const weivel_standard_host HOST = {
 
 const void *stub_host_definition(void) {
     return &HOST;
-}
-
-const weivel_standard_description *stub_host_description(void) {
-    return weivel_standard_host_description();
 }
