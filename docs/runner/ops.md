@@ -74,7 +74,7 @@ consumer holding a revoked handle has to learn what happened, and the kit must n
 Given `{ schema, manifest, wellKnownServices? }`, where `schema` names the published vocabulary's file. The
 manifest names itself with `importName`; a repository's identity is supplied from outside it.
 **An adapter validates against the published schema and never against a restatement of it**, and alongside it
-applies the rules the standard's `VALIDATION.md` states. `wellKnownServices` is the host's list for rule V2; absent means V2 is not applied,
+applies the rules the standard's `docs/validation.md` states. `wellKnownServices` is the host's list for rule V2; absent means V2 is not applied,
 and an empty list refuses every bare id.
 Answers `{ valid, paths: [field], refusal }`, where `refusal` is the first wrong field as `{ code, detail, fix, path }`
 or null, and `code` is the standard's refusal code in lowercase without its prefix, so
