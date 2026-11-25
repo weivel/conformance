@@ -1,0 +1,12 @@
+{
+  "id": "identity/refuses-a-local-name-with-whitespace",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "local:a b"
+  },
+  "then": {
+    "valid": false,
+    "offset": 7
+  }
+}

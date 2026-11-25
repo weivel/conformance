@@ -96,15 +96,19 @@ that decision.
 ## `identity`
 
 Given `{ value }`, a string offered as a repository identity. Answers `{ valid }`, true when the whole string is
-`local:` followed by a name, or `git:` followed by 40 or 64 lowercase hex digits (the root commit's object id), then
-any number of path segments, each `[a-z0-9._-]+` and never `.` or `..`. A refusal also answers `{ offset }`, the
-byte at which the string stops matching. A bare name, a forge and number such as `github:123`, uppercase hex, a 41st
-digit and a `.` or `..` segment are all invalid; a segment that only starts with or contains dots, such as `.hidden`
-or `a..b`, is valid.
+`local:` followed by a name with no whitespace or NUL, or `git:` followed by 40 or 64 lowercase hex digits (the
+root commit's object id), then any number of path segments, each `[a-z0-9._-]+` and never `.` or `..`. A segment
+that only starts with or contains dots, such as `.hidden` or `a..b`, is valid.
+
+A refusal also answers `{ offset }`. An input with no recognised prefix (`git:` or `local:`), such as a bare name or
+`forge:123`, refuses at offset 0. Past a recognised prefix the offset is the first byte that cannot continue a valid
+id: a hex run shorter than 40 refuses where it ends, a run of 41 to 63 digits at the 41st digit, a run longer than
+64 at the 65th digit, and a segment at its first bad byte, or at its first byte when it is empty, `.` or `..`.
 
 Given `{ value, other }` instead, two valid identities, it answers `{ order }`: -1, 0 or 1 for `value` against
-`other`. A `local:` id sorts before every `git:` id, two local ids by name text, two git ids by hex text, then
-segment by segment, an id that is a prefix of another first. Text compares bytewise.
+`other`. A `local:` id sorts before every `git:` id, two local ids by name text, two git ids by hex text, then the
+`/`-separated segments are compared one by one, an id that is a prefix of another before its extension. Text
+compares bytewise.
 
 ## `library`
 

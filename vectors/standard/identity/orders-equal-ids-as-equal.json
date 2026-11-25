@@ -1,0 +1,12 @@
+{
+  "id": "identity/orders-equal-ids-as-equal",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "git:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/a",
+    "other": "git:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/a"
+  },
+  "then": {
+    "order": 0
+  }
+}
