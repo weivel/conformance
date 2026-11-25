@@ -130,3 +130,17 @@ to 6 and of Test run 44752588723 attempt 1. Three definition or same-language sa
 Linux 0.004118 in 44752588723 and 0.009986 in 44776432788, and on Windows 0.014668 in attempt 4 of 44765952616.
 macOS's stands, since none of the new samples is as noisy as the samples it was set from. The commit that sets them
 lists every sample.
+
+`rust.txt` carries `weivel/rust`'s bounds as its Test workflow's `benchmarks` job measured them on 2026-11-25, in
+attempts 1 to 4 of Test run 45612902972, ten repetitions an attempt on each system, forty samples a gate and platform:
+a release run on a platform this file gives no line measures ten samples of each gate and fails. The control call is
+weivel_get_service through the wrapper, on a host whose timer is armed on the system scheduler, over the same function
+of the core's table called with the very core the wrapper calls; the library call is the echo library's `echo_echo`
+through the host's `LibraryService`, 16 bytes in, over the same function reached through the platform's loader and
+called directly, its answer released through `echo_release` on both. Its `described-call` is the described mirror's
+`reflect`, a sample holding a text and a counted array of three texts in and its reflection out, through the
+`BoundDefinition` a consumer resolved, over the same operation through the fixture's structs declared by hand in the
+benchmark alone, every member copied out into Rust values and the reflection and the refusal released after every
+call on both. Rust runs a blocking operation on the calling thread, so it carries no `blocking-call`. Its noise is of
+million-call batches of the same-language pair and of the definition row's batches of 20 000 calls, pooled. The commit
+that adds the file lists every sample and how each bound follows from them.
