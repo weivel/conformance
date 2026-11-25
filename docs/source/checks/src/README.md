@@ -11,12 +11,12 @@ The sources of the five drift check programs. Each program is one file with its 
 - [header_tokens.c](../../../../checks/src/header_tokens.c) - preprocessing a header with its `#include` lines blanked, and tokenizing only the lines the line markers give back to it
 - [header_tokens.h](../../../../checks/src/header_tokens.h) - a header's tokens, each with its line in the header, string and character literals dropped
 - [languages.c](../../../../checks/src/languages.c) - reading `languages.txt` for one language, or for every language but one
-- [languages.h](../../../../checks/src/languages.h) - a language's rules: extensions, names, patterns, prefixes, source roots and bases, test and header roots, and layer exemptions
+- [languages.h](../../../../checks/src/languages.h) - a language's rules: extensions, names, patterns, prefixes, source roots and bases, test, header and crate roots, and layer exemptions
 - [layers.c](../../../../checks/src/layers.c) - `weivel-layers`: every layer vector's id named on its own in a language's tests, apart from the directories it is exempt from
 - [lockfile.c](../../../../checks/src/lockfile.c) - the names check's structural read of an npm lockfile, member by member
 - [lockfile.h](../../../../checks/src/lockfile.h) - which members of a lockfile can name a dependency or its origin, and so are read
 - [names.c](../../../../checks/src/names.c) - `weivel-names`: every text file read for a listed word, case-folded, binaries skipped and printed, and the list's own copy recognised by its content
-- [parity.c](../../../../checks/src/parity.c) - `weivel-parity`: a language's module directories against the pinned core's `MODULES`, its source bases and its header root
+- [parity.c](../../../../checks/src/parity.c) - `weivel-parity`: a language's module directories against the pinned core's `MODULES`, its source bases, its header root and its crate root
 - [purity.c](../../../../checks/src/purity.c) - `weivel-purity`: what a role may hold, its own language and prose, and never another language's build file
 - [tool.c](../../../../checks/src/tool.c) - starting a program with its arguments quoted for Windows or POSIX and capturing what it prints
 - [tool.h](../../../../checks/src/tool.h) - `tool_run`

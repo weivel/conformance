@@ -20,6 +20,13 @@ java source-root src/main/java22/com/weivel
 java source-base src/main/java22
 java test-root src/test/java
 java layer-exempt host
+rust extension .rs
+rust name Cargo.toml
+rust name Cargo.lock
+rust name rust-toolchain.toml
+rust source-root src
+rust crate-root src/lib.rs
+rust test-root tests
 typescript extension .ts
 typescript name package.json
 typescript name package-lock.json
