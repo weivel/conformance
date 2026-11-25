@@ -48,6 +48,9 @@ static int apply_line(language_rules *rules, const char *kind, const char *value
     if (strcmp(kind, "header-root") == 0) {
         return replace_text(&rules->header_root, value);
     }
+    if (strcmp(kind, "crate-root") == 0) {
+        return replace_text(&rules->crate_root, value);
+    }
     list = list_for_kind(rules, kind);
     return list != NULL && text_list_add(list, value);
 }
@@ -133,5 +136,6 @@ void language_rules_free(language_rules *rules) {
     text_list_free(&rules->layer_exemptions);
     free(rules->test_root);
     free(rules->header_root);
+    free(rules->crate_root);
     memset(rules, 0, sizeof *rules);
 }

@@ -88,6 +88,11 @@ set(checks_test_scenarios
     parity_rejects_a_public_header_without_the_language_extension
     parity_refuses_a_header_root_whose_language_has_no_extension
     parity_counts_no_build_output_as_a_module_file
+    parity_allows_the_rust_crate_root_and_no_other_loose_file
+    parity_refuses_a_crate_root_missing_on_disk
+    parity_refuses_a_crate_root_in_no_source_root
+    purity_accepts_a_rust_layer_and_rejects_its_build_files_elsewhere
+    layers_reads_rust_tests_and_exempts_no_directory
     layers_demands_a_vector_under_any_directory_name
     layers_counts_no_build_output_under_the_test_root
     purity_rejects_a_file_named_only_by_a_pattern_suffix

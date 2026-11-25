@@ -22,7 +22,7 @@ weivel-core-gate --sources <rules-file> <core-root>
   implementation is the role `c` and the language `c`: one word, read by purity as the role and by parity and layers
   as the language. Any other role is a language named in `checks/languages.txt`, whose lines read
   `<language> <kind> <value>` with kind `extension`, `name`, `pattern`, `prefix`, `source-root`, `source-base`,
-  `test-root`, `header-root` or `layer-exempt`; it allows its own files and prose, and a generated `.js` under a Java
+  `test-root`, `header-root`, `crate-root` or `layer-exempt`; it allows its own files and prose, and a generated `.js` under a Java
   repository is an offender.
   Prose, in every role, is a `.md` or `.txt` file anywhere; every role also allows `.gitignore`, `.gitattributes`,
   `LICENSE`, `MODULES` and `repo.json` at the root, and `docs/VERSION`, the version file of the docs standard the
@@ -53,7 +53,11 @@ weivel-core-gate --sources <rules-file> <core-root>
   repository carries one top-level directory per module, named exactly as listed, under its `source-root`. A language
   may name several source roots, and then a module present under any one of them is present. A missing required
   module, a directory not on the list, a module directory that holds no file and a loose file directly under a source
-  root are all offenders. Every directory directly under each source root is judged, whatever its name. A declared
+  root are all offenders, except the one file a `crate-root` names, as Rust names `src/lib.rs`, the file its compiler
+  starts the library from: that file is allowed loose, and every other loose file beside it (`src/other.rs`) is still
+  an offender. A crate root that lies directly in none of the language's source roots is refused with 2, and so is one
+  missing on disk, the message naming the line that declared it, since a stale line would allow whatever file is
+  given its name next. Every directory directly under each source root is judged, whatever its name. A declared
   source root missing on disk is refused with 2, the message naming the root, the line that declared it
   (`java source-root src/main/java22/com/weivel`) and the list it came from. A module holds a file when one sits in it at any depth, except under a
   directory directly inside the module that carries a name skipped at a repository root (`build`, `build-*`,

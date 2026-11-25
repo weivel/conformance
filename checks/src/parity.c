@@ -24,10 +24,12 @@ typedef struct {
     const char *base;
 } source_tree;
 
+/** Every tree a language's modules are spread over, and the one loose file its `crate-root` allows, or NULL. */
 typedef struct {
     source_tree *items;
     size_t count;
     const char *languages_path;
+    const char *crate_root;
 } source_layout;
 
 static int parse_modules(const text_list *lines, module_list *modules) {
@@ -206,6 +208,7 @@ static int pair_roots(const char *languages_path, const char *language, const la
     layout->items = calloc(rules->source_roots.count, sizeof(source_tree));
     layout->count = 0;
     layout->languages_path = languages_path;
+    layout->crate_root = rules->crate_root;
     if (layout->items == NULL) {
         snprintf(error, error_size, "out of memory");
         return 0;
@@ -229,6 +232,26 @@ static int pair_roots(const char *languages_path, const char *language, const la
     return 1;
 }
 
+/** The crate root's name under `source_root` when it lies directly in it, or NULL. */
+static const char *crate_file_in(const char *crate_root, const char *source_root) {
+    const char *name;
+    if (crate_root == NULL || !holds_path(source_root, crate_root)) {
+        return NULL;
+    }
+    name = crate_root + strlen(source_root) + 1;
+    return strchr(name, '/') == NULL ? name : NULL;
+}
+
+static int crate_root_sits_in_a_source_root(const language_rules *rules) {
+    size_t at;
+    for (at = 0; at < rules->source_roots.count; at++) {
+        if (crate_file_in(rules->crate_root, rules->source_roots.items[at]) != NULL) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static int describe_layout_refusal(const char *languages_path, const char *language, const language_rules *rules,
                                    char *error, size_t error_size) {
     if (!rules->known) {
@@ -240,6 +263,9 @@ static int describe_layout_refusal(const char *languages_path, const char *langu
     } else if (rules->header_root != NULL && rules->extensions.count == 0) {
         snprintf(error, error_size, "%s gives %s a header-root and no extension, so none of its headers can be told",
                  languages_path, language);
+    } else if (rules->crate_root != NULL && !crate_root_sits_in_a_source_root(rules)) {
+        snprintf(error, error_size, "%s gives %s the crate-root %s, which lies directly in none of its source roots",
+                 languages_path, language, rules->crate_root);
     } else {
         return 0;
     }
@@ -263,8 +289,14 @@ static int is_loose_file(const char *relative) {
     return strchr(relative, '/') == NULL;
 }
 
-static int report_loose_files(const char *source_directory, const char *language, const char *source_root, char *error,
-                              size_t error_size) {
+/**
+ * Counts the loose files under one source root but the crate root, or answers -1 with `error` filled when the root
+ * cannot be read or the crate root that lies in it is missing, since the line declaring it is then stale.
+ */
+static int report_loose_files(const char *source_directory, const char *language, const source_layout *layout,
+                              const char *source_root, char *error, size_t error_size) {
+    const char *crate_file = crate_file_in(layout->crate_root, source_root);
+    int crate_file_found = 0;
     text_list files;
     size_t at;
     int offenders = 0;
@@ -272,13 +304,20 @@ static int report_loose_files(const char *source_directory, const char *language
         return -1;
     }
     for (at = 0; at < files.count; at++) {
-        if (is_loose_file(files.items[at])) {
+        if (crate_file != NULL && strcmp(files.items[at], crate_file) == 0) {
+            crate_file_found = 1;
+        } else if (is_loose_file(files.items[at])) {
             fprintf(stderr, "%s: '%s' under %s is a loose file, outside every module\n", language, files.items[at],
                     source_root);
             offenders++;
         }
     }
     text_list_free(&files);
+    if (crate_file != NULL && !crate_file_found) {
+        snprintf(error, error_size, "the crate-root %s, declared by the line '%s crate-root %s' of %s, is missing",
+                 layout->crate_root, language, layout->crate_root, layout->languages_path);
+        return -1;
+    }
     return offenders;
 }
 
@@ -410,7 +449,7 @@ static int count_tree_offenders(const char *root, const module_list *modules, co
         free(directory);
         return -1;
     }
-    offenders = report_loose_files(directory, language, source_root, error, error_size);
+    offenders = report_loose_files(directory, language, layout, source_root, error, error_size);
     if (offenders >= 0) {
         offenders += report_module_directories(modules, &directories, language, source_root, directory);
     }
@@ -703,7 +742,7 @@ static int check_repository(const char *root, const char *language, const char *
     text_list lines;
     module_list modules;
     language_rules rules;
-    source_layout layout = {NULL, 0, NULL};
+    source_layout layout = {NULL, 0, NULL, NULL};
     int offenders = -1;
     if (!load_pinned_modules(root, &lines, &modules)) {
         return -1;
