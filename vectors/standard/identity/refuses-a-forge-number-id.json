@@ -1,0 +1,12 @@
+{
+  "id": "identity/refuses-a-forge-number-id",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "github:123"
+  },
+  "then": {
+    "valid": false,
+    "offset": 0
+  }
+}

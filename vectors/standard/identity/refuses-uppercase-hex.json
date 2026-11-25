@@ -1,0 +1,12 @@
+{
+  "id": "identity/refuses-uppercase-hex",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "git:4B825DC642CB6EB9A060E54BF8D69288FBEE4904"
+  },
+  "then": {
+    "valid": false,
+    "offset": 5
+  }
+}

@@ -3,7 +3,7 @@
   "op": "identity",
   "covers": "12.6",
   "given": {
-    "value": "forge:1/a..b"
+    "value": "git:4b825dc642cb6eb9a060e54bf8d69288fbee4904/a..b"
   },
   "then": {
     "valid": true

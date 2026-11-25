@@ -1,0 +1,11 @@
+{
+  "id": "identity/accepts-a-sha256-git-id",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "git:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "then": {
+    "valid": true
+  }
+}

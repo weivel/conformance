@@ -1,0 +1,12 @@
+{
+  "id": "identity/orders-git-ids-by-hex-text",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "git:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "other": "git:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "then": {
+    "order": -1
+  }
+}

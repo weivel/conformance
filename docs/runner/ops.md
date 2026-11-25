@@ -95,11 +95,16 @@ that decision.
 
 ## `identity`
 
-Given `{ value }`, a string offered as a repository identity. Answers `{ valid }`, true when the whole string
-matches `^(local:[^/\s]+|[a-z][a-z0-9-]*(@[a-z0-9.-]+)?:[0-9]+)(/(?!\.{1,2}(/|(?![\s\S])))[a-z0-9._-]+)*(?![\s\S])`:
-`local:` followed by a name, or a forge (with an optional `@host`) and a numeric repository id, then any number of
-path segments. A bare name, a non-numeric or empty id, an uppercase forge and a `.` or `..` segment are all
-invalid; a segment that only starts with or contains dots, such as `.hidden` or `a..b`, is valid.
+Given `{ value }`, a string offered as a repository identity. Answers `{ valid }`, true when the whole string is
+`local:` followed by a name, or `git:` followed by 40 or 64 lowercase hex digits (the root commit's object id), then
+any number of path segments, each `[a-z0-9._-]+` and never `.` or `..`. A refusal also answers `{ offset }`, the
+byte at which the string stops matching. A bare name, a forge and number such as `github:123`, uppercase hex, a 41st
+digit and a `.` or `..` segment are all invalid; a segment that only starts with or contains dots, such as `.hidden`
+or `a..b`, is valid.
+
+Given `{ value, other }` instead, two valid identities, it answers `{ order }`: -1, 0 or 1 for `value` against
+`other`. A `local:` id sorts before every `git:` id, two local ids by name text, two git ids by hex text, then
+segment by segment, an id that is a prefix of another first. Text compares bytewise.
 
 ## `library`
 

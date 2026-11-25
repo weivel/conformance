@@ -1,0 +1,12 @@
+{
+  "id": "identity/orders-local-before-git",
+  "op": "identity",
+  "covers": "12.6",
+  "given": {
+    "value": "local:z",
+    "other": "git:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "then": {
+    "order": -1
+  }
+}
