@@ -55,10 +55,11 @@ every operation's offset in the definition's struct, with its own FFI layout and
 A check that answers OUT_OF_MEMORY fails the load as out of memory, never as the caller's mistake.
 
 Its `given` is `{ declaration, holders, steps }`. `declaration` is the library's declaration, as the standard's
-`test/described/library.json` and its three broken variants are, handed to the host as the standard reads it with the
-path of the built `described` library beside it; `holders` names plugins the suite opens before the first step, each
-consuming every service id the declaration lists, exactly as in a [`library` vector](library.md). The steps run in
-order, each once the layer has nothing left to run from the one before:
+`test/described/library.json` and its three broken variants are, or one publishing a contract alone, handed to the
+host as the standard reads it with the path of the built `described` library beside it; `holders` names plugins the
+suite opens before the first step, each consuming every service id the declaration lists, exactly as in a
+[`library` vector](library.md). The steps run in order, each once the layer has nothing left to run from the one
+before:
 
 - `{ load: true }` loads the declaration through the host's public load call;
 - `{ holder, get: id }` gets the service as that holder, which then holds it;
@@ -221,6 +222,17 @@ The suite builds the vector's `given` through its layer, the mirror declared alo
 witnesses that the load succeeds and the get is served with the very address `described_mirror_definition` answers,
 as `loaded`, `got` and `sameObject` state, with nothing reported. A layer that requires a description of every
 definition fails here.
+
+## `description/a-library-publishing-only-contracts-loads-and-registers-nothing`
+
+A library may publish contracts alone, declaring no service, and its load succeeds and registers nothing.
+
+The suite builds the vector's `given` through its layer, a declaration of no service publishing the mirror's
+description as the contract of `described.mirroring`, with no holder, loads it and unloads it, and witnesses that the
+load succeeds with nothing reported, as `loaded` and `reported` state. A host that still requires a service, or that
+fails the unload of a library it registered nothing for, fails here. That the load registers nothing, which no step
+can reach with no declared id to get, is held by each language's own tests. A layer that checks a contract's
+description at the load, as one that checks a provide against it does, checks a real one here.
 
 ## `description/binding/a-broken-offset-description-fails-the-load`
 

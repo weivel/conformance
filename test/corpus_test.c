@@ -17,8 +17,8 @@ static const pinned_count PINNED[] = {
     {"core/want", 3},       {"core/reach", 16},        {"core/unbound", 3},
     {"core/carry", 1},      {"core/consume", 16},      {"standard/identity", 14},
     {"standard/validate", 33}, {"standard/library", 18}, {"layer/consume", 2},
-    {"layer/want", 4},      {"layer/lifecycle", 6},    {"layer/library", 13},
-    {"layer/description", 5}, {"layer/description/binding", 24},
+    {"layer/want", 4},      {"layer/lifecycle", 6},    {"layer/library", 14},
+    {"layer/description", 6}, {"layer/description/binding", 24},
     {"layer/host", 32},     {"layer/host/contract", 6},
 };
 
