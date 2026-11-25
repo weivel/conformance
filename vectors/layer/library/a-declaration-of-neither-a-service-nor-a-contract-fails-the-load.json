@@ -1,0 +1,24 @@
+{
+  "id": "library/a-declaration-of-neither-a-service-nor-a-contract-fails-the-load",
+  "op": "library",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "echo",
+      "version": "0.2.0"
+    },
+    "holders": [],
+    "steps": [
+      {
+        "load": true
+      }
+    ]
+  },
+  "then": {
+    "loaded": false,
+    "callersMistake": true,
+    "reported": {
+      "equals": []
+    }
+  }
+}

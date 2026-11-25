@@ -1,0 +1,32 @@
+{
+  "id": "description/a-library-publishing-only-contracts-loads-and-registers-nothing",
+  "op": "description",
+  "covers": "12.6",
+  "given": {
+    "declaration": {
+      "importName": "described",
+      "version": "1.0.0",
+      "contracts": [
+        {
+          "capability": "described.mirroring",
+          "description": "described_mirror_description"
+        }
+      ]
+    },
+    "holders": [],
+    "steps": [
+      {
+        "load": true
+      },
+      {
+        "unload": true
+      }
+    ]
+  },
+  "then": {
+    "loaded": true,
+    "reported": {
+      "equals": []
+    }
+  }
+}

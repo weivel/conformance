@@ -119,6 +119,17 @@ succeeds and `agenda`'s get is served, as `loaded` and `got` state, so a host th
 than below it fails here. Beside `library/a-definition-below-its-size-fails-the-load` it pins the floor from both
 sides.
 
+## `library/a-declaration-of-neither-a-service-nor-a-contract-fails-the-load`
+
+A declaration must declare something, a service or a contract it publishes, so one of neither is the caller's mistake
+at the host exactly as the standard's reader refuses it.
+
+The suite builds the vector's `given` through its layer, a declaration naming only its `importName` and `version`,
+and witnesses that the load fails, refused as the caller's mistake, with nothing reported, as `loaded`,
+`callersMistake` and `reported` state. The standard's reader refuses this declaration, so a suite that hands its host
+what the reader reads builds this one itself, from its `importName`, `version` and `release`, and hands the host that.
+A host that loads an empty library, since nothing in it can fail, fails here.
+
 ## `library/an-unload-revokes-every-holding-of-a-definition`
 
 A definition is called directly, so no call to it can be refused after its library's unload: the unload unregisters
