@@ -7,6 +7,7 @@
     "manifest": {
       "importName": "a",
       "api": 2,
+      "language": "c",
       "dependencies": [
         { "importName": "runtime", "name": "vendor/runtime", "commit": "abc", "sha256": "def" }
       ]
