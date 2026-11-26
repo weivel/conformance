@@ -347,7 +347,8 @@ static void reads_a_rejection_only_for_the_codes_the_contract_means(void) {
     check_text(want_state_in_reach(&served), "served", "reach want served");
 }
 
-#define BARE_ROUTING "\"manifest\":{\"importName\":\"a\",\"api\":2,\"services\":{\"provides\":[\"routing\"]}}"
+#define BARE_ROUTING                                                                                              \
+    "\"manifest\":{\"importName\":\"a\",\"api\":2,\"language\":\"c\",\"services\":{\"provides\":[\"routing\"]}}"
 
 static void names_every_standard_refusal_code_as_the_header_spells_it(void) {
     check_text(standard_refusal_name(WEIVEL_STANDARD_REFUSAL_WRONG_TYPE), "wrong_type", "wrong type");
@@ -412,7 +413,7 @@ static void skips_the_well_known_rule_only_when_the_list_is_absent(void) {
 static void hands_the_validator_a_string_with_an_escaped_newline_intact(void) {
     weivel_json_value *answer = answer_of(adapter_validate,
                                           "{\"schema\":\"plugin.schema.json\",\"manifest\":{\"importName\":\"a\\n\","
-                                          "\"api\":2}}");
+                                          "\"api\":2,\"language\":\"c\"}}");
     CHECK(flag_at(answer, "valid") == 0);
     check_text(text_at(weivel_json_object_get(answer, "refusal"), "code"), "invalid_value", "escaped newline code");
     check_text(text_at(weivel_json_object_get(answer, "refusal"), "path"), "importName", "escaped newline path");
