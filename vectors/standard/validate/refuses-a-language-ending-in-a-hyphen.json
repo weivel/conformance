@@ -1,0 +1,24 @@
+{
+  "id": "validate/refuses-a-language-ending-in-a-hyphen",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "a",
+      "api": 2,
+      "language": "c-"
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "language"
+      ]
+    },
+    "refusal": {
+      "code": "invalid_value"
+    }
+  }
+}
