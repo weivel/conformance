@@ -1,0 +1,23 @@
+{
+  "id": "validate/requires-a-language",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "a",
+      "api": 2
+    }
+  },
+  "then": {
+    "valid": false,
+    "paths": {
+      "equals": [
+        "language"
+      ]
+    },
+    "refusal": {
+      "code": "missing_field"
+    }
+  }
+}

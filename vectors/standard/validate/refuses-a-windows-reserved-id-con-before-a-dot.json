@@ -6,7 +6,8 @@
     "schema": "plugin.schema.json",
     "manifest": {
       "importName": "con.foo",
-      "api": 2
+      "api": 2,
+      "language": "c"
     },
     "wellKnownServices": []
   },

@@ -1,0 +1,20 @@
+{
+  "id": "validate/accepts-a-hyphenated-language",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "a",
+      "api": 2,
+      "language": "objective-c"
+    }
+  },
+  "then": {
+    "valid": true,
+    "paths": {
+      "equals": []
+    },
+    "refusal": null
+  }
+}

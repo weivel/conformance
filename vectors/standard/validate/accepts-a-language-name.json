@@ -1,0 +1,20 @@
+{
+  "id": "validate/accepts-a-language-name",
+  "op": "validate",
+  "covers": "12.6",
+  "given": {
+    "schema": "plugin.schema.json",
+    "manifest": {
+      "importName": "a",
+      "api": 2,
+      "language": "typescript"
+    }
+  },
+  "then": {
+    "valid": true,
+    "paths": {
+      "equals": []
+    },
+    "refusal": null
+  }
+}

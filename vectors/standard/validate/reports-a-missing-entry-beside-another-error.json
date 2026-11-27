@@ -7,6 +7,7 @@
     "manifest": {
       "importName": "config-ledger",
       "api": "one",
+      "language": "c",
       "capabilities": {
         "provides": [
           "provider"

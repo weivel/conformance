@@ -6,7 +6,8 @@
     "schema": "plugin.schema.json",
     "manifest": {
       "importName": "package-lock",
-      "api": 2
+      "api": 2,
+      "language": "c"
     },
     "wellKnownServices": []
   },
