@@ -420,15 +420,45 @@ static void hands_the_validator_a_string_with_an_escaped_newline_intact(void) {
     weivel_json_free(answer);
 }
 
+static int64_t number_at(const weivel_json_value *object, const char *key) {
+    int64_t number = INT64_MIN;
+    CHECK(weivel_json_as_int64(weivel_json_object_get(object, key), &number));
+    return number;
+}
+
+#define ROOT "git:4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+
 static void answers_whether_a_value_is_an_identity(void) {
-    weivel_json_value *forge = answer_of(adapter_identity, "{\"value\":\"forge:12/a\"}");
+    weivel_json_value *rooted = answer_of(adapter_identity, "{\"value\":\"" ROOT "/a\"}");
     weivel_json_value *bare = answer_of(adapter_identity, "{\"value\":\"a\"}");
-    CHECK(flag_at(forge, "valid") == 1);
-    CHECK(flag_at(bare, "valid") == 0);
+    weivel_json_value *forge = answer_of(adapter_identity, "{\"value\":\"forge:12/a\"}");
+    weivel_json_value *long_run = answer_of(adapter_identity, "{\"value\":\"" ROOT "0\"}");
+    CHECK(flag_at(rooted, "valid") == 1);
+    CHECK(rooted != NULL && weivel_json_object_get(rooted, "offset") == NULL);
+    CHECK(flag_at(bare, "valid") == 0 && number_at(bare, "offset") == 0);
+    CHECK(flag_at(forge, "valid") == 0 && number_at(forge, "offset") == 0);
+    CHECK(flag_at(long_run, "valid") == 0 && number_at(long_run, "offset") == 44);
     CHECK(answers_nothing(adapter_identity, "{\"value\":12}"));
     CHECK(answers_nothing(adapter_identity, "{}"));
-    weivel_json_free(forge);
+    weivel_json_free(rooted);
     weivel_json_free(bare);
+    weivel_json_free(forge);
+    weivel_json_free(long_run);
+}
+
+static void answers_how_two_identities_order(void) {
+    weivel_json_value *local_first = answer_of(adapter_identity, "{\"value\":\"local:z\",\"other\":\"" ROOT "\"}");
+    weivel_json_value *prefix_last = answer_of(adapter_identity, "{\"value\":\"" ROOT "/a\",\"other\":\"" ROOT "\"}");
+    weivel_json_value *same = answer_of(adapter_identity, "{\"value\":\"" ROOT "\",\"other\":\"" ROOT "\"}");
+    CHECK(number_at(local_first, "order") == -1);
+    CHECK(number_at(prefix_last, "order") == 1);
+    CHECK(number_at(same, "order") == 0);
+    CHECK(same != NULL && weivel_json_object_get(same, "valid") == NULL);
+    CHECK(answers_nothing(adapter_identity, "{\"value\":\"calendar\",\"other\":\"" ROOT "\"}"));
+    CHECK(answers_nothing(adapter_identity, "{\"value\":\"" ROOT "\",\"other\":7}"));
+    weivel_json_free(local_first);
+    weivel_json_free(prefix_last);
+    weivel_json_free(same);
 }
 
 static const weivel_json_value *first_function_of(const weivel_json_value *answer, size_t service) {
@@ -519,6 +549,7 @@ int main(void) {
     skips_the_well_known_rule_only_when_the_list_is_absent();
     hands_the_validator_a_string_with_an_escaped_newline_intact();
     answers_whether_a_value_is_an_identity();
+    answers_how_two_identities_order();
     answers_each_function_kind_by_the_name_a_vector_writes();
     answers_a_read_declaration_service_by_service();
     answers_a_refused_declaration_by_its_path();
